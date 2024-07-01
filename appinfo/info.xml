@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>privacyidea</id>
+	<name>privacyIDEA</name>
+	<summary>Authentication app to perform MFA against privacyIDEA</summary>
+	<description>lorem ipsum</description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author mail="lukas.matusiewicz@netknights.it">Lukas Matusiewicz</author>
+	<namespace>PrivacyIDEA</namespace>
+	<category>security</category>
+	<bugs>https://github.com</bugs>
+	<dependencies>
+		<nextcloud min-version="29" max-version="29"/>
+	</dependencies>
+	<navigations>
+		<navigation>
+			<id>privacyidea</id>
+			<name>privacyIDEA</name>
+			<route>privacyidea.page.index</route>
+			<icon>app.svg</icon>
+			<type>link</type>
+		</navigation>
+	</navigations>
+	<settings>
+		<admin>OCA\PrivacyIDEA\Settings\Admin</admin>
+		<admin-section>OCA\PrivacyIDEA\Sections\PrivacyIDEAAdmin</admin-section>
+	</settings>
+</info>
