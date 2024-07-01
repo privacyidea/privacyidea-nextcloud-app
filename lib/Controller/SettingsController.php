@@ -9,7 +9,6 @@ use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\ISession;
 
 class SettingsController extends Controller
 {
@@ -39,24 +38,26 @@ class SettingsController extends Controller
     }
 
     /**
-     * Set a configuration value in the twofactor_privacyidea app config.
+     * Set a configuration value in the privacyIDEA app config.
      *
      * @param string $key configuration key
      * @param string $value configuration value
      */
     public function setValue(string $key, string $value)
     {
-        $this->appConfig->setValue("privacyidea", $key, $value);
+        //$this->appConfig->setValue("privacyidea", $key, $value);
+        $this->appConfig->setValueString("privacyidea", $key, $value);
     }
 
     /**
-     * Retrieve a configuration from the twofactor_privacyidea app config.
+     * Retrieve a configuration from the privacyIDEA app config.
      *
      * @param string $key configuration key
      * @return string
      */
     public function getValue(string $key): string
     {
-        return $this->config->getAppValue("twofactor_privacyidea", $key);
+        //return $this->config->getAppValue("privacyidea", $key);
+        return $this->appConfig->getValueString("privacyidea", $key);
     }
 }

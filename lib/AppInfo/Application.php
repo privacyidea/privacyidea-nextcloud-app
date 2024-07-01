@@ -8,8 +8,6 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCA\PrivacyIDEA\Settings\Admin;
-use Psr\Container\ContainerInterface;
 
 class Application extends App implements IBootstrap
 {
