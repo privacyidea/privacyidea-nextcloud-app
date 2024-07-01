@@ -2,7 +2,7 @@
 
 use OCP\Util;
 
-Util::addScript(OCA\PrivacyIDEA\AppInfo\Application::APP_ID, 'settings-admin');
+Util::addScript('privacyidea', 'settings-admin');
 ?>
 
 <div class="section" id="privacyIDEA">
@@ -107,15 +107,16 @@ Util::addScript(OCA\PrivacyIDEA\AppInfo\Application::APP_ID, 'settings-admin');
                     <br>
                     <input id="piExcludeGroups" type="radio" name="piInExGroups">
                     <label for="piExcludeGroups">Exclude groups</label>
+                    <input id="piInOrExSelected" type="hidden" name="piInOrExSelected" value=""/>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <label for="piInExGroups">Group names: </label>
-                    <input id="piInExGroups" type="text" width="300px"/>
+                    <label for="piInExGroupsField">Group names: </label>
+                    <input id="piInExGroupsField" type="text" width="300px"/>
                 </td>
                 <td>
-                    <em>Provide the group names separated by a comma.</em>
+                    <em>Select the group names.</em>
                 </td>
             </tr>
         </table>
