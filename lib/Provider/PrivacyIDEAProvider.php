@@ -135,9 +135,28 @@ class PrivacyIDEAProvider implements IProvider
                             return true;
                         }
                     }
+                    $this->log("debug", "[isTwoFactorEnabledForUser] The user " . $user->getUID() . " is not in group " . $group . ".");
+                    if ($piInOrExSelected === "exclude")
+                    {
+                        $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is excluded (User may need 2FA).");
+                        $checkEnabled = true;
+                    }
+                    if ($piInOrExSelected === "include")
+                    {
+                        $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is included (User may not need 2FA).");
+                        $checkEnabled = false;
+                    }
+                }
+                if (!$checkEnabled)
+                {
+                    return false;
                 }
             }
+            $this->log("debug", "[isTwoFactorAuthEnabledForUser] User needs 2FA");
+            return true;
         }
+        $this->log("debug", "[isTwoFactorAuthEnabledForUser] privacyIDEA is not enabled.");
+        return false;
     }
 
     /**
