@@ -18,7 +18,7 @@
 		<navigation>
 			<id>privacyidea</id>
 			<name>privacyIDEA</name>
-			<route>privacyidea.page.index</route>
+			<route>privacyidea.page.main</route>
 			<icon>app.svg</icon>
 			<type>link</type>
 		</navigation>

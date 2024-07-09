@@ -43,7 +43,7 @@ class SettingsController extends Controller
      * @param string $key configuration key
      * @param string $value configuration value
      */
-    public function setValue(string $key, string $value)
+    public function setValue(string $key, string $value): void
     {
         //$this->appConfig->setValue("privacyidea", $key, $value);
         $this->appConfig->setValueString("privacyidea", $key, $value);
