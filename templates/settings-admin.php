@@ -127,6 +127,7 @@ Util::addScript('privacyidea', 'settings-admin');
             "Send Password" - (default) Login interface contains an username input and an single password/OTP input.
             "Trigger Challenge" - triggers all challenges beforehand using the provided service account.
             This flow require additional parameters: 'service name','service pass' (see below).
+            "Separate OTP" - Login interface will contain separate Pass an OTP inputs.
             "Send static pass" - performs the privacyIDEA server request automatically beforehand using
             the provided static password. This flow require additional parameter: 'static pass' (see below).</em>
         <br>
@@ -141,6 +142,9 @@ Util::addScript('privacyidea', 'settings-admin');
                     <br>
                     <input id="piAuthFlowSeparateOTP" type="radio" name="piAuthenticationFlow">
                     <label for="piAuthFlowSeparateOTP">Separate OTP</label>
+                    <br>
+                    <input id="piAuthFlowSendStaticPass" type="radio" name="piAuthenticationFlow">
+                    <label for="piAuthFlowSendStaticPass">Send Static Pass</label>
                     <br>
                     <br>
                     <input id="piSelectedAuthFlow" type="hidden" name="piSelectedAuthFlow" value=""/>
