@@ -258,10 +258,10 @@ class PrivacyIDEAProvider implements IProvider
         {
             $this->log("debug", "We are processing a PUSH response.");
 
-            if ($this->pollTransaction($transactionID))
+            if ($this->pi->pollTransaction($transactionID))
             {
                 // The challenge has been answered. Now we need to verify it.
-                $ret = $this->validateCheck($username, "", $transactionID);
+                $ret = $this->pi->validateCheck($username, "", $transactionID);
             }
             else
             {
@@ -286,7 +286,7 @@ class PrivacyIDEAProvider implements IProvider
             }
             else
             {
-                $ret = $this->validateCheckWebAuthn($username, $transactionID, $webAuthnSignResponse, $origin);
+                $ret = $this->pi->validateCheckWebAuthn($username, $transactionID, $webAuthnSignResponse, $origin);
             }
         }
         else
@@ -294,11 +294,11 @@ class PrivacyIDEAProvider implements IProvider
             if ($transactionID)
             {
                 $this->log("debug", "Transaction ID: " . $transactionID);
-                $ret = $this->validateCheck($username, $password, $transactionID);
+                $ret = $this->pi->validateCheck($username, $password, $transactionID);
             }
             else
             {
-                $ret = $this->validateCheck($username, $password);
+                $ret = $this->pi->validateCheck($username, $password);
             }
         }
 
