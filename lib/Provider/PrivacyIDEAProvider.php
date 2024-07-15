@@ -181,33 +181,20 @@ class PrivacyIDEAProvider implements IProvider
         {
             $template->assign("imgOTP", $this->session->get("piImgOTP"));
         }
-
-        if ($this->getAppValue("piActivateAutoSubmitOtpLength"))
-        {
-            $template->assign("autoSubmitOtpLength", $this->getAppValue("piAutoSubmitOtpLength", null));
-        }
-        $template->assign("pollInBrowser", $this->getAppValue("piPollInBrowser", ""));
+        $template->assign("autoSubmitOtpLength", $this->getAppValue("piActivateAutoSubmitOtpLength", false));
+        $template->assign("pollInBrowser", $this->getAppValue("piPollInBrowser", false));
         $template->assign("pollInBrowserUrl", $this->getAppValue("piPollInBrowserURL", ""));
-
         if ($this->session->get("piTransactionID") !== null)
         {
             $template->assign("transactionID", $this->session->get("piTransactionID"));
         }
-        if ($this->session->get("piPollInBrowserFailed") !== null)
+        if ($this->session->get("piPollInBrowserFailed") !== null && $this->session->get("piPollInBrowserFailed") === true)
         {
             $template->assign("pollInBrowserFailed", $this->session->get("piPollInBrowserFailed"));
-        }
-        else
-        {
-            $template->assign("pollInBrowserFailed", $this->getAppValue("pollInBrowserFailed", false));
         }
         if ($this->session->get("piErrorMessage") !== null)
         {
             $template->assign("errorMessage", $this->session->get("piErrorMessage"));
-        }
-        else
-        {
-            $template->assign("errorMessage", $this->getAppValue("errorMessage", ""));
         }
 
         $loads = 1;
@@ -257,7 +244,7 @@ class PrivacyIDEAProvider implements IProvider
 
         if ($mode === "push")
         {
-            $this->log("debug", "We are processing a PUSH response.");
+            $this->log("debug", "privacyIDEA: Processing PUSH response...");
 
             if ($this->pi->pollTransaction($transactionID))
             {
@@ -266,7 +253,7 @@ class PrivacyIDEAProvider implements IProvider
             }
             else
             {
-                $this->log("debug", "privacyIDEA: PUSH not confirmed yet");
+                $this->log("debug", "privacyIDEA: PUSH not confirmed yet...");
             }
 
             // Increase load counter
@@ -283,7 +270,7 @@ class PrivacyIDEAProvider implements IProvider
 
             if (empty($webAuthnSignResponse))
             {
-                $this->log("error", "Incomplete data for WebAuthn authentication: webAuthnSignResponse is missing!");
+                $this->log("error", "bIncomplete data for WebAuthn authentication: webAuthnSignResponse is missing!");
             }
             else
             {
