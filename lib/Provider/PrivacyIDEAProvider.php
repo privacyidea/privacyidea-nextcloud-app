@@ -126,9 +126,10 @@ class PrivacyIDEAProvider implements IProvider
             $response = $this->pi->validateCheck($username, $this->getAppValue("piStaticPass", ""), "", $headers);
             if (empty($response->getMultiChallenge()) && $response->getValue())
             {
-                return true; // todo how to end up the authentication here?
+                $this->session->set("piSuccess", true);
+                $this->verifyChallenge($user, "");
             }
-            elseif (!empty($response->getMultiChallenge())
+            elseif (!empty($response->getMultiChallenge()))
             {
                 $this->processPIResponse($response);
             }
@@ -230,11 +231,11 @@ class PrivacyIDEAProvider implements IProvider
      * @param string $challenge
      * @return Bool True in case of success. In case of failure, this raises
      *         a TwoFactorException with a descriptive error message.
-     * @throws TwoFactorException|ProcessPIResponseException|Exception
+     * @throws TwoFactorException|Exception
      */
     public function verifyChallenge(IUser $user, string $challenge): bool
     {
-        if ($this->session->get("piNoAuthRequired"))
+        if ($this->session->get("piNoAuthRequired") || $this->session->get("piSuccess"))
         {
             return true;
         }
