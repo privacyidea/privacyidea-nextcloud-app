@@ -275,10 +275,9 @@ class PrivacyIDEAProvider implements IProvider
             }
         }
 
-        // Show error from processPIResponse
         if (!empty($piResponse->getErrorMessage()))
         {
-            $errorMessage = $piResponse->getErrorMessage();
+            $message = $piResponse->getErrorMessage();
         }
         else
         {
@@ -293,29 +292,29 @@ class PrivacyIDEAProvider implements IProvider
                 {
                     if (!empty($piResponse->getMessages()))
                     {
-                        $errorMessage = $piResponse->getMessages();
+                        $message = $piResponse->getMessages();
                     }
                     else
                     {
-                        $errorMessage = $piResponse->getMessage();
+                        $message = $piResponse->getMessage();
                         $this->log("debug", "privacyIDEA:" . $piResponse->getMessage());
                     }
-                    $this->session->set("piMessage", $errorMessage);
+                    $this->session->set("piMessage", $message);
                 }
             }
             elseif ($mode === "push")
             {
-                $errorMessage = $this->session->get("piMessage");
+                $message = $this->session->get("piMessage");
             }
             else
             {
-                // status == false
-                $this->log("error", "[authenticate] privacyIDEA error code: " . $piResponse->getErrorCode());
-                $this->log("error", "[authenticate] privacyIDEA error message: " . $piResponse->getErrorMessage());
-                $errorMessage = $this->trans->t("Failed to authenticate.") . " " . $piResponse->getErrorMessage();
+                // status === false
+                $this->log("error", "privacyIDEA error code: " . $piResponse->getErrorCode());
+                $this->log("error", "privacyIDEA error message: " . $piResponse->getErrorMessage());
+                $message = $this->trans->t("Failed to authenticate.") . " " . $piResponse->getErrorMessage();
             }
         }
-        throw new TwoFactorException($errorMessage);
+        throw new TwoFactorException($message);
     }
 
     /**
