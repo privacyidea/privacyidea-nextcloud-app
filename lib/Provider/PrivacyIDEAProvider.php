@@ -3,6 +3,7 @@
 namespace OCA\PrivacyIDEA\Provider;
 
 use Exception;
+use OCA\PrivacyIDEA\PIClient\AuthenticationStatus;
 use OCA\PrivacyIDEA\PIClient\PIBadRequestException;
 use OCA\PrivacyIDEA\PIClient\PIResponse;
 use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
@@ -77,22 +78,6 @@ class PrivacyIDEAProvider implements IProvider
         // TriggerChallenge
         if ($authenticationFlow === "piAuthFlowTriggerChallenge")
         {
-            /*if ($this->session->get("piTriggerChallengeSuccess") !== true)
-            {
-                try
-                {
-                    $message = $this->privacyIDEA->triggerChallenge($user->getUID());
-
-                    // Check if the user was actually found when triggering challenges
-                    // If not and the setting "passOnNoToken" is set, the user can log in without 2FA
-                    $this->session->set("piMessage", $message);
-                    $this->session->set("piTriggerChallengeSuccess", true);
-                }
-                catch (Exception $e)
-                {
-                    $message = $e->getMessage();
-                }
-            }*/
             if (!$this->pi->serviceAccountAvailable())
             {
                 $this->log("error", "privacyIDEA: Service account name or password is not set in config. Cannot trigger the challenges.");
@@ -124,12 +109,12 @@ class PrivacyIDEAProvider implements IProvider
             // This could already end up the authentication if the "passOnNoToken" policy is set.
             // Otherwise, it triggers the challenges.
             $response = $this->pi->validateCheck($username, $this->getAppValue("piStaticPass", ""), "", $headers);
-            if (empty($response->getMultiChallenge()) && $response->getValue())
+            if ($response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
             {
                 $this->session->set("piSuccess", true);
                 $this->verifyChallenge($user, "");
             }
-            elseif (!empty($response->getMultiChallenge()))
+            elseif ($response->getAuthenticationStatus() === AuthenticationStatus::CHALLENGE)
             {
                 $this->processPIResponse($response);
             }
@@ -231,16 +216,16 @@ class PrivacyIDEAProvider implements IProvider
         $username = $user->getUID();
 
         // Get mode and transactionID
-        $transactionID = $this->session->get("piTransactionID");
         $mode = $this->request->getParam("mode");
         $this->session->set("piMode", $mode);
+        $transactionID = $this->session->get("piTransactionID");
 
         if ($this->request->getParam("modeChanged") === "1")
         {
             throw new TwoFactorException($this->session->get("piMessage"));
         }
 
-        $ret = 0;
+        $piResponse = 0;
 
         if ($mode === "push")
         {
@@ -249,7 +234,7 @@ class PrivacyIDEAProvider implements IProvider
             if ($this->pi->pollTransaction($transactionID))
             {
                 // The challenge has been answered. Now we need to verify it.
-                $ret = $this->pi->validateCheck($username, "", $transactionID);
+                $piResponse = $this->pi->validateCheck($username, "", $transactionID);
             }
             else
             {
@@ -270,50 +255,50 @@ class PrivacyIDEAProvider implements IProvider
 
             if (empty($webAuthnSignResponse))
             {
-                $this->log("error", "bIncomplete data for WebAuthn authentication: webAuthnSignResponse is missing!");
+                $this->log("error", "Incomplete data for WebAuthn authentication: WebAuthn sign response is missing!");
             }
             else
             {
-                $ret = $this->pi->validateCheckWebAuthn($username, $transactionID, $webAuthnSignResponse, $origin);
+                $piResponse = $this->pi->validateCheckWebAuthn($username, $transactionID, $webAuthnSignResponse, $origin);
             }
         }
         else
         {
-            if ($transactionID)
+            if (!empty($transactionID))
             {
                 $this->log("debug", "Transaction ID: " . $transactionID);
-                $ret = $this->pi->validateCheck($username, $password, $transactionID);
+                $piResponse = $this->pi->validateCheck($username, $password, $transactionID);
             }
             else
             {
-                $ret = $this->pi->validateCheck($username, $password);
+                $piResponse = $this->pi->validateCheck($username, $password);
             }
         }
 
         // Show error from processPIResponse
-        if (is_string($ret))
+        if (!empty($piResponse->getErrorMessage()))
         {
-            $errorMessage = $ret;
+            $errorMessage = $piResponse->getErrorMessage();
         }
         else
         {
-            if (!empty($ret) && $ret->result->status === true)
+            if ($piResponse->getStatus() === true)
             {
-                if ($ret->result->value === true)
+                if ($piResponse->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
                 {
                     $this->log("debug", "privacyIDEA: User authenticated successfully!");
                     return true;
                 }
                 else
                 {
-                    if (isset($ret->detail->messages))
+                    if (!empty($piResponse->getMessages()))
                     {
-                        $errorMessage = implode(", ", array_unique($ret->detail->messages));
+                        $errorMessage = $piResponse->getMessages();
                     }
                     else
                     {
-                        $errorMessage = $ret->detail->message;
-                        $this->log("debug", "privacyIDEA:" . $ret->detail->message);
+                        $errorMessage = $piResponse->getMessage();
+                        $this->log("debug", "privacyIDEA:" . $piResponse->getMessage());
                     }
                     $this->session->set("piMessage", $errorMessage);
                 }
@@ -325,21 +310,12 @@ class PrivacyIDEAProvider implements IProvider
             else
             {
                 // status == false
-                $this->log("error", "[authenticate] privacyIDEA error code: " . $ret->result->error->code);
-                $this->log("error", "[authenticate] privacyIDEA error message: " . $ret->result->error->message);
-                $errorMessage = $this->trans->t("Failed to authenticate.") . " " . $ret->result->error->message;
+                $this->log("error", "[authenticate] privacyIDEA error code: " . $piResponse->getErrorCode());
+                $this->log("error", "[authenticate] privacyIDEA error message: " . $piResponse->getErrorMessage());
+                $errorMessage = $this->trans->t("Failed to authenticate.") . " " . $piResponse->getErrorMessage();
             }
         }
-        if (class_exists('OCP\Authentication\TwoFactorAuth\TwoFactorException'))
-        {
-            // This is the behaviour for OC >= 9.2
-            throw new TwoFactorException($errorMessage);
-        }
-        else
-        {
-            // This is the behaviour for OC == 9.1 and NC.
-            return false;
-        }
+        throw new TwoFactorException($errorMessage);
     }
 
     /**
