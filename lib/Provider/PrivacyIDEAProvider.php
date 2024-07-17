@@ -75,7 +75,6 @@ class PrivacyIDEAProvider implements IProvider
             $headers = $this->getHeadersToForward($headersFromConfig);
         }
 
-        // TriggerChallenge
         if ($authenticationFlow === "piAuthFlowTriggerChallenge")
         {
             if (!$this->pi->serviceAccountAvailable())
@@ -96,7 +95,7 @@ class PrivacyIDEAProvider implements IProvider
 
                 if ($response != null)
                 {
-                    if (!empty($response->getMultiChallenge()))
+                    if ($response->getAuthenticationStatus() === AuthenticationStatus::CHALLENGE)
                     {
                         $this->processPIResponse($response);
                     }
@@ -111,6 +110,7 @@ class PrivacyIDEAProvider implements IProvider
             $response = $this->pi->validateCheck($username, $this->getAppValue("piStaticPass", ""), "", $headers);
             if ($response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
             {
+                // Complete the authentication
                 $this->session->set("piSuccess", true);
                 $this->verifyChallenge($user, "");
             }
@@ -214,18 +214,15 @@ class PrivacyIDEAProvider implements IProvider
 
         $password = $challenge;
         $username = $user->getUID();
-
-        // Get mode and transactionID
+        $transactionID = $this->session->get("piTransactionID");
         $mode = $this->request->getParam("mode");
         $this->session->set("piMode", $mode);
-        $transactionID = $this->session->get("piTransactionID");
 
+        $piResponse = null;
         if ($this->request->getParam("modeChanged") === "1")
         {
             throw new TwoFactorException($this->session->get("piMessage"));
         }
-
-        $piResponse = 0;
 
         if ($mode === "push")
         {
@@ -326,13 +323,16 @@ class PrivacyIDEAProvider implements IProvider
     {
         if (!empty($this->getAppValue("piURL", "")))
         {
-            $pi = new PrivacyIDEA("nextCloud", $this->getAppValue("piURL", ""));
+            $pi = new PrivacyIDEA("nextCloud Plugin", $this->getAppValue("piURL", ""));
             $pi->setLogger($this->logger);
             $pi->setSSLVerifyHost($this->getAppValue("piSSLVerify", "true"));
+            $pi->setSSLVerifyPeer($this->getAppValue("piSSLVerify", "true"));
             $pi->setServiceAccountName($this->getAppValue("piServiceName", ""));
             $pi->setServiceAccountPass($this->getAppValue("piServicePass", ""));
             $pi->setServiceAccountRealm($this->getAppValue("piServiceRealm", ""));
             $pi->setRealm($this->getAppValue("piRealm", ""));
+            $pi->setForwardClientIP($this->getAppValue("piForwardClientIP", false));
+            $pi->setNoProxy($this->getAppValue("piNoProxy", false));
             return $pi;
         }
         else
@@ -346,14 +346,13 @@ class PrivacyIDEAProvider implements IProvider
      *  Process the response from privacyIDEA and write information to session.
      *
      * @param PIResponse $response
-     * @return bool|null
+     * @return void
      */
-    private function processPIResponse(PIResponse $response): ?bool
+    private function processPIResponse(PIResponse $response): void
     {
         $this->session->set("piMode", "otp");
-        if (!empty($response->getMultiChallenge()))
+        if ($response->getAuthenticationStatus() === AuthenticationStatus::CHALLENGE)
         {
-            // Authentication not complete, new challenges were triggered.
             $triggeredTokens = $response->triggeredTokenTypes();
             if (!empty($response->getPreferredClientMode()))
             {
@@ -400,11 +399,6 @@ class PrivacyIDEAProvider implements IProvider
                 }
             }
         }
-        elseif ($response->getValue())
-        {
-            // Authentication complete
-            return true;
-        }
         elseif (!empty($response->getErrorCode()))
         {
             // privacyIDEA returned an error, prepare it to display.
@@ -418,7 +412,6 @@ class PrivacyIDEAProvider implements IProvider
             $this->log("error", "privacyIDEA: " . $response->getMessage());
             $this->session->set("piErrorMessage", $response->getMessage());
         }
-        return null;
     }
 
     /**
@@ -588,26 +581,6 @@ class PrivacyIDEAProvider implements IProvider
             $url .= "/";
         }
         return $url;
-    }
-
-    /**
-     * Return an associative array that contains the options that should be passed to
-     * the HTTP client service when creating HTTP requests.
-     * @return array
-     */
-    private function getClientOptions(): array
-    {
-        $checkSSL = $this->getAppValue('piSSLVerify', '');
-        $noProxy = $this->getAppValue('piNoProxy', '');
-        $timeout = $this->getAppValue('piTimeout', '5');
-        $options = ['headers' => ['user-agent' => "nextCloud Plugin"], // NOTE: Here, we check for `!== '0'` instead of `=== '1'` in order to verify certificates
-            // by default just after app installation.
-                    'verify'  => $checkSSL !== '0', 'debug' => false, 'exceptions' => false, 'timeout' => $timeout];
-        if ($noProxy === "1")
-        {
-            $options["proxy"] = ["https" => "", "http" => ""];
-        }
-        return $options;
     }
 
     /**
