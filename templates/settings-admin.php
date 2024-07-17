@@ -81,8 +81,17 @@ Util::addScript('privacyidea', 'settings-admin');
                     <label for="piNoProxy">No proxy</label>
                 </td>
                 <td>
-                    <em> Ignore the system wide proxy settings and send the authentication requests directly to
+                    <em> Ignore the system-wide proxy settings and send the authentication requests directly to
                         privacyIDEA.</em>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input id="piForwardClientIP" type="checkbox" class="checkbox">
+                    <label for="piForwardClientIP">No proxy</label>
+                </td>
+                <td>
+                    <em> Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.</em>
                 </td>
             </tr>
             <tr>
