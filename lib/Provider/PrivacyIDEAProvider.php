@@ -131,13 +131,15 @@ class PrivacyIDEAProvider implements IProvider
         // Set options, tokens and load counter to the template
         $template = new Template("privacyidea", "main");
 
-        $message = $this->session->get("piMessage");
-        if ($message === null)
+        if ($this->session->get("piMessage") !== null)
+        {
+            $message = $this->session->get("piMessage");
+        }
+        else
         {
             $message = $this->getAppValue("piDefaultMessage", "Please enter the OTP!");
         }
         $template->assign("message", $message);
-
         if ($this->session->get("piMode") !== null)
         {
             $template->assign("mode", $this->session->get("piMode"));
