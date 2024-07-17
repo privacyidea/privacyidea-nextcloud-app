@@ -14,6 +14,9 @@
 
 namespace OCA\PrivacyIDEA\PIClient;
 
+use RecursiveArrayIterator;
+use RecursiveIteratorIterator;
+
 const AUTHENTICATORDATA = "authenticatordata";
 const CLIENTDATA = "clientdata";
 const SIGNATUREDATA = "signaturedata";
@@ -55,6 +58,12 @@ class PrivacyIDEA
 
     /* @var bool Send the "client" parameter to allow using the original IP address in the privacyIDEA policies. */
     private bool $forwardClientIP = false;
+
+    /* @var string Timeout for the request. */
+    private string $timeout = "5";
+
+    /* @var bool Ignore the system-wide proxy settings and send the authentication requests directly to privacyIDEA. */
+    private bool $noProxy = false;
 
     /* @var object|null Implementation of the PILog interface. */
     private ?object $logger = null;
@@ -98,7 +107,7 @@ class PrivacyIDEA
             {
                 $headers = array('');
             }
-            if ($this->realm)
+            if (!empty($this->realm))
             {
                 $params["realm"] = $this->realm;
             }
@@ -139,7 +148,7 @@ class PrivacyIDEA
 
             $params = array("user" => $username);
 
-            if ($this->realm)
+            if (!empty($this->realm))
             {
                 $params["realm"] = $this->realm;
             }
@@ -183,6 +192,7 @@ class PrivacyIDEA
             {
                 $headers = array('');
             }
+
             $responseJSON = $this->sendRequest($params, $headers, 'GET', '/validate/polltransaction');
             $response = json_decode($responseJSON, true);
             return $response['result']['value'];
@@ -219,7 +229,7 @@ class PrivacyIDEA
             $params["pass"] = "";
             $params["transaction_id"] = $transactionID;
 
-            if ($this->realm)
+            if (!empty($this->realm))
             {
                 $params["realm"] = $this->realm;
             }
@@ -264,56 +274,6 @@ class PrivacyIDEA
     }
 
     /**
-     * Sends request to /validate/check endpoint with the data required to authenticate using U2F token.
-     *
-     * @param string $username Username to authenticate.
-     * @param string $transactionID Transaction ID of the triggered challenge.
-     * @param string $u2fSignResponse U2F sign response.
-     * @param array|null $headers Optional headers to forward to the server.
-     * @return PIResponse|null Returns PIResponse object or null if response was empty or malformed, or some parameter is missing.
-     * @throws PIBadRequestException If an error occurs during the request.
-     */
-    public function validateCheckU2F(string $username, string $transactionID, string $u2fSignResponse, array $headers = null): ?PIResponse
-    {
-        assert('string' === gettype($username));
-        assert('string' === gettype($transactionID));
-        assert('string' === gettype($u2fSignResponse));
-
-        // Check if required parameters are set
-        if (!empty($username) && !empty($transactionID) && !empty($u2fSignResponse))
-        {
-            // Compose standard validate/check params
-            $params["user"] = $username;
-            $params["pass"] = "";
-            $params["transaction_id"] = $transactionID;
-
-            if ($this->realm)
-            {
-                $params["realm"] = $this->realm;
-            }
-
-            if (!empty($headers))
-            {
-                $headers = array('');
-            }
-
-            // Additional U2F params from $u2fSignResponse
-            $tmp = json_decode($u2fSignResponse, true);
-            $params[CLIENTDATA] = $tmp["clientData"];
-            $params[SIGNATUREDATA] = $tmp["signatureData"];
-
-            $response = $this->sendRequest($params, $headers, 'POST', '/validate/check');
-
-            return PIResponse::fromJSON($response, $this);
-        }
-        else
-        {
-            $this->debugLog("validateCheckU2F parameters are incomplete!");
-        }
-        return null;
-    }
-
-    /**
      * Check if name and pass of service account are set.
      * @return bool
      */
@@ -336,12 +296,7 @@ class PrivacyIDEA
             return "";
         }
 
-
-        $params = array(
-            "username" => $this->serviceAccountName,
-            "password" => $this->serviceAccountPass
-        );
-
+        $params = array("username" => $this->serviceAccountName, "password" => $this->serviceAccountPass);
         if ($this->serviceAccountRealm != null && $this->serviceAccountRealm != "")
         {
             $params["realm"] = $this->serviceAccountRealm;
@@ -379,10 +334,7 @@ class PrivacyIDEA
         assert(is_string($needle));
 
         $iterator = new RecursiveArrayIterator($haystack);
-        $recursive = new RecursiveIteratorIterator(
-            $iterator,
-            RecursiveIteratorIterator::SELF_FIRST
-        );
+        $recursive = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST);
 
         foreach ($recursive as $key => $value)
         {
@@ -404,7 +356,7 @@ class PrivacyIDEA
      * @return string Returns a string with the server response.
      * @throws PIBadRequestException If an error occurs.
      */
-    public function sendRequest(array $params, array $headers, string $httpMethod, string $endpoint): string
+    private function sendRequest(array $params, array $headers, string $httpMethod, string $endpoint): string
     {
         assert('array' === gettype($params));
         assert('array' === gettype($headers));
@@ -426,6 +378,16 @@ class PrivacyIDEA
                 }
             }
         }
+
+        // Ignore proxy settings if wished.
+        if ($this->noProxy === true)
+        {
+            $this->debugLog("Ignoring proxy settings.");
+            $params["proxy"] = ["https" => "", "http" => ""];
+        }
+
+        // Set request's timeout
+        $params["timeout"] = $this->timeout;
 
         $this->debugLog("Sending " . http_build_query($params, '', ', ') . " to " . $endpoint);
 
@@ -593,6 +555,15 @@ class PrivacyIDEA
     public function setForwardClientIP(bool $forwardClientIP): void
     {
         $this->forwardClientIP = $forwardClientIP;
+    }
+
+    /**
+     * @param bool $noProxy Ignore the system-wide proxy settings and send the authentication requests directly to privacyIDEA.
+     * @return void
+     */
+    public function setNoProxy(bool $noProxy): void
+    {
+        $this->$noProxy = $noProxy;
     }
 
     /**
