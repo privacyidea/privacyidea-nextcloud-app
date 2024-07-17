@@ -39,7 +39,4 @@ class PIChallenge
 
     /* @var string WebAuthn sign request in JSON format */
     public string $webAuthnSignRequest = "";
-
-    /* @var string U2F sign request in JSON format */
-    public string $u2fSignRequest = "";
 }
