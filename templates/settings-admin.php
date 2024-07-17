@@ -3,6 +3,8 @@
 use OCP\Util;
 
 Util::addScript('privacyidea', 'settings-admin');
+Util::addStyle('privacyidea', 'settings-admin');
+
 ?>
 
 <div class="section" id="privacyIDEA">
