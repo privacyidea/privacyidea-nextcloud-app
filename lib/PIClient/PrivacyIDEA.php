@@ -117,13 +117,13 @@ class PrivacyIDEA
             $ret = PIResponse::fromJSON($response, $this);
             if ($ret == null)
             {
-                $this->debugLog("Server did not respond.");
+                $this->log("debug", "Server did not respond.");
             }
             return $ret;
         }
         else
         {
-            $this->debugLog("Missing username for /validate/check.");
+            $this->log("debug", "Missing username for /validate/check.");
         }
         return null;
     }
@@ -168,7 +168,7 @@ class PrivacyIDEA
         }
         else
         {
-            $this->debugLog("Username missing!");
+            $this->log("debug", "Username missing!");
         }
         return null;
     }
@@ -199,7 +199,7 @@ class PrivacyIDEA
         }
         else
         {
-            $this->debugLog("TransactionID missing!");
+            $this->log("debug", "TransactionID missing!");
         }
         return false;
     }
@@ -268,7 +268,7 @@ class PrivacyIDEA
         else
         {
             // Handle debug message if $username is empty
-            $this->debugLog("validateCheckWebAuthn: parameters are incomplete!");
+            $this->log("debug", "validateCheckWebAuthn: parameters are incomplete!");
         }
         return null;
     }
@@ -292,7 +292,7 @@ class PrivacyIDEA
     {
         if (!$this->serviceAccountAvailable())
         {
-            $this->errorLog("Cannot retrieve auth token without service account!");
+            $this->log("error", "Cannot retrieve auth token without service account!");
             return "";
         }
 
@@ -311,13 +311,13 @@ class PrivacyIDEA
             {
                 if ($this->findRecursive($response, 'role') != 'admin')
                 {
-                    $this->debugLog("Auth token was of a user without admin role.");
+                    $this->log("debug", "Auth token was of a user without admin role.");
                     return "";
                 }
                 return $response['result']['value']['token'];
             }
         }
-        $this->debugLog("/auth response did not contain the auth token.");
+        $this->log("debug", "/auth response did not contain the auth token.");
         return "";
     }
 
@@ -372,7 +372,7 @@ class PrivacyIDEA
                 if (array_key_exists($clientKey, $serverHeaders))
                 {
                     $clientIP = $serverHeaders[$clientKey];
-                    $this->debugLog("Forwarding Client IP: " . $clientKey . ": " . $clientIP);
+                    $this->log("debug", "Forwarding Client IP: " . $clientKey . ": " . $clientIP);
                     $params['client'] = $clientIP;
                     break;
                 }
@@ -382,14 +382,14 @@ class PrivacyIDEA
         // Ignore proxy settings if wished.
         if ($this->noProxy === true)
         {
-            $this->debugLog("Ignoring proxy settings.");
+            $this->log("debug", "Ignoring proxy settings.");
             $params["proxy"] = ["https" => "", "http" => ""];
         }
 
         // Set request's timeout
         $params["timeout"] = $this->timeout;
 
-        $this->debugLog("Sending " . http_build_query($params, '', ', ') . " to " . $endpoint);
+        $this->log("debug", "Sending " . http_build_query($params, '', ', ') . " to " . $endpoint);
 
         $completeUrl = $this->serverURL . $endpoint;
 
@@ -455,7 +455,7 @@ class PrivacyIDEA
         {
             // Handle the error
             $curlErrno = curl_errno($curlInstance);
-            $this->errorLog("Bad request: " . curl_error($curlInstance) . " errno: " . $curlErrno);
+            $this->log("error", "Bad request: " . curl_error($curlInstance) . " errno: " . $curlErrno);
             throw new PIBadRequestException("Unable to reach the authentication server (" . $curlErrno . ")");
         }
 
@@ -467,7 +467,7 @@ class PrivacyIDEA
         if ($endpoint != "/auth" && $this->logger != null)
         {
             $retJson = json_decode($ret, true);
-            $this->debugLog($endpoint . " returned " . json_encode($retJson, JSON_PRETTY_PRINT));
+            $this->log("debug", $endpoint . " returned " . json_encode($retJson, JSON_PRETTY_PRINT));
         }
 
         // Return decoded response
@@ -475,21 +475,26 @@ class PrivacyIDEA
     }
 
     /**
-     * This function relays messages to the PILogger implementation.
-     * @param string $message Debug message to log.
+     * Log a message with the given log level.
+     *
+     * @param $level
+     * @param $message
      */
-    function debugLog(string $message): void
+    function log($level, $message): void
     {
-        $this->logger?->piDebug("privacyIDEA-PHP-Client: " . $message);
-    }
-
-    /**
-     * This function relays messages to the PILogger implementation
-     * @param string $message Error message to log.
-     */
-    function errorLog(string $message): void
-    {
-        $this->logger?->piError("privacyIDEA-PHP-Client: " . $message);
+        $context = ["app" => "privacyIDEA"];
+        if ($level === 'debug')
+        {
+            $this->logger->debug($message, $context);
+        }
+        if ($level === 'info')
+        {
+            $this->logger->info($message, $context);
+        }
+        if ($level === 'error')
+        {
+            $this->logger->error($message, $context);
+        }
     }
 
     // Setters
