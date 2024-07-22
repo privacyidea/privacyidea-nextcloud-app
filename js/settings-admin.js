@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piActivatePI").addEventListener("change", function ()
     {
+        console.log("pi: Saving privacyIDEA activation");
         setValue("piActivatePI", $(this).is(":checked") ? "1" : "0");
     });
 

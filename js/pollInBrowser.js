@@ -10,7 +10,7 @@ window.onload = () =>
         {
             if (typeof (worker) == "undefined")
             {
-                worker = new Worker("/apps/privacyidea/js/poll-transaction.worker.js");
+                worker = new Worker("/apps/privacyidea/js/pollTransaction.worker.js");
                 document.getElementById("submitButton").addEventListener('click', function (e)
                 {
                     worker.terminate();
