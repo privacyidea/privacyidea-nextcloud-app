@@ -90,7 +90,7 @@ Util::addStyle('privacyidea', 'settings-admin');
             <tr>
                 <td>
                     <input id="piForwardClientIP" type="checkbox" class="checkbox">
-                    <label for="piForwardClientIP">No proxy</label>
+                    <label for="piForwardClientIP">Forward client IP</label>
                 </td>
                 <td>
                     <em> Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.</em>
