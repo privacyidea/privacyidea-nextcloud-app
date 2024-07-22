@@ -65,7 +65,7 @@ class PIResponse
 
         if ($json == null || $json == "")
         {
-            $privacyIDEA->errorLog("Response from the server is empty.");
+            $privacyIDEA->log("error", "Response from the server is empty.");
             return null;
         }
 
@@ -73,7 +73,7 @@ class PIResponse
         $map = json_decode($json, true);
         if ($map == null)
         {
-            $privacyIDEA->errorLog("Response from the server is malformed:\n" . $json);
+            $privacyIDEA->log("error", "Response from the server is malformed:\n" . $json);
             return null;
         }
         $ret->raw = $json;
@@ -135,7 +135,7 @@ class PIResponse
         }
         else
         {
-            $privacyIDEA->debugLog("Unknown authentication status.");
+            $privacyIDEA->log("debug", "Unknown authentication status.");
             $ret->authenticationStatus = AuthenticationStatus::NONE;
         }
         $ret->status = $map['result']['status'] ?: false;
@@ -184,11 +184,6 @@ class PIResponse
                     $t = $challenge['attributes']['webAuthnSignRequest'];
                     $tmp->webAuthnSignRequest = json_encode($t);
                 }
-                if ($tmp->type === "u2f")
-                {
-                    $t = $challenge['attributes']['u2fSignRequest'];
-                    $tmp->u2fSignRequest = json_encode($t);
-                }
 
                 $ret->multiChallenge[] = $tmp;
             }
@@ -218,7 +213,7 @@ class PIResponse
     {
         foreach ($this->multiChallenge as $challenge)
         {
-            if ($challenge->type !== "push" && $challenge->type !== "webauthn" && $challenge->type !== "u2f")
+            if ($challenge->type !== "push" && $challenge->type !== "webauthn")
             {
                 return $challenge->message;
             }
@@ -287,40 +282,6 @@ class PIResponse
             $webauthn->allowCredentials = $arr;
             return json_encode($webauthn);
         }
-    }
-
-    /**
-     * Get the U2FSignRequest for any triggered U2F token.
-     * @return string U2FSignRequest or empty string if no U2F token was triggered.
-     */
-    public function u2fSignRequest(): string
-    {
-        $ret = "";
-        foreach ($this->multiChallenge as $challenge)
-        {
-            if ($challenge->type === "u2f")
-            {
-                $ret = $challenge->u2fSignRequest;
-                break;
-            }
-        }
-        return $ret;
-    }
-
-    /**
-     * Get the WebAuthn token message if any were triggered.
-     * @return string
-     */
-    public function u2fMessage(): string
-    {
-        foreach ($this->multiChallenge as $challenge)
-        {
-            if ($challenge->type === "u2f")
-            {
-                return $challenge->message;
-            }
-        }
-        return "";
     }
 
     // Getters
@@ -398,25 +359,17 @@ class PIResponse
     }
 
     /**
-     * @return array Additional attributes of the user that can be sent by the server.
+     * @return string|null If an error occurred, the error code will be set here.
      */
-    public function getDetailAndAttributes(): array
-    {
-        return $this->detailAndAttributes;
-    }
-
-    /**
-     * @return string If an error occurred, the error code will be set here.
-     */
-    public function getErrorCode(): string
+    public function getErrorCode(): ?string
     {
         return $this->errorCode;
     }
 
     /**
-     * @return string If an error occurred, the error message will be set here.
+     * @return string|null If an error occurred, the error message will be set here.
      */
-    public function getErrorMessage(): string
+    public function getErrorMessage(): ?string
     {
         return $this->errorMessage;
     }
