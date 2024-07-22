@@ -181,6 +181,15 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
+                    <label for="piServiceRealm">Service realm: </label>
+                    <input id="piServiceRealm" type="text" width="300px"/>
+                </td>
+                <td>
+                    <em>Provide the service account realm (optional).</em>
+                </td>
+            </tr>
+            <tr>
+                <td>
                     <label for="piStaticPass">Static password: </label>
                     <input id="piStaticPass" type="password" width="300px"/>
                 </td>
