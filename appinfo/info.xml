@@ -17,15 +17,6 @@
 	<two-factor-providers>
 		<provider>OCA\PrivacyIDEA\Provider\PrivacyIDEAProvider</provider>
 	</two-factor-providers>
-	<navigations>
-		<navigation>
-			<id>privacyidea</id>
-			<name>privacyIDEA</name>
-			<route>privacyidea.page.main</route>
-			<icon>app.svg</icon>
-			<type>link</type>
-		</navigation>
-	</navigations>
 	<settings>
 		<admin>OCA\PrivacyIDEA\Settings\Admin</admin>
 		<admin-section>OCA\PrivacyIDEA\Sections\PrivacyIDEAAdmin</admin-section>
