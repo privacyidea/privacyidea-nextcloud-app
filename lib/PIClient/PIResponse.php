@@ -46,11 +46,11 @@ class PIResponse
     /* @var array Additional attributes of the user that can be sent by the server. */
     private array $detailAndAttributes = array();
 
-    /* @var string If an error occurred, the error code will be set here. */
-    private string $errorCode;
+    /* @var string|null If an error occurred, the error code will be set here. */
+    private ?string $errorCode;
 
-    /* @var string If an error occurred, the error message will be set here. */
-    private string $errorMessage;
+    /* @var string|null If an error occurred, the error message will be set here. */
+    private ?string $errorMessage;
 
     /**
      * Create a PIResponse object from the JSON response of the server.
@@ -191,11 +191,13 @@ class PIResponse
         return $ret;
     }
 
+    // Getters
+
     /**
      * Get an array with all triggered token types.
      * @return array
      */
-    public function triggeredTokenTypes(): array
+    public function getTriggeredTokenTypes(): array
     {
         $ret = array();
         foreach ($this->multiChallenge as $challenge)
@@ -209,7 +211,7 @@ class PIResponse
      * Get the message of any token that is not Push or WebAuthn. Those are OTP tokens requiring an input field.
      * @return string
      */
-    public function otpMessage(): string
+    public function getOtpMessage(): string
     {
         foreach ($this->multiChallenge as $challenge)
         {
@@ -225,7 +227,7 @@ class PIResponse
      * Get the Push token message if any were triggered.
      * @return string
      */
-    public function pushMessage(): string
+    public function getPushMessage(): string
     {
         foreach ($this->multiChallenge as $challenge)
         {
@@ -236,55 +238,6 @@ class PIResponse
         }
         return "";
     }
-
-    /**
-     * Get the WebAuthn token message if any were triggered.
-     * @return string
-     */
-    public function webauthnMessage(): string
-    {
-        foreach ($this->multiChallenge as $challenge)
-        {
-            if ($challenge->type === "webauthn")
-            {
-                return $challenge->message;
-            }
-        }
-        return "";
-    }
-
-    /**
-     * Get the WebAuthnSignRequest for any triggered WebAuthn token.
-     * @return string WebAuthnSignRequest or empty string if no WebAuthn token was triggered.
-     */
-    public function webAuthnSignRequest(): string
-    {
-        $arr = [];
-        $webauthn = "";
-        foreach ($this->multiChallenge as $challenge)
-        {
-            if ($challenge->type === "webauthn")
-            {
-                $t = json_decode($challenge->webAuthnSignRequest);
-                if (empty($webauthn))
-                {
-                    $webauthn = $t;
-                }
-                $arr[] = $challenge->attributes['webAuthnSignRequest']['allowCredentials'][0];
-            }
-        }
-        if (empty($webauthn))
-        {
-            return "";
-        }
-        else
-        {
-            $webauthn->allowCredentials = $arr;
-            return json_encode($webauthn);
-        }
-    }
-
-    // Getters
 
     /**
      * @return string Combined messages of all triggered token.
@@ -327,6 +280,55 @@ class PIResponse
     }
 
     /**
+     * Get the WebAuthnSignRequest for any triggered WebAuthn token.
+     * @return string WebAuthnSignRequest or empty string if no WebAuthn token was triggered.
+     */
+    public function getWebauthnSignRequest(): string
+    {
+        $arr = [];
+        $webauthn = "";
+        foreach ($this->multiChallenge as $challenge)
+        {
+            if ($challenge->type === "webauthn")
+            {
+                $t = json_decode($challenge->webAuthnSignRequest);
+                if (empty($webauthn))
+                {
+                    $webauthn = $t;
+                }
+                $arr[] = $challenge->attributes['webAuthnSignRequest']['allowCredentials'][0];
+            }
+        }
+        if (empty($webauthn))
+        {
+            return "";
+        }
+        else
+        {
+            $webauthn->allowCredentials = $arr;
+            return json_encode($webauthn);
+        }
+    }
+
+
+    /**
+     * Get the WebAuthn token message if any were triggered.
+     * @return string
+     */
+    public function getWebauthnMessage(): string
+    {
+        foreach ($this->multiChallenge as $challenge)
+        {
+            if ($challenge->type === "webauthn")
+            {
+                return $challenge->message;
+            }
+        }
+        return "";
+    }
+
+
+    /**
      * @return array Array of PIChallenge objects representing the triggered token challenges.
      */
     public function getMultiChallenge(): array
@@ -363,7 +365,7 @@ class PIResponse
      */
     public function getErrorCode(): ?string
     {
-        return $this->errorCode;
+        return $this->errorCode ?? null;
     }
 
     /**
@@ -371,6 +373,6 @@ class PIResponse
      */
     public function getErrorMessage(): ?string
     {
-        return $this->errorMessage;
+        return $this->errorMessage ?? null;
     }
 }
