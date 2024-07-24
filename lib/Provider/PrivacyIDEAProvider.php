@@ -95,10 +95,7 @@ class PrivacyIDEAProvider implements IProvider
 
                 if ($response != null)
                 {
-                    if ($response->getAuthenticationStatus() === AuthenticationStatus::CHALLENGE)
-                    {
-                        $this->processPIResponse($response);
-                    }
+                    $this->processPIResponse($response);
                 }
             }
         }
@@ -114,7 +111,7 @@ class PrivacyIDEAProvider implements IProvider
                 $this->session->set("piSuccess", true);
                 $this->verifyChallenge($user, "");
             }
-            elseif ($response->getAuthenticationStatus() === AuthenticationStatus::CHALLENGE)
+            else
             {
                 $this->processPIResponse($response);
             }
@@ -123,7 +120,7 @@ class PrivacyIDEAProvider implements IProvider
         {
             $this->session->set("piSeparateOTP", true);
         }
-        else
+        elseif ($authenticationFlow !== "piAuthFlowDefault")
         {
             $this->log("error", "privacyIDEA: Unknown authentication flow: " . $authenticationFlow . ". Fallback to default.");
         }
@@ -131,15 +128,10 @@ class PrivacyIDEAProvider implements IProvider
         // Set options, tokens and load counter to the template
         $template = new Template("privacyidea", "main");
 
-        if ($this->session->get("piMessage") !== null)
+        if ($this->session->get("piMessage") === null)
         {
-            $message = $this->session->get("piMessage");
+            $template->assign("message", $this->getAppValue("piDefaultMessage", "Please enter the OTP!"));
         }
-        else
-        {
-            $message = $this->getAppValue("piDefaultMessage", "Please enter the OTP!");
-        }
-        $template->assign("message", $message);
         if ($this->session->get("piMode") !== null)
         {
             $template->assign("mode", $this->session->get("piMode"));
@@ -168,7 +160,7 @@ class PrivacyIDEAProvider implements IProvider
         {
             $template->assign("imgOTP", $this->session->get("piImgOTP"));
         }
-        $template->assign("activateAutoSubmitOtpLength", $this->getAppValue("piActivateAutoSubmitOtpLength", false));
+        $template->assign("activateAutoSubmitOtpLength", $this->getAppValue("piActivateAutoSubmitOtpLength", "0"));
         $template->assign("autoSubmitOtpLength", $this->getAppValue("piAutoSubmitOtpLength", "6"));
         $template->assign("pollInBrowser", $this->getAppValue("piPollInBrowser", false));
         $template->assign("pollInBrowserUrl", $this->getAppValue("piPollInBrowserURL", ""));
@@ -235,6 +227,7 @@ class PrivacyIDEAProvider implements IProvider
             {
                 // The challenge has been answered. Now we need to verify it.
                 $piResponse = $this->pi->validateCheck($username, "", $transactionID);
+                $this->processPIResponse($piResponse);
             }
             else
             {
@@ -260,6 +253,7 @@ class PrivacyIDEAProvider implements IProvider
             else
             {
                 $piResponse = $this->pi->validateCheckWebAuthn($username, $transactionID, $webAuthnSignResponse, $origin);
+                $this->processPIResponse($piResponse);
             }
         }
         else
@@ -268,10 +262,12 @@ class PrivacyIDEAProvider implements IProvider
             {
                 $this->log("debug", "Transaction ID: " . $transactionID);
                 $piResponse = $this->pi->validateCheck($username, $password, $transactionID);
+                $this->processPIResponse($piResponse);
             }
             else
             {
                 $piResponse = $this->pi->validateCheck($username, $password);
+                $this->processPIResponse($piResponse);
             }
         }
 
@@ -356,7 +352,7 @@ class PrivacyIDEAProvider implements IProvider
         $this->session->set("piMode", "otp");
         if ($response->getAuthenticationStatus() === AuthenticationStatus::CHALLENGE)
         {
-            $triggeredTokens = $response->triggeredTokenTypes();
+            $triggeredTokens = $response->getTriggeredTokenTypes();
             if (!empty($response->getPreferredClientMode()))
             {
                 if ($response->getPreferredClientMode() === "interactive")
@@ -379,7 +375,7 @@ class PrivacyIDEAProvider implements IProvider
             $this->session->set("piTransactionID", $response->getTransactionID());
             if (in_array("webauthn", $triggeredTokens))
             {
-                $this->session->set("piWebAuthnSignRequest", $response->webAuthnSignRequest());
+                $this->session->set("piWebAuthnSignRequest", $response->getWebauthnSignRequest());
             }
 
             // Search for the images
@@ -471,7 +467,7 @@ class PrivacyIDEAProvider implements IProvider
      */
     public function isTwoFactorAuthEnabledForUser(IUser $user): bool
     {
-        $piActive = $this->getAppValue('piActivatePI', '');
+        $piActive = $this->getAppValue('piActivatePI', '0');
         $piExcludeIPs = $this->getAppValue('piExcludeIPs', '');
         $piInExGroups = $this->getAppValue('piInExGroupsField', '');
         $piInOrExSelected = $this->getAppValue('piInOrExSelected', 'exclude');
@@ -558,32 +554,6 @@ class PrivacyIDEAProvider implements IProvider
     private function getAppValue(string $key, $default): string
     {
         return $this->appConfig->getValueString('privacyidea', $key, $default);
-    }
-
-    /**
-     * Retrieve the privacyIDEA instance base URL from the app configuration.
-     * In case the stored URL ends with '/validate/check', this suffix is removed.
-     * The returned URL always ends with a slash.
-     *
-     * @return string
-     */
-    private function getBaseUrl(): string
-    {
-        $url = $this->getAppValue('url', '');
-
-        // Remove the "/validate/check" suffix of $url if it exists
-        $suffix = "/validate/check";
-        if (substr($url, -strlen($suffix)) === $suffix)
-        {
-            $url = substr($url, 0, -strlen($suffix));
-        }
-
-        // Ensure that $url ends with a slash
-        if (substr($url, -1) !== "/")
-        {
-            $url .= "/";
-        }
-        return $url;
     }
 
     /**
