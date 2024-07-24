@@ -8,6 +8,7 @@ Util::addScript('privacyidea', 'webauthn');
 Util::addScript('privacyidea', 'pollByReload');
 Util::addScript('privacyidea', 'pollTransaction.worker');
 Util::addScript('privacyidea', 'pollInBrowser');
+Util::addScript('privacyidea', 'autoSubmit');
 Util::addStyle('privacyidea', 'main');
 ?>
 
@@ -31,10 +32,6 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
 
 <!-- FORM -->
 <form method="POST" id="piLoginForm" name="piLoginForm">
-    <?php if (!empty($_['redirect_url'])) : ?>
-        <input type="hidden" name="redirect_url" value="<?php p($_['redirect_url']); ?>">
-    <?php endif; ?>
-
     <?php if (!isset($_['hideOTPField']) || !$_['hideOTPField']) : ?>
         <label>
             <input id="otp" type="password" name="challenge" placeholder="OTP" autocomplete="off" required
@@ -56,6 +53,7 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
                p("otp");
            } ?>"/>
     <input id="modeChanged" type="hidden" name="modeChanged" value="0"/>
+    <input id="activateAutoSubmitOtpLength" type="hidden" name="activateAutoSubmitOtpLength" value="0"/>
     <input id="autoSubmitOtpLength" type="hidden" name="autoSubmitOtpLength"
            value="<?php if (!empty($_['autoSubmitOtpLength'])) : p($_['autoSubmitOtpLength']); endif; ?>"/>
     <input id="webAuthnSignRequest" type="hidden" name="webAuthnSignRequest"
@@ -72,8 +70,8 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
            value="<?php if (isset($_['pollInBrowserUrl'])) : p($_['pollInBrowserUrl']); endif; ?>"/>
     <input id="pollInBrowser" type="hidden" name="pollInBrowser"
            value="<?php if (isset($_['pollInBrowser'])) : p($_['pollInBrowser']); endif; ?>"/>
-    <input id="transactionId" type="hidden" name="transactionId"
-           value="<?php if (isset($_['transactionId'])) : p($_['transactionId']); endif; ?>"/>
+    <input id="transactionID" type="hidden" name="transactionID"
+           value="<?php if (isset($_['transactionID'])) : p($_['transactionID']); endif; ?>"/>
     <input id="errorMessage" type="hidden" name="errorMessage" value="">
     <input id="pollInBrowserFailed" type="hidden" name="pollInBrowserFailed"
            value="<?php if (isset($_['pollInBrowserFailed'])) : p($_['pollInBrowserFailed']); endif; ?>"/>

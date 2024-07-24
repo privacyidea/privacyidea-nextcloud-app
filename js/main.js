@@ -34,6 +34,7 @@ function piFormTemplate()
     }
     if (piGetValue("pushAvailable") !== "1" && piGetValue("webAuthnSignRequest").length < 1)
     {
+        console.log("Disabling alternate login options");
         piDisableElement("alternateLoginOptions");
     }
 }
