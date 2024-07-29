@@ -2,9 +2,9 @@
 declare(strict_types=1);
 use OCP\Util;
 Util::addScript('privacyidea', 'utils');
+Util::addScript('privacyidea', 'pi-webauthn');
 Util::addScript('privacyidea', 'main');
 Util::addScript('privacyidea', 'eventListeners');
-Util::addScript('privacyidea', 'webauthn');
 Util::addScript('privacyidea', 'pollByReload');
 Util::addScript('privacyidea', 'pollTransaction.worker');
 Util::addScript('privacyidea', 'pollInBrowser');

@@ -21,9 +21,6 @@ class Application extends App implements IBootstrap
 
     public function register(IRegistrationContext $context): void
     {
-        /*$context->registerService('settings-admin', function (ContainerInterface $c) {
-            return new Admin();
-        });*/
     }
 
     public function boot(IBootContext $context): void

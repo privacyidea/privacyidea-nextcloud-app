@@ -11,7 +11,7 @@ webpackConfig.entry = {
 	pollByReload: { import: path.join(__dirname, 'js', 'pollByReload.js'), filename: 'pollByReload.js' },
 	pollInBrowser: { import: path.join(__dirname, 'js', 'pollInBrowser.js'), filename: 'pollInBrowser.js' },
 	pollTransactionWorker: { import: path.join(__dirname, 'js', 'pollTransaction.worker.js'), filename: 'pollTransaction.worker.js' },
-	webauthn: { import: path.join(__dirname, 'js', 'webauthn.js'), filename: 'webauthn.js' },
+	webauthn: { import: path.join(__dirname, 'js', 'pi-webauthn.js'), filename: 'pi-webauthn.js' },
 	settingsAdmin: { import: path.join(__dirname, 'js', 'settings-admin.js'), filename: 'settings-admin.js' },
 }
 

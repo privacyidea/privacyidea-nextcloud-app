@@ -1,7 +1,7 @@
 /**
  * Namespace for the WebAuthn api.
  */
-var pi_webauthn = navigator.credentials ? window.pi_webauthn || {} : null;
+var piWebAuthn = navigator.credentials ? window.piWebAuthn || {} : null;
 
 /**
  * WebAuthn wrapper functions for privacyIDEA.
@@ -54,17 +54,17 @@ var pi_webauthn = navigator.credentials ? window.pi_webauthn || {} : null;
      */
     var uint6ToB64 = function(nUint6) {
         return nUint6 < 26 ?
-                nUint6 + 65
+            nUint6 + 65
             : nUint6 < 52 ?
                 nUint6 + 71
-            : nUint6 < 62 ?
-                nUint6 - 4
-            : nUint6 === 62 ?
-                43
-            : nUint6 === 63 ?
-                47
-            :
-                65;
+                : nUint6 < 62 ?
+                    nUint6 - 4
+                    : nUint6 === 62 ?
+                        43
+                        : nUint6 === 63 ?
+                            47
+                            :
+                            65;
     };
 
     /**
@@ -89,9 +89,9 @@ var pi_webauthn = navigator.credentials ? window.pi_webauthn || {} : null;
         var sB64Enc = sBase64.replace(/[^A-Za-z0-9+\/]/g, "");
         var nInLen = sB64Enc.length;
         var nOutLen = nBlockSize ?
-                Math.ceil((nInLen * 3 + 1 >>> 2) / nBlockSize) * nBlockSize
+            Math.ceil((nInLen * 3 + 1 >>> 2) / nBlockSize) * nBlockSize
             :
-                nInLen * 3 + 1 >>> 2;
+            nInLen * 3 + 1 >>> 2;
         var aBytes = new Uint8Array(nOutLen);
 
         for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
@@ -146,9 +146,9 @@ var pi_webauthn = navigator.credentials ? window.pi_webauthn || {} : null;
         }
 
         return eqLen === 0 ?
-                sB64Enc
+            sB64Enc
             :
-                sB64Enc.substring(0, sB64Enc.length - eqLen) + (eqLen === 1 ? "=" : "==");
+            sB64Enc.substring(0, sB64Enc.length - eqLen) + (eqLen === 1 ? "=" : "==");
     };
 
     /**
@@ -203,32 +203,32 @@ var pi_webauthn = navigator.credentials ? window.pi_webauthn || {} : null;
             nPart = aBytes[nIdx];
             sView += String.fromCharCode(
                 nPart > 251 && nPart < 254 && nIdx + 5 < nLen ?
-                        (nPart - 252) * 1073741824 /* << 30 */
-                            + (aBytes[++nIdx] - 128 << 24)
-                            + (aBytes[++nIdx] - 128 << 18)
-                            + (aBytes[++nIdx] - 128 << 12)
-                            + (aBytes[++nIdx] - 128 << 6)
-                            + aBytes[++nIdx] - 128
+                    (nPart - 252) * 1073741824 /* << 30 */
+                    + (aBytes[++nIdx] - 128 << 24)
+                    + (aBytes[++nIdx] - 128 << 18)
+                    + (aBytes[++nIdx] - 128 << 12)
+                    + (aBytes[++nIdx] - 128 << 6)
+                    + aBytes[++nIdx] - 128
                     : nPart > 247 && nPart < 252 && nIdx + 4 < nLen ?
                         (nPart - 248 << 24)
-                            + (aBytes[++nIdx] - 128 << 18)
+                        + (aBytes[++nIdx] - 128 << 18)
+                        + (aBytes[++nIdx] - 128 << 12)
+                        + (aBytes[++nIdx] - 128 << 6)
+                        + aBytes[++nIdx] - 128
+                        : nPart > 239 && nPart < 248 && nIdx + 3 < nLen ?
+                            (nPart - 240 << 18)
                             + (aBytes[++nIdx] - 128 << 12)
                             + (aBytes[++nIdx] - 128 << 6)
                             + aBytes[++nIdx] - 128
-                    : nPart > 239 && nPart < 248 && nIdx + 3 < nLen ?
-                        (nPart - 240 << 18)
-                            + (aBytes[++nIdx] - 128 << 12)
-                            + (aBytes[++nIdx] - 128 << 6)
-                            + aBytes[++nIdx] - 128
-                    : nPart > 223 && nPart < 240 && nIdx + 2 < nLen ?
-                        (nPart - 224 << 12)
-                            + (aBytes[++nIdx] - 128 << 6)
-                            + aBytes[++nIdx] - 128
-                    : nPart > 191 && nPart < 224 && nIdx + 1 < nLen ?
-                        (nPart - 192 << 6)
-                            + aBytes[++nIdx] - 128
-                    :
-                        nPart
+                            : nPart > 223 && nPart < 240 && nIdx + 2 < nLen ?
+                                (nPart - 224 << 12)
+                                + (aBytes[++nIdx] - 128 << 6)
+                                + aBytes[++nIdx] - 128
+                                : nPart > 191 && nPart < 224 && nIdx + 1 < nLen ?
+                                    (nPart - 192 << 6)
+                                    + aBytes[++nIdx] - 128
+                                    :
+                                    nPart
             );
         }
 
@@ -258,17 +258,17 @@ var pi_webauthn = navigator.credentials ? window.pi_webauthn || {} : null;
         for (var nMapIdx = 0; nMapIdx < nStrLen; nMapIdx++) {
             nChr = sDOMStr.charCodeAt(nMapIdx);
             nArrLen += nChr < 0x80 ?
-                    1
+                1
                 : nChr < 0x800 ?
                     2
-                : nChr < 0x10000 ?
-                    3
-                : nChr < 0x200000 ?
-                    4
-                : nChr < 0x4000000 ?
-                    5
-                :
-                    6;
+                    : nChr < 0x10000 ?
+                        3
+                        : nChr < 0x200000 ?
+                            4
+                            : nChr < 0x4000000 ?
+                                5
+                                :
+                                6;
         }
 
         aBytes = new Uint8Array(nArrLen);
@@ -479,4 +479,4 @@ var pi_webauthn = navigator.credentials ? window.pi_webauthn || {} : null;
                 return Promise.resolve(webAuthnSignResponse);
             });
     };
-}).bind(pi_webauthn)(navigator.credentials);
+}).bind(piWebAuthn)(navigator.credentials);
