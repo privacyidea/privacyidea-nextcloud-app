@@ -16,7 +16,7 @@ class PrivacyIDEAAdmin implements IIconSection {
     }
 
     public function getIcon(): string {
-        return $this->urlGenerator->imagePath('core', 'actions/settings-dark.svg');
+        return $this->urlGenerator->imagePath('privacyidea', 'settings-dark.svg');
     }
 
     public function getID(): string {
