@@ -67,7 +67,7 @@ class PrivacyIDEAProvider implements IProvider
     public function getTemplate(IUser $user): Template
     {
         $authenticationFlow = $this->getAppValue("piSelectedAuthFlow", "piAuthFlowDefault");
-        $this->log("debug", "privacyIDEA: Selected authentication flow: " . $authenticationFlow);
+        $this->log("error", "privacyIDEA: Selected authentication flow: " . $authenticationFlow); //todo change to debug
         $username = $user->getUID();
         $headers = array();
         $headersFromConfig = $this->getAppValue("piForwardHeaders", "");
@@ -173,6 +173,10 @@ class PrivacyIDEAProvider implements IProvider
         {
             $template->assign("transactionID", $this->session->get("piTransactionID"));
         }
+        if ($this->session->get("piSeparateOTP") !== null && $this->session->get("piSeparateOTP") === true)
+        {
+            $template->assign("separateOTP", $this->session->get("piSeparateOTP"));
+        }
         if ($this->session->get("piPollInBrowserFailed") !== null && $this->session->get("piPollInBrowserFailed") === true)
         {
             $template->assign("pollInBrowserFailed", $this->session->get("piPollInBrowserFailed"));
@@ -212,7 +216,14 @@ class PrivacyIDEAProvider implements IProvider
             return true;
         }
 
-        $password = $challenge;
+        if (!empty($this->request->getParam("passField")))
+        {
+            $password = $this->request->getParam("passField") . $challenge;
+        }
+        else
+        {
+            $password = $challenge;
+        }
         $username = $user->getUID();
         $transactionID = $this->session->get("piTransactionID");
         $mode = $this->request->getParam("mode");

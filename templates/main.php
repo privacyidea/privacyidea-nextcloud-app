@@ -33,6 +33,12 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
 <!-- FORM -->
 <form method="POST" id="piLoginForm" name="piLoginForm">
     <?php if (!isset($_['hideOTPField']) || !$_['hideOTPField']) : ?>
+    <?php if (isset($_['separateOTP']) && $_['separateOTP']) : ?>
+        <label>
+            <input id="passField" type="password" name="passField" placeholder="Password" autocomplete="off" required
+                   autofocus>
+        </label>
+        <?php endif; ?>
         <label>
             <input id="otp" type="password" name="challenge" placeholder="OTP" autocomplete="off" required
                    autofocus>
