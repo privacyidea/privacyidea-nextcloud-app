@@ -8,7 +8,7 @@
     vertical-align : unset !important;
 }
 
-#otp
+#otp, #passField
 {
     width      : 230px !important;
     text-align : center !important;
