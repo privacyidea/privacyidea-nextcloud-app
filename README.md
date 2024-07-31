@@ -1,4 +1,4 @@
-# privacyIDEA
+# privacyIDEA Nextcloud App
 
 This module adds flexible, enterprise-grade multi-factor authentication to Nextcloud.
 It enables Nextcloud to perform MFA against the privacyIDEA server, that runs in your network.
