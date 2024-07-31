@@ -57,7 +57,7 @@ class PrivacyIDEAProvider implements IProvider
     }
 
     /**
-     * Get the template for rending the 2FA provider view
+     * Get the template for rending the 2FA provider view.
      *
      * @param IUser $user
      * @return Template
@@ -67,6 +67,7 @@ class PrivacyIDEAProvider implements IProvider
     public function getTemplate(IUser $user): Template
     {
         $authenticationFlow = $this->getAppValue("piSelectedAuthFlow", "piAuthFlowDefault");
+        $this->log("debug", "privacyIDEA: Selected authentication flow: " . $authenticationFlow);
         $username = $user->getUID();
         $headers = array();
         $headersFromConfig = $this->getAppValue("piForwardHeaders", "");
@@ -128,7 +129,11 @@ class PrivacyIDEAProvider implements IProvider
         // Set options, tokens and load counter to the template
         $template = new Template("privacyidea", "main");
 
-        if ($this->session->get("piMessage") === null)
+        if (!empty($this->session->get("piMessage")))
+        {
+            $template->assign("message", $this->session->get("piMessage"));
+        }
+        else
         {
             $template->assign("message", $this->getAppValue("piDefaultMessage", "Please enter the OTP!"));
         }
@@ -262,18 +267,17 @@ class PrivacyIDEAProvider implements IProvider
             {
                 $this->log("debug", "Transaction ID: " . $transactionID);
                 $piResponse = $this->pi->validateCheck($username, $password, $transactionID);
-                $this->processPIResponse($piResponse);
             }
             else
             {
                 $piResponse = $this->pi->validateCheck($username, $password);
-                $this->processPIResponse($piResponse);
             }
+            $this->processPIResponse($piResponse);
         }
 
         if (!empty($piResponse->getErrorMessage()))
         {
-            $message = $piResponse->getErrorMessage();
+            throw new TwoFactorException($piResponse->getErrorMessage());
         }
         else
         {
@@ -288,29 +292,29 @@ class PrivacyIDEAProvider implements IProvider
                 {
                     if (!empty($piResponse->getMessages()))
                     {
-                        $message = $piResponse->getMessages();
+                        $this->session->set("piMessage", $piResponse->getMessages());
+                        $this->log("debug", "privacyIDEA:" . $piResponse->getMessages());
                     }
                     else
                     {
-                        $message = $piResponse->getMessage();
+                        $this->session->set("piMessage", $piResponse->getMessage());
                         $this->log("debug", "privacyIDEA:" . $piResponse->getMessage());
                     }
-                    $this->session->set("piMessage", $message);
                 }
             }
             elseif ($mode === "push")
             {
-                $message = $this->session->get("piMessage");
+                $this->log("debug", "privacyIDEA: PUSH not confirmed yet...");
             }
             else
             {
                 // status === false
                 $this->log("error", "privacyIDEA error code: " . $piResponse->getErrorCode());
                 $this->log("error", "privacyIDEA error message: " . $piResponse->getErrorMessage());
-                $message = $this->trans->t("Failed to authenticate.") . " " . $piResponse->getErrorMessage();
+                throw new TwoFactorException($this->trans->t("Failed to authenticate.") . " " . $piResponse->getErrorMessage());
             }
         }
-        throw new TwoFactorException($message);
+        throw new TwoFactorException(" ");
     }
 
     /**
