@@ -344,7 +344,7 @@ class PrivacyIDEAProvider implements IProvider
         $this->log("info", "privacyIDEA: Creating privacyIDEA instance...");
         if (!empty($this->getAppValue("piURL", "")))
         {
-            $pi = new PrivacyIDEA("privacyidea-nextcloud", $this->getAppValue("piURL", ""));
+            $pi = new PrivacyIDEA("privacyidea-nextcloud/1.0.0", $this->getAppValue("piURL", ""));
             $pi->setLogger($this->logger);
             $pi->setSSLVerifyHost($this->getAppValue("piSSLVerify", "true"));
             $pi->setSSLVerifyPeer($this->getAppValue("piSSLVerify", "true"));
