@@ -17,6 +17,7 @@ Util::addStyle('privacyidea', 'main');
     <fieldset class="warning">
         <?php p($_['message']); ?>
     </fieldset>
+    <br>
 <?php endif; ?>
 
 <!-- IMAGES -->
