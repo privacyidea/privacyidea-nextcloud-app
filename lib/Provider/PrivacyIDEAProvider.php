@@ -67,7 +67,7 @@ class PrivacyIDEAProvider implements IProvider
     public function getTemplate(IUser $user): Template
     {
         $authenticationFlow = $this->getAppValue("piSelectedAuthFlow", "piAuthFlowDefault");
-        $this->log("error", "privacyIDEA: Selected authentication flow: " . $authenticationFlow); //todo change to debug
+        $this->log("debug", "privacyIDEA: Selected authentication flow: " . $authenticationFlow);
         $username = $user->getUID();
         $headers = array();
         $headersFromConfig = $this->getAppValue("piForwardHeaders", "");
@@ -84,19 +84,25 @@ class PrivacyIDEAProvider implements IProvider
             }
             else
             {
-                $response = null;
-                try
+                if ($this->session->get("piTriggerChallengeDone") !== true)
                 {
-                    $response = $this->pi->triggerChallenge($username, $headers);
-                }
-                catch (PIBadRequestException $e)
-                {
-                    $this->handlePIException($e);
-                }
-
-                if ($response != null)
-                {
-                    $this->processPIResponse($response);
+                    try
+                    {
+                        $response = $this->pi->triggerChallenge($username, $headers);
+                        $this->session->set("piTriggerChallengeDone", true);
+                        if ($response !== null)
+                        {
+                            $this->processPIResponse($response);
+                        }
+                        else
+                        {
+                            $this->log("error", "privacyIDEA: No response from privacyIDEA server for triggerchallenge.");
+                        }
+                    }
+                    catch (PIBadRequestException $e)
+                    {
+                        $this->handlePIException($e);
+                    }
                 }
             }
         }
@@ -335,6 +341,7 @@ class PrivacyIDEAProvider implements IProvider
      */
     private function createPrivacyIDEAInstance(): ?PrivacyIDEA
     {
+        $this->log("info", "privacyIDEA: Creating privacyIDEA instance...");
         if (!empty($this->getAppValue("piURL", "")))
         {
             $pi = new PrivacyIDEA("privacyidea-nextcloud", $this->getAppValue("piURL", ""));
@@ -364,8 +371,10 @@ class PrivacyIDEAProvider implements IProvider
      */
     private function processPIResponse(PIResponse $response): void
     {
+        $this->log("info", "privacyIDEA: Processing server response...");
         $this->session->set("piMode", "otp");
-        if ($response->getAuthenticationStatus() === AuthenticationStatus::CHALLENGE)
+        $this->log("error", "privacyIDEA: Authentication status: " . $response->getAuthenticationStatus());
+        if (!empty($response->getMultiChallenge()))
         {
             $triggeredTokens = $response->getTriggeredTokenTypes();
             if (!empty($response->getPreferredClientMode()))
