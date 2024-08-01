@@ -5,7 +5,7 @@
 	<name>privacyIDEA</name>
 	<summary>Authentication app to perform MFA against privacyIDEA</summary>
 	<description>lorem ipsum</description>
-	<version>0.1.0</version>
+	<version>1.0.0</version>
 	<licence>agpl</licence>
 	<author mail="lukas.matusiewicz@netknights.it">Lukas Matusiewicz</author>
 	<namespace>PrivacyIDEA</namespace>
