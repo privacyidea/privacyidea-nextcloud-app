@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function ()
     getValue("piInExGroupsField", function (piInExGroupsField)
     {
         $("#piSettings #piInExGroupsField").val(piInExGroupsField);
-        OC.Settings.setupGroupsSelect($('#piSettings #piInExGroupsField'));
+        //OC.Settings.setupGroupsSelect($('#piSettings #piInExGroupsField'));
     });
     document.getElementById("piInExGroupsField").addEventListener("change", function ()
     {
@@ -159,6 +159,7 @@ document.addEventListener("DOMContentLoaded", function ()
         $("#piSettings #piAuthFlowDefault").prop('checked', piSelectedAuthFlow === "piAuthFlowDefault");
         $("#piSettings #piAuthFlowTriggerChallenge").prop('checked', piSelectedAuthFlow === "piAuthFlowTriggerChallenge");
         $("#piSettings #piAuthFlowSeparateOTP").prop('checked', piSelectedAuthFlow === "piAuthFlowSeparateOTP");
+        $("#piSettings #piAuthFlowSendStaticPass").prop('checked', piSelectedAuthFlow === "piAuthFlowSendStaticPass");
     });
     document.getElementById("piAuthFlowDefault").addEventListener("change", function ()
     {

@@ -373,7 +373,7 @@ class PrivacyIDEAProvider implements IProvider
     {
         $this->log("info", "privacyIDEA: Processing server response...");
         $this->session->set("piMode", "otp");
-        $this->log("error", "privacyIDEA: Authentication status: " . $response->getAuthenticationStatus());
+        $this->log("info", "privacyIDEA: Authentication status: " . $response->getAuthenticationStatus());
         if (!empty($response->getMultiChallenge()))
         {
             $triggeredTokens = $response->getTriggeredTokenTypes();
