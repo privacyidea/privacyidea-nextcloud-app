@@ -50,15 +50,6 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
     <?php endif; ?>
 
     <!-- Hidden input that saves the changes -->
-    <input id="mode" type="hidden" name="mode"
-           value="<?php if (isset($_['mode']))
-           {
-               p($_['mode']);
-           }
-           else
-           {
-               p("otp");
-           } ?>"/>
     <input id="modeChanged" type="hidden" name="modeChanged" value="0"/>
     <input id="activateAutoSubmitOtpLength" type="hidden" name="activateAutoSubmitOtpLength" value="0"/>
     <input id="autoSubmitOtpLength" type="hidden" name="autoSubmitOtpLength"
@@ -84,6 +75,15 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
            value="<?php if (isset($_['pollInBrowserFailed'])) : p($_['pollInBrowserFailed']); endif; ?>"/>
     <input id="autoSubmit" type="hidden" name="autoSubmit"
            value="<?php if (isset($_['autoSubmit'])) : p($_['autoSubmit']); endif; ?>"/>
+    <input id="mode" type="hidden" name="mode"
+           value="<?php if (isset($_['mode']))
+           {
+               p($_['mode']);
+           }
+           else
+           {
+               p("otp");
+           } ?>"/>
 
     <!-- ALTERNATE LOGIN OPTIONS -->
     <div id="alternateLoginOptions">
