@@ -43,9 +43,6 @@ class PIResponse
     /* @var string Authentication Status. */
     private string $authenticationStatus = "";
 
-    /* @var array Additional attributes of the user that can be sent by the server. */
-    private array $detailAndAttributes = array();
-
     /* @var string|null If an error occurred, the error code will be set here. */
     private ?string $errorCode;
 
@@ -140,20 +137,6 @@ class PIResponse
         }
         $ret->status = $map['result']['status'] ?: false;
         $ret->value = $map['result']['value'] ?: false;
-
-        // Attributes and detail
-        if (!empty($map['detail']['user']))
-        {
-            $attributes = $map['detail']['user'];
-            $detail = $map['detail'];
-
-            if (isset($attributes['username']))
-            {
-                $attributes['realm'] = $map['detail']['user-realm'] ?: "";
-                $attributes['resolver'] = $map['detail']['user-resolver'] ?: "";
-            }
-            $ret->detailAndAttributes = array("detail" => $detail, "attributes" => $attributes);
-        }
 
         // Add any challenges to multiChallenge
         if (isset($map['detail']['multi_challenge']))
