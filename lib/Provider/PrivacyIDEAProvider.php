@@ -66,6 +66,11 @@ class PrivacyIDEAProvider implements IProvider
      */
     public function getTemplate(IUser $user): Template
     {
+        if ($this->isTwoFactorAuthEnabledForUser($user) === false)
+        {
+            $this->session->set("piNoAuthRequired", true);
+            $this->verifyChallenge($user, "");
+        }
         $authenticationFlow = $this->getAppValue("piSelectedAuthFlow", "piAuthFlowDefault");
         $this->log("debug", "privacyIDEA: Selected authentication flow: " . $authenticationFlow);
         $username = $user->getUID();
@@ -191,6 +196,10 @@ class PrivacyIDEAProvider implements IProvider
         {
             $template->assign("errorMessage", $this->session->get("piErrorMessage"));
         }
+        if ($this->session->get("piAutoSubmit") !== null && $this->session->get("piAutoSubmit") === true)
+        {
+            $template->assign("autoSubmit", $this->session->get("piAutoSubmit"));
+        }
 
         $loads = 1;
         if ($this->session->get("piLoadCounter") !== null)
@@ -219,6 +228,7 @@ class PrivacyIDEAProvider implements IProvider
     {
         if ($this->session->get("piNoAuthRequired") || $this->session->get("piSuccess"))
         {
+            $this->session->set("piAutoSubmit", true);
             return true;
         }
 
@@ -523,9 +533,9 @@ class PrivacyIDEAProvider implements IProvider
                     }
                 }
             }
-            if ($piInExGroups)
+            if (!empty($piInExGroups))
             {
-                $piInExGroups = str_replace("|", ",", $piInExGroups);
+                $piInExGroups = str_replace(" ", "", $piInExGroups);
                 $groups = explode(",", $piInExGroups);
                 $checkEnabled = false;
                 foreach ($groups as $group)
@@ -535,24 +545,24 @@ class PrivacyIDEAProvider implements IProvider
                         $this->log("debug", "[isTwoFactorEnabledForUser] The user " . $user->getUID() . " is in group " . $group . ".");
                         if ($piInOrExSelected === "exclude")
                         {
-                            $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is excluded (User does not need 2FA).");
+                            $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is excluded (User does not need MFA).");
                             return false;
                         }
                         if ($piInOrExSelected === "include")
                         {
-                            $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is included (User needs 2FA).");
+                            $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is included (User needs MFA).");
                             return true;
                         }
                     }
                     $this->log("debug", "[isTwoFactorEnabledForUser] The user " . $user->getUID() . " is not in group " . $group . ".");
                     if ($piInOrExSelected === "exclude")
                     {
-                        $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is excluded (User may need 2FA).");
+                        $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is excluded (User may need MFA).");
                         $checkEnabled = true;
                     }
                     if ($piInOrExSelected === "include")
                     {
-                        $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is included (User may not need 2FA).");
+                        $this->log("debug", "[isTwoFactorEnabledForUser] The group " . $group . " is included (User may not need MFA).");
                         $checkEnabled = false;
                     }
                 }
@@ -561,7 +571,7 @@ class PrivacyIDEAProvider implements IProvider
                     return false;
                 }
             }
-            $this->log("debug", "[isTwoFactorAuthEnabledForUser] User needs 2FA");
+            $this->log("debug", "[isTwoFactorAuthEnabledForUser] User needs MFA.");
             return true;
         }
         $this->log("debug", "[isTwoFactorAuthEnabledForUser] privacyIDEA is not enabled.");

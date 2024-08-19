@@ -98,9 +98,4 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
         <input class="alternateTokenButtons" id="pushButton" name="pushButton" type="button" value="Push"/>
         <input id="otpButton" name="otpButton" type="button" value="OTP"/>
     </div>
-
-    <?php if (isset($_['autoSubmit']) && $_['autoSubmit']): ?>
-        <input type="submit" class="button" value="Login">
-        <br>
-    <?php endif; ?>
 </form>
