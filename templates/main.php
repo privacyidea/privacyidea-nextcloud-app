@@ -51,7 +51,8 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
 
     <!-- Hidden input that saves the changes -->
     <input id="modeChanged" type="hidden" name="modeChanged" value="0"/>
-    <input id="activateAutoSubmitOtpLength" type="hidden" name="activateAutoSubmitOtpLength" value="0"/>
+    <input id="activateAutoSubmitOtpLength" type="hidden" name="activateAutoSubmitOtpLength"
+           value="<?php if (!empty($_['activateAutoSubmitOtpLength'])) : p($_['activateAutoSubmitOtpLength']); endif; ?>"/>
     <input id="autoSubmitOtpLength" type="hidden" name="autoSubmitOtpLength"
            value="<?php if (!empty($_['autoSubmitOtpLength'])) : p($_['autoSubmitOtpLength']); endif; ?>"/>
     <input id="webAuthnSignRequest" type="hidden" name="webAuthnSignRequest"
