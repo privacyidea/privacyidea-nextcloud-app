@@ -242,5 +242,18 @@ Util::addStyle('privacyidea', 'settings-admin');
                 </td>
             </tr>
         </table>
+
+        <h2>Forward headers to privacyIDEA</h2>
+        <table>
+            <tr>
+                <td>
+                    <label for="piForwardHeaders">Headers to forward: </label>
+                    <input id="piForwardHeaders" type="text" width="300px"/>
+                </td>
+                <td>
+                    <em>Set headers which should be forwarded to privacyIDEA.</em>
+                </td>
+            </tr>
+        </table>
     </div>
 </div>

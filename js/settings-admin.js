@@ -279,9 +279,19 @@ document.addEventListener("DOMContentLoaded", function ()
         setValue("piAutoSubmitOtpLength", value);
     });
 
-    // todo add forward headers
-    // todo add default message
+    /* Forward headers */
+    getValue("piForwardHeaders", function (piForwardHeaders)
+    {
+        $("#piSettings #piForwardHeaders").val(piForwardHeaders);
+    });
+    document.getElementById("piForwardHeaders").addEventListener("change", function ()
+    {
+        let value = $("#piSettings #piForwardHeaders").val();
+        setValue("piForwardHeaders", value);
+    });
 
+    // todo add default message
+    // todo add passOnNoUser
     /* Let the user log in if the user is not found in privacyIDEA */
     /*getValue("piPassOnNoUser", function (piPassOnNoUser)
     {

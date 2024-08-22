@@ -2,7 +2,7 @@
 declare(strict_types=1);
 use OCP\Util;
 Util::addScript('privacyidea', 'utils');
-Util::addScript('privacyidea', 'pi-webauthn');
+Util::addScript('privacyidea', 'piWebAuthn');
 Util::addScript('privacyidea', 'main');
 Util::addScript('privacyidea', 'eventListeners');
 Util::addScript('privacyidea', 'pollTransaction.worker');
