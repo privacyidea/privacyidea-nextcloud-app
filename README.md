@@ -6,4 +6,4 @@ Users can authenticate with classic OTP tokens, and Challenge-Response tokens li
 
 ## Installation
 
-Copy the directory ``privacyidea`` to your <nextcloud>/apps/ directory or install the privacyIDEA app via the Nextcloud marketplace.
+Install the privacyIDEA app via the Nextcloud marketplace or copy the directory ``privacyidea`` to your <nextcloud>/apps/ directory.
