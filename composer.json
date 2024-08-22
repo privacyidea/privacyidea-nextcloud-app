@@ -1,12 +1,11 @@
 {
 	"name": "nextcloud/privacyidea",
-	"description": "lorem ipsum",
+	"description": "Authentication app to perform MFA against privacyIDEA",
 	"license": "AGPL-3.0-or-later",
 	"authors": [
 		{
 			"name": "Lukas Matusiewicz",
 			"email": "lukas.matusiewicz@netknights.it",
-			"homepage": ""
 		}
 	],
 	"autoload": {
