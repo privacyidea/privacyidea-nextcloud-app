@@ -4,7 +4,10 @@
 	<id>privacyidea</id>
 	<name>privacyIDEA</name>
 	<summary>Authentication app to perform MFA against privacyIDEA</summary>
-	<description>Supporting OTP, PUSH and WebAuthn tokens.</description>
+	<description>This module adds flexible, enterprise-grade multi-factor authentication to Nextcloud.
+		It enables Nextcloud to perform MFA against the privacyIDEA server, that runs in your network.
+		Users can authenticate with classic OTP tokens, and Challenge-Response tokens like E-Mail,
+		SMS, PUSH, or WebAuthn devices.</description>
 	<version>1.0.0</version>
 	<licence>agpl</licence>
 	<author mail="lukas.matusiewicz@netknights.it">Lukas Matusiewicz</author>
