@@ -242,6 +242,7 @@ Util::addStyle('privacyidea', 'settings-admin');
                 </td>
             </tr>
         </table>
+        <hr>
 
         <h2>Forward headers to privacyIDEA</h2>
         <table>
