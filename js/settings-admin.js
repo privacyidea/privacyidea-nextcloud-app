@@ -241,7 +241,7 @@ document.addEventListener("DOMContentLoaded", function ()
     /* Poll in browser */
     getValue("piPollInBrowser", function (piPollInBrowser)
     {
-        $("#piSettings #piPollInBrowser").prop('checked', piPollInBrowser === "0");
+        $("#piSettings #piPollInBrowser").prop('checked', piPollInBrowser === "1");
     });
     document.getElementById("piPollInBrowser").addEventListener("change", function ()
     {
