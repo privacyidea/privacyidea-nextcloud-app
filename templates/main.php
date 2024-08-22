@@ -5,10 +5,7 @@ Util::addScript('privacyidea', 'utils');
 Util::addScript('privacyidea', 'pi-webauthn');
 Util::addScript('privacyidea', 'main');
 Util::addScript('privacyidea', 'eventListeners');
-Util::addScript('privacyidea', 'pollByReload');
 Util::addScript('privacyidea', 'pollTransaction.worker');
-Util::addScript('privacyidea', 'pollInBrowser');
-Util::addScript('privacyidea', 'autoSubmit');
 Util::addStyle('privacyidea', 'main');
 ?>
 
@@ -65,15 +62,15 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
            value="<?php if (isset($_['otpAvailable'])) : p($_['otpAvailable']); endif; ?>"/>
     <input id="loadCounter" type="hidden" name="loadCounter"
            value="<?php if (isset($_['loadCounter'])) : p($_['loadCounter']); endif; ?>"/>
-    <input id="pollInBrowserUrl" type="hidden" name="pollInBrowserUrl"
-           value="<?php if (isset($_['pollInBrowserUrl'])) : p($_['pollInBrowserUrl']); endif; ?>"/>
     <input id="pollInBrowser" type="hidden" name="pollInBrowser"
            value="<?php if (isset($_['pollInBrowser'])) : p($_['pollInBrowser']); endif; ?>"/>
+    <input id="pollInBrowserUrl" type="hidden" name="pollInBrowserUrl"
+           value="<?php if (isset($_['pollInBrowserUrl'])) : p($_['pollInBrowserUrl']); endif; ?>"/>
+    <input id="pollInBrowserFailed" type="hidden" name="pollInBrowserFailed"
+           value="<?php if (isset($_['pollInBrowserFailed'])) : p($_['pollInBrowserFailed']); endif; ?>"/>
     <input id="transactionID" type="hidden" name="transactionID"
            value="<?php if (isset($_['transactionID'])) : p($_['transactionID']); endif; ?>"/>
     <input id="errorMessage" type="hidden" name="errorMessage" value="">
-    <input id="pollInBrowserFailed" type="hidden" name="pollInBrowserFailed"
-           value="<?php if (isset($_['pollInBrowserFailed'])) : p($_['pollInBrowserFailed']); endif; ?>"/>
     <input id="autoSubmit" type="hidden" name="autoSubmit"
            value="<?php if (isset($_['autoSubmit'])) : p($_['autoSubmit']); endif; ?>"/>
     <input id="mode" type="hidden" name="mode"
