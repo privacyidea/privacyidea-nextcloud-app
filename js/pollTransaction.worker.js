@@ -1,5 +1,8 @@
 let url;
 let params;
+
+console.log("pollTransaction.worker.js loaded");
+
 self.addEventListener('message', function (e)
 {
     let data = e.data;
@@ -15,52 +18,51 @@ self.addEventListener('message', function (e)
         case 'start':
             if (url.length > 0 && params.length > 0)
             {
-                setInterval("pollTransactionInBrowser()", 300);
+                setInterval(function() {
+
+                    const request = new XMLHttpRequest();
+
+                    request.open("GET", url + "?" + params, false);
+
+                    request.onload = (e) =>
+                    {
+                        try
+                        {
+                            if (request.readyState === 4)
+                            {
+                                if (request.status === 200)
+                                {
+                                    const response = JSON.parse(request.response);
+                                    if (response['result']['authentication'] === "ACCEPT")
+                                    {
+                                        self.postMessage({'message': 'Polling in browser: Push message confirmed!', 'status': 'success'});
+                                        self.close();
+                                    }
+                                }
+                                else
+                                {
+                                    self.postMessage({'message': request.statusText, 'status': 'error'});
+                                    self.close();
+                                }
+                            }457088
+                        }
+                        catch (e)
+                        {
+                            self.postMessage({'message': e, 'status': 'error'});
+                            self.close();
+                        }
+                    };
+
+                    request.onerror = (e) =>
+                    {
+                        self.postMessage({'message': request.statusText, 'status': 'error'});
+                        self.close();
+                    };
+
+                    request.send();
+
+                }, 300);
             }
             break;
     }
-})
-
-function pollTransactionInBrowser()
-{
-    const request = new XMLHttpRequest();
-
-    request.open("GET", url + "?" + params, false);
-
-    request.onload = (e) =>
-    {
-        try
-        {
-            if (request.readyState === 4)
-            {
-                if (request.status === 200)
-                {
-                    const response = JSON.parse(request.response);
-                    if (response['result']['authentication'] === "ACCEPT")
-                    {
-                        self.postMessage({'message': 'Polling in browser: Push message confirmed!', 'status': 'success'});
-                        self.close();
-                    }
-                }
-                else
-                {
-                    self.postMessage({'message': request.statusText, 'status': 'error'});
-                    self.close();
-                }
-            }
-        }
-        catch (e)
-        {
-            self.postMessage({'message': e, 'status': 'error'});
-            self.close();
-        }
-    };
-
-    request.onerror = (e) =>
-    {
-        self.postMessage({'message': request.statusText, 'status': 'error'});
-        self.close();
-    };
-
-    request.send();
-}
+});
