@@ -302,43 +302,46 @@ class PrivacyIDEAProvider implements IProvider
             $this->processPIResponse($piResponse);
         }
 
-        if (!empty($piResponse->getErrorMessage()))
+        if ($piResponse !== null)
         {
-            throw new TwoFactorException($piResponse->getErrorMessage());
-        }
-        else
-        {
-            if ($piResponse->getStatus() === true)
+            if (!empty($piResponse->getErrorMessage()))
             {
-                if ($piResponse->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
-                {
-                    $this->log("debug", "privacyIDEA: User authenticated successfully!");
-                    return true;
-                }
-                else
-                {
-                    if (!empty($piResponse->getMessages()))
-                    {
-                        $this->session->set("piMessage", $piResponse->getMessages());
-                        $this->log("debug", "privacyIDEA:" . $piResponse->getMessages());
-                    }
-                    else
-                    {
-                        $this->session->set("piMessage", $piResponse->getMessage());
-                        $this->log("debug", "privacyIDEA:" . $piResponse->getMessage());
-                    }
-                }
-            }
-            elseif ($mode === "push")
-            {
-                $this->log("debug", "privacyIDEA: PUSH not confirmed yet...");
+                throw new TwoFactorException($piResponse->getErrorMessage());
             }
             else
             {
-                // status === false
-                $this->log("error", "privacyIDEA error code: " . $piResponse->getErrorCode());
-                $this->log("error", "privacyIDEA error message: " . $piResponse->getErrorMessage());
-                throw new TwoFactorException($this->trans->t("Failed to authenticate.") . " " . $piResponse->getErrorMessage());
+                if ($piResponse->getStatus() === true)
+                {
+                    if ($piResponse->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
+                    {
+                        $this->log("debug", "privacyIDEA: User authenticated successfully!");
+                        return true;
+                    }
+                    else
+                    {
+                        if (!empty($piResponse->getMessages()))
+                        {
+                            $this->session->set("piMessage", $piResponse->getMessages());
+                            $this->log("debug", "privacyIDEA:" . $piResponse->getMessages());
+                        }
+                        else
+                        {
+                            $this->session->set("piMessage", $piResponse->getMessage());
+                            $this->log("debug", "privacyIDEA:" . $piResponse->getMessage());
+                        }
+                    }
+                }
+                elseif ($mode === "push")
+                {
+                    $this->log("debug", "privacyIDEA: PUSH not confirmed yet...");
+                }
+                else
+                {
+                    // status === false
+                    $this->log("error", "privacyIDEA error code: " . $piResponse->getErrorCode());
+                    $this->log("error", "privacyIDEA error message: " . $piResponse->getErrorMessage());
+                    throw new TwoFactorException($this->trans->t("Failed to authenticate.") . " " . $piResponse->getErrorMessage());
+                }
             }
         }
         throw new TwoFactorException(" ");
