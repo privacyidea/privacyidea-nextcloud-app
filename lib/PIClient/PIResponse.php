@@ -44,10 +44,10 @@ class PIResponse
     private string $authenticationStatus = "";
 
     /* @var string|null If an error occurred, the error code will be set here. */
-    private ?string $errorCode;
+    private ?string $errorCode = null;
 
     /* @var string|null If an error occurred, the error message will be set here. */
-    private ?string $errorMessage;
+    private ?string $errorMessage = null;
 
     /**
      * Create a PIResponse object from the JSON response of the server.
