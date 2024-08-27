@@ -43,11 +43,11 @@ class PIResponse
     /* @var string Authentication Status. */
     private string $authenticationStatus = "";
 
-    /* @var string|null If an error occurred, the error code will be set here. */
-    private ?string $errorCode = null;
+    /* @var string If an error occurred, the error code will be set here. */
+    private string $errorCode = "";
 
-    /* @var string|null If an error occurred, the error message will be set here. */
-    private ?string $errorMessage = null;
+    /* @var string If an error occurred, the error message will be set here. */
+    private string $errorMessage = "";
 
     /**
      * Create a PIResponse object from the JSON response of the server.
@@ -344,18 +344,18 @@ class PIResponse
     }
 
     /**
-     * @return string|null If an error occurred, the error code will be set here.
+     * @return string If an error occurred, the error code will be set here.
      */
-    public function getErrorCode(): ?string
+    public function getErrorCode(): string
     {
-        return $this->errorCode ?? null;
+        return $this->errorCode;
     }
 
     /**
-     * @return string|null If an error occurred, the error message will be set here.
+     * @return string If an error occurred, the error message will be set here.
      */
-    public function getErrorMessage(): ?string
+    public function getErrorMessage(): string
     {
-        return $this->errorMessage ?? null;
+        return $this->errorMessage;
     }
 }
