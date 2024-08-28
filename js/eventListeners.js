@@ -9,7 +9,7 @@ function eventListeners()
     // AUTO SUBMIT BY OTP LENGTH
     if (piGetValue("activateAutoSubmitOtpLength") === "1")
     {
-        document.getElementById("otp").addEventListener("keyup", function()
+        document.getElementById("otp").addEventListener("keyup", function ()
         {
             if (piGetValue('otp').length === parseInt(piGetValue("autoSubmitOtpLength")))
             {

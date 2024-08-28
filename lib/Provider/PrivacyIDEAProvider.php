@@ -72,7 +72,7 @@ class PrivacyIDEAProvider implements IProvider
             $this->verifyChallenge($user, "");
         }
         $authenticationFlow = $this->getAppValue("piSelectedAuthFlow", "piAuthFlowDefault");
-        $this->log("debug", "privacyIDEA: Selected authentication flow: " . $authenticationFlow);
+        $this->log("debug", "Selected authentication flow: " . $authenticationFlow);
         $username = $user->getUID();
         $headers = array();
         $headersFromConfig = $this->getAppValue("piForwardHeaders", "");
@@ -85,7 +85,7 @@ class PrivacyIDEAProvider implements IProvider
         {
             if (!$this->pi->serviceAccountAvailable())
             {
-                $this->log("error", "privacyIDEA: Service account name or password is not set in config. Cannot trigger the challenges.");
+                $this->log("error", "Service account name or password is not set in config. Cannot trigger the challenges.");
             }
             else
             {
@@ -101,7 +101,7 @@ class PrivacyIDEAProvider implements IProvider
                         }
                         else
                         {
-                            $this->log("error", "privacyIDEA: No response from privacyIDEA server for triggerchallenge.");
+                            $this->log("error", "No response from privacyIDEA server for triggerchallenge.");
                         }
                     }
                     catch (PIBadRequestException $e)
@@ -134,7 +134,7 @@ class PrivacyIDEAProvider implements IProvider
         }
         elseif ($authenticationFlow !== "piAuthFlowDefault")
         {
-            $this->log("error", "privacyIDEA: Unknown authentication flow: " . $authenticationFlow . ". Fallback to default.");
+            $this->log("error", "Unknown authentication flow: " . $authenticationFlow . ". Fallback to default.");
         }
 
         // Set options, tokens and load counter to the template
@@ -248,12 +248,12 @@ class PrivacyIDEAProvider implements IProvider
         $piResponse = null;
         if ($this->request->getParam("modeChanged") === "1")
         {
-            throw new TwoFactorException($this->session->get("piMessage"));
+            throw new TwoFactorException(" ");
         }
 
         if ($mode === "push")
         {
-            $this->log("debug", "privacyIDEA: Processing PUSH response...");
+            $this->log("debug", "Processing PUSH response...");
 
             if ($this->pi->pollTransaction($transactionID))
             {
@@ -263,7 +263,7 @@ class PrivacyIDEAProvider implements IProvider
             }
             else
             {
-                $this->log("debug", "privacyIDEA: PUSH not confirmed yet...");
+                $this->log("debug", "PUSH not confirmed yet...");
             }
 
             // Increase load counter
@@ -314,7 +314,7 @@ class PrivacyIDEAProvider implements IProvider
                 {
                     if ($piResponse->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
                     {
-                        $this->log("debug", "privacyIDEA: User authenticated successfully!");
+                        $this->log("debug", "User authenticated successfully!");
                         return true;
                     }
                     else
@@ -322,18 +322,18 @@ class PrivacyIDEAProvider implements IProvider
                         if (!empty($piResponse->getMessages()))
                         {
                             $this->session->set("piMessage", $piResponse->getMessages());
-                            $this->log("debug", "privacyIDEA:" . $piResponse->getMessages());
+                            $this->log("debug", $piResponse->getMessages());
                         }
                         else
                         {
                             $this->session->set("piMessage", $piResponse->getMessage());
-                            $this->log("debug", "privacyIDEA:" . $piResponse->getMessage());
+                            $this->log("debug", $piResponse->getMessage());
                         }
                     }
                 }
                 elseif ($mode === "push")
                 {
-                    $this->log("debug", "privacyIDEA: PUSH not confirmed yet...");
+                    $this->log("debug", "PUSH not confirmed yet...");
                 }
                 else
                 {
@@ -354,7 +354,7 @@ class PrivacyIDEAProvider implements IProvider
      */
     private function createPrivacyIDEAInstance(): ?PrivacyIDEA
     {
-        $this->log("info", "privacyIDEA: Creating privacyIDEA instance...");
+        $this->log("info", "Creating privacyIDEA instance...");
         if (!empty($this->getAppValue("piURL", "")))
         {
             $pi = new PrivacyIDEA("privacyidea-nextcloud/1.0.0", $this->getAppValue("piURL", ""));
@@ -371,7 +371,7 @@ class PrivacyIDEAProvider implements IProvider
         }
         else
         {
-            $this->log("error", "privacyIDEA: Cannot create privacyIDEA instance: Server URL missing in configuration!");
+            $this->log("error", "Cannot create privacyIDEA instance: Server URL missing in configuration!");
         }
         return null;
     }
@@ -384,9 +384,9 @@ class PrivacyIDEAProvider implements IProvider
      */
     private function processPIResponse(PIResponse $response): void
     {
-        $this->log("info", "privacyIDEA: Processing server response...");
+        $this->log("info", "Processing server response...");
         $this->session->set("piMode", "otp");
-        $this->log("info", "privacyIDEA: Authentication status: " . $response->getAuthenticationStatus());
+        $this->log("info", "Authentication status: " . $response->getAuthenticationStatus());
         if (!empty($response->getMultiChallenge()))
         {
             $triggeredTokens = $response->getTriggeredTokenTypes();
@@ -404,7 +404,7 @@ class PrivacyIDEAProvider implements IProvider
                 {
                     $this->session->set("piMode", $response->getPreferredClientMode());
                 }
-                $this->log("debug", "privacyIDEA: Preferred client mode: " . $this->session->get("piMode"));
+                $this->log("debug", "Preferred client mode: " . $this->session->get("piMode"));
             }
             $this->session->set("piPushAvailable", in_array("push", $triggeredTokens));
             $this->session->set("piOTPAvailable", true);
@@ -438,14 +438,19 @@ class PrivacyIDEAProvider implements IProvider
         elseif (!empty($response->getErrorCode()))
         {
             // privacyIDEA returned an error, prepare it to display.
-            $this->log("error", "privacyIDEA: Error code: " . $response->getErrorCode() . ", Error Message: " . $response->getErrorMessage());
+            $this->log("error", "Error code: " . $response->getErrorCode() . ", Error Message: " . $response->getErrorMessage());
             $this->session->set("piErrorCode", $response->getErrorCode());
             $this->session->set("piErrorMessage", $response->getErrorMessage());
+        }
+        elseif ($response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
+        {
+            // The user has been authenticated successfully.
+            $this->log("info", $response->getMessage());
         }
         else
         {
             // Unexpected response
-            $this->log("error", "privacyIDEA: " . $response->getMessage());
+            $this->log("error", $response->getMessage());
             $this->session->set("piErrorMessage", $response->getMessage());
         }
     }

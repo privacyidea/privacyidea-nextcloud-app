@@ -5,19 +5,23 @@ const BASE_URL = '/apps/privacyidea/';
 document.addEventListener("DOMContentLoaded", function ()
 {
     /* Util functions */
-    const getValue = function (key, callback) {
+    const getValue = function (key, callback)
+    {
         $.get(generateUrl(BASE_URL + 'getValue'), {key: key}).done(
-            function (result) {
+            function (result)
+            {
                 callback(result);
             }
         );
     };
-    const setValue = function (key, value) {
+    const setValue = function (key, value)
+    {
         OC.msg.startSaving('#piSettingsMsg');
         $.post(generateUrl(BASE_URL + 'setValue'), {
             key: key,
             value: value
-        }, function (data) {
+        }, function (data)
+        {
             OC.msg.finishedSuccess('#piSettingsMsg', "Saved");
         });
     };
@@ -157,7 +161,8 @@ document.addEventListener("DOMContentLoaded", function ()
     getValue("piSelectedAuthFlow", function (piSelectedAuthFlow)
     {
         $("#piSettings #piAuthFlowDefault").prop('checked', piSelectedAuthFlow === "piAuthFlowDefault");
-        $("#piSettings #piAuthFlowTriggerChallenge").prop('checked', piSelectedAuthFlow === "piAuthFlowTriggerChallenge");
+        $("#piSettings #piAuthFlowTriggerChallenge")
+            .prop('checked', piSelectedAuthFlow === "piAuthFlowTriggerChallenge");
         $("#piSettings #piAuthFlowSeparateOTP").prop('checked', piSelectedAuthFlow === "piAuthFlowSeparateOTP");
         $("#piSettings #piAuthFlowSendStaticPass").prop('checked', piSelectedAuthFlow === "piAuthFlowSendStaticPass");
     });
