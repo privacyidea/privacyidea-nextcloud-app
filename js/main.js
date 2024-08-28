@@ -20,34 +20,29 @@ function piFormTemplate()
     {
         piDisableElement("otp");
         piDisableElement("submitButton");
-        if (piGetValue("mode") === "push")
-        {
-            piDisableElement("pushButton");
-        }
+        piDisableElement("pushButton");
         piEnableElement("otpButton");
-    }
-    if (piGetValue("mode") === "webauthn")
-    {
-        piDisableElement("otp");
-        piDisableElement("submitButton");
-        doWebAuthn();
     }
     if (piGetValue("pushAvailable") !== "1" && piGetValue("webAuthnSignRequest").length < 1)
     {
         console.log("Disabling alternate login options");
         piDisableElement("alternateLoginOptions");
     }
+    if (piGetValue("mode") === "webauthn")
+    {
+        piDisableElement("otp");
+        piDisableElement("submitButton");
+        piEnableElement("otpButton");
+        processWebauthn();
+    }
 }
 
-/**
- * @param mode
- */
-function ensureSecureContextAndMode(mode)
+function ensureSecureContextAndMode()
 {
-    // If mode is push, we have to change it, otherwise the site will refresh while doing webauthn
+    // If mode is push, we have to change it, otherwise the site will refresh while processing webauthn
     if (piGetValue("mode") === "push")
     {
-        piChangeMode(mode);
+        piChangeMode("webauthn");
     }
 
     if (!window.isSecureContext)
@@ -57,25 +52,26 @@ function ensureSecureContextAndMode(mode)
         piChangeMode("otp");
     }
 
-    if (mode === "webauthn")
+    if (piGetValue("mode") === "webauthn")
     {
-        if (typeof piWebAuthn === undefined)
-            {
+        if (typeof piWebauthn === undefined)
+        {
             window.alert("Could not load WebAuthn library. Please try again or use other token!");
             piChangeMode("otp");
         }
     }
 }
 
-function doWebAuthn()
+function processWebauthn()
 {
-    ensureSecureContextAndMode("webauthn");
+    ensureSecureContextAndMode();
 
     const requestStr = piGetValue("webAuthnSignRequest");
-    if (requestStr === null)
+    if (!requestStr)
     {
         window.alert("Could not to process WebAuthn request. Please try again or use other token.");
         piChangeMode("otp");
+        return;
     }
 
     // Set origin
@@ -85,25 +81,29 @@ function doWebAuthn()
             + window.location.hostname
             + (window.location.port ? ':' + window.location.port : '');
     }
-    piSetValue("origin", window.origin);
+    piSetValue("origin", window.origin); // todo check if this is correct (window.location.origin)
 
     try
     {
         const requestJson = JSON.parse(requestStr);
-
-        const webAuthnSignResponse = piWebAuthn.sign(requestJson);
-        webAuthnSignResponse.then(function (webauthnresponse)
+        console.log("WebAuthn sign request in json: " + requestJson);
+        const webAuthnSignResponse = piWebauthn.sign(requestJson);
+        console.log("WebAuthn sign response: " + webAuthnSignResponse);
+        webAuthnSignResponse.then(function (credentials)
         {
-            const response = JSON.stringify(webauthnresponse);
+            const response = JSON.stringify(credentials);
             piSetValue("webAuthnSignResponse", response);
             piSetValue("mode", "webauthn");
             document.forms["piLoginForm"].submit();
+        }).catch(function (error) {
+            console.log("Error while signing WebAuthnSignRequest: ", error);
+            window.alert("Error while signing WebAuthnSignRequest: " + error);
         });
     }
-    catch (err)
+    catch (error)
     {
-        console.log("Error while signing WebAuthnSignRequest: " + err);
-        window.alert("Error while signing WebAuthnSignRequest: " + err);
+        console.log("Error while signing WebAuthnSignRequest: " + error);
+        window.alert("Error while signing WebAuthnSignRequest: " + error);
     }
 }
 
