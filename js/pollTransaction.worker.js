@@ -1,8 +1,6 @@
 let url;
 let params;
 
-console.log("pollTransaction.worker.js loaded");
-
 self.addEventListener('message', function (e)
 {
     let data = e.data;
@@ -44,7 +42,7 @@ self.addEventListener('message', function (e)
                                     self.postMessage({'message': request.statusText, 'status': 'error'});
                                     self.close();
                                 }
-                            }457088
+                            }
                         }
                         catch (e)
                         {

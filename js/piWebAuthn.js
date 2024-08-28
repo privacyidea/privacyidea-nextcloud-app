@@ -1,7 +1,7 @@
 /**
  * Namespace for the WebAuthn api.
  */
-var piWebAuthn = navigator.credentials ? window.piWebAuthn || {} : null;
+const piWebAuthn = navigator.credentials ? window.piWebAuthn || {} : null;
 
 /**
  * WebAuthn wrapper functions for privacyIDEA.
