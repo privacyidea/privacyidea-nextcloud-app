@@ -8,8 +8,8 @@ PrivacyIDEA supports classic OTP tokens, and challenge-response tokens like E-Ma
 
 ## Installation
 
-- privacyIDEA Nextcloud App is available in the Nextcloud App Store. You can install it from the Nextcloud Admin Panel.
-   For more information see the Nextcloud documentation: https://docs.nextcloud.com/server/stable/admin_manual/apps_management.html
+privacyIDEA Nextcloud App is available in the Nextcloud App Store. You can install it from the Nextcloud Admin Panel.
+For more information see the Nextcloud documentation: https://docs.nextcloud.com/server/stable/admin_manual/apps_management.html
 
 ### Manual Installation
 1. Copy the files of this repository to ``<nextcloud>/apps/privacyidea``.

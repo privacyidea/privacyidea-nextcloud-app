@@ -54,7 +54,7 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
     <input id="autoSubmitOtpLength" type="hidden" name="autoSubmitOtpLength"
            value="<?php if (!empty($_['autoSubmitOtpLength'])) : p($_['autoSubmitOtpLength']); endif; ?>"/>
     <input id="webAuthnSignRequest" type="hidden" name="webAuthnSignRequest"
-           value='<?php if (isset($_['webAuthnSignRequest'])) : p($_['webAuthnSignRequest']); endif; ?>'/>
+           value="<?php if (isset($_['webAuthnSignRequest'])) : p($_['webAuthnSignRequest']); endif; ?>"/>
     <input id="webAuthnSignResponse" type="hidden" name="webAuthnSignResponse" value=""/>
     <input id="origin" type="hidden" name="origin" value=""/>
     <input id="pushAvailable" type="hidden" name="pushAvailable"
