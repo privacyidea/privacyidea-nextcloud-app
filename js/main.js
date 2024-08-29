@@ -54,7 +54,7 @@ function ensureSecureContextAndMode()
 
     if (piGetValue("mode") === "webauthn")
     {
-        if (typeof piWebauthn === undefined)
+        if (!window.piWebauthn)
         {
             window.alert("Could not load WebAuthn library. Please try again or use other token!");
             piChangeMode("otp");
@@ -66,8 +66,7 @@ function processWebauthn()
 {
     ensureSecureContextAndMode();
 
-    const requestStr = piGetValue("webAuthnSignRequest");
-    if (!requestStr)
+    if (!piGetValue("webAuthnSignRequest"))
     {
         window.alert("Could not to process WebAuthn request. Please try again or use other token.");
         piChangeMode("otp");
@@ -85,7 +84,7 @@ function processWebauthn()
 
     try
     {
-        const requestJson = JSON.parse(requestStr);
+        const requestJson = JSON.parse(piGetValue("webAuthnSignRequest"));
         console.log("WebAuthn sign request in json: " + requestJson);
         const webAuthnSignResponse = piWebauthn.sign(requestJson);
         console.log("WebAuthn sign response: " + webAuthnSignResponse);
