@@ -154,7 +154,7 @@ class PrivacyIDEAProvider implements IProvider
         }
         if ($this->session->get("piWebAuthnSignRequest") !== null)
         {
-            $template->assign("webAuthnSignRequest", json_encode($this->session->get("piWebAuthnSignRequest")));
+            $template->assign("webAuthnSignRequest", $this->session->get("piWebAuthnSignRequest"));
         }
         if ($this->session->get("piPushAvailable"))
         {
@@ -284,7 +284,7 @@ class PrivacyIDEAProvider implements IProvider
             }
             else
             {
-                $piResponse = $this->pi->validateCheckWebAuthn($username, $transactionID, $webAuthnSignResponse, $origin);
+                $piResponse = $this->pi->validateCheckWebAuthn($username, $transactionID, json_encode($webAuthnSignResponse), $origin);
                 $this->processPIResponse($piResponse);
             }
         }
