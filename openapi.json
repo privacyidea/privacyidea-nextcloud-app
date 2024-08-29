@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "privacyidea",
-        "version": "0.0.1",
+        "version": "1.0.0",
         "description": "Authentication app to perform MFA against privacyIDEA",
         "license": {
             "name": "agpl"
