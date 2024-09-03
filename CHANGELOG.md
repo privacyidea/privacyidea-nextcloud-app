@@ -6,7 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Authentication flows: default, trigger challenges, separate OTP field, send static pass.
+- Authentication flows: Default, Trigger Challenges, Separate OTP Field, Send Static Pass.
 - Forward chosen headers to privacyIDEA server with every request.
+- Support for WebAuthn and PUSH tokens.
 - Auto-submit form after x digits entered to the OTP field.
-- 
+- Polling in browser for PUSH token confirmation.
+- Specify included / excluded groups for privacyIDEA Authentication.
