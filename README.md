@@ -13,5 +13,5 @@ For more information see the Nextcloud documentation: https://docs.nextcloud.com
 
 ### Manual Installation
 1. Copy the files of this repository to ``<nextcloud>/apps/privacyidea``.
-2. Build webpack in the privacyidea directory: ``npm install && npm run build``. Note: Check your node and npm version to fulfill the requirements.
+2. Build webpack in the privacyidea directory: ``npm run build``. Note: Install node and npm first. Check your node and npm version to fulfill the requirements.
 3. In the Nextcloud WebUI go to settings -> apps -> disabled page with "Not enabled" apps by administrator and click "Enable" for the privacyIDEA application.
