@@ -1,9 +1,14 @@
-#h2-pi
+td
+{
+    column-gap: 10px;
+}
+
+#h2
 {
     display : inline-block !important;
 }
 
-#span-pi
+#piSettingsMsg
 {
     float : left !important;
 }
