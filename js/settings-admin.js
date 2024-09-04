@@ -33,8 +33,21 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piActivatePI").addEventListener("change", function ()
     {
-        console.log("pi: Saving privacyIDEA activation");
-        setValue("piActivatePI", $(this).is(":checked") ? "1" : "0");
+        if ($(this).is(":checked"))
+        {
+            if ($("#piSettings #piURL").val().length > 0)
+            {
+                setValue("piActivatePI", "1");
+            }
+            else
+            {
+                OC.msg.finishedError('#piSettingsMsg', "Cannot activate privacyIDEA without server URL provided.");
+            }
+        }
+        else
+        {
+            setValue("piActivatePI", "0");
+        }
     });
 
     /* privacyIDEA instance URL */
@@ -44,7 +57,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piURL").addEventListener("change", function ()
     {
-        console.log("pi: Saving URL");
         let value = $("#piSettings #piURL").val();
         console.log(value);
         setValue("piURL", value);
@@ -69,7 +81,6 @@ document.addEventListener("DOMContentLoaded", function ()
     document.getElementById("piRealm").addEventListener("change", function ()
     {
         // Always save the value
-        console.log("pi: Saving Realm");
         let value = $("#piSettings #piRealm").val();
         console.log(value);
         setValue("piRealm", value);
@@ -82,7 +93,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piExcludeIPs").addEventListener("change", function ()
     {
-        console.log("pi: Saving excluded IPs");
         let value = $("#piSettings #piExcludeIPs").val();
         setValue("piExcludeIPs", value);
     });
@@ -114,7 +124,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piTimeout").addEventListener("change", function ()
     {
-        console.log("pi: Saving Timeout");
         let value = $("#piSettings #piTimeout").val();
         setValue("piTimeout", value);
     });
@@ -148,7 +157,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piInExGroupsField").addEventListener("change", function ()
     {
-        console.log("pi: Saving In/Excluded groups");
         let value = $("#piSettings #piInExGroupsField").val();
         setValue("piInExGroupsField", value);
     });
@@ -202,7 +210,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piServiceName").addEventListener("change", function ()
     {
-        console.log("pi: Saving service account name");
         let value = $("#piSettings #piServiceName").val();
         setValue("piServiceName", value);
     });
@@ -214,7 +221,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piServicePass").addEventListener("change", function ()
     {
-        console.log("pi: Saving service account pass");
         let value = $("#piSettings #piServicePass").val();
         setValue("piServicePass", value);
     });
@@ -226,7 +232,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piServiceRealm").addEventListener("change", function ()
     {
-        console.log("pi: Saving service account realm");
         let value = $("#piSettings #piServiceRealm").val();
         setValue("piServiceRealm", value);
     });
@@ -238,7 +243,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piStaticPass").addEventListener("change", function ()
     {
-        console.log("pi: Saving static pass");
         let value = $("#piSettings #piStaticPass").val();
         setValue("piStaticPass", value);
     });
@@ -259,7 +263,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piPollInBrowserURL").addEventListener("change", function ()
     {
-        console.log("pi: Saving URL for poll in browser");
         let value = $("#piSettings #piPollInBrowserURL").val();
         setValue("piPollInBrowserURL", value);
     });
@@ -279,7 +282,6 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piAutoSubmitOtpLength").addEventListener("change", function ()
     {
-        console.log("pi: Saving OTP length for auto submit function");
         let value = $("#piSettings #piAutoSubmitOtpLength").val();
         setValue("piAutoSubmitOtpLength", value);
     });
