@@ -13,10 +13,9 @@ Util::addStyle('privacyidea', 'settings-admin');
                                          href="https://privacyidea.readthedocs.io"></a></h2>
     </div>
 
-    <span id="piSettingsMsg" class="msg"></span>
-
     <div id="piSettings">
         <h2>Configuration</h2>
+        <span id="piSettingsMsg" class="msg"></span>
         <br>
 
         <h2>Activate multi-factor authentication with privacyIDEA</h2>
@@ -28,7 +27,7 @@ Util::addStyle('privacyidea', 'settings-admin');
                 </td>
                 <td>
                     <em>Before activating the MFA with privacyIDEA, please assure, that the connection to your
-                        privacyIDEA server is configured correctly</em>
+                        privacyIDEA server is configured correctly.</em>
                 </td>
             </tr>
         </table>
@@ -39,8 +38,8 @@ Util::addStyle('privacyidea', 'settings-admin');
         <table>
             <tr>
                 <td>
-                    <label for="piURL">URL of the privacyIDEA server: </label>
                     <input id="piURL" type="text" width="300px"/>
+                    <label for="piURL">URL of the privacyIDEA server</label>
                 </td>
                 <td>
                     <em>Provide the base URL of your privacyIDEA instance.</em>
@@ -60,8 +59,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piRealm">Realm: </label>
                     <input id="piRealm" type="text" width="300px"/>
+                    <label for="piRealm">Realm</label>
                 </td>
                 <td>
                     <em>Provide the realm of your privacyIDEA instance if its differ from default one.</em>
@@ -69,8 +68,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piExcludeIPs">Exclude IP addresses: </label>
                     <input id="piExcludeIPs" type="text" width="300px"/>
+                    <label for="piExcludeIPs">Exclude IP addresses</label>
                 </td>
                 <td>
                     <em>You can either add single IPs like 10.0.1.12,10.0.1.13, a range like 10.0.1.12-10.0.1.113
@@ -98,8 +97,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piTimeout">Timeout: </label>
                     <input id="piTimeout" type="number" min="1" placeholder="Default is 5">
+                    <label for="piTimeout">Timeout</label>
                 </td>
                 <td>
                     <em>Set a server connection timeout in seconds.</em>
@@ -123,8 +122,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piInExGroupsField">Group names: </label>
                     <input id="piInExGroupsField" type="text" width="300px"/>
+                    <label for="piInExGroupsField">Group names</label>
                 </td>
                 <td>
                     <em>Select the group names.</em>
@@ -163,8 +162,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piServiceName">Service name: </label>
                     <input id="piServiceName" type="text" width="300px"/>
+                    <label for="piServiceName">Service name</label>
                 </td>
                 <td>
                     <em>Provide the service account name for the trigger challenge flow.</em>
@@ -172,8 +171,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piServicePass">Service password: </label>
                     <input id="piServicePass" type="password" width="300px"/>
+                    <label for="piServicePass">Service password</label>
                 </td>
                 <td>
                     <em>Provide the service account password for the trigger challenge flow.</em>
@@ -181,8 +180,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piServiceRealm">Service realm: </label>
                     <input id="piServiceRealm" type="text" width="300px"/>
+                    <label for="piServiceRealm">Service realm</label>
                 </td>
                 <td>
                     <em>Provide the service account realm (optional).</em>
@@ -190,8 +189,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piStaticPass">Static password: </label>
                     <input id="piStaticPass" type="password" width="300px"/>
+                    <label for="piStaticPass">Static password</label>
                 </td>
                 <td>
                     <em>Provide the static password for the send static pass flow.</em>
@@ -213,8 +212,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piPollInBrowserURL">URL for poll in browser: </label>
                     <input id="piPollInBrowserURL" type="text" width="300px"/>
+                    <label for="piPollInBrowserURL">URL for poll in browser</label>
                 </td>
             </tr>
         </table>
@@ -234,8 +233,8 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <label for="piAutoSubmitOtpLength">OTP length: </label>
                     <input id="piAutoSubmitOtpLength" type="number" min="1" size="20" placeholder="Default is 6"/>
+                    <label for="piAutoSubmitOtpLength">OTP length</label>
                 </td>
                 <td>
                     <em>Set the expected OTP length.</em>
@@ -248,8 +247,8 @@ Util::addStyle('privacyidea', 'settings-admin');
         <table>
             <tr>
                 <td>
-                    <label for="piForwardHeaders">Headers to forward: </label>
                     <input id="piForwardHeaders" type="text" width="300px"/>
+                    <label for="piForwardHeaders">Headers to forward</label>
                 </td>
                 <td>
                     <em>Set headers which should be forwarded to privacyIDEA.</em>
