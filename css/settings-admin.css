@@ -1,14 +1,11 @@
-td
-{
+td {
     column-gap: 10px;
 }
 
-#h2
-{
-    display : inline-block !important;
+#h2 {
+    display: inline-block !important;
 }
 
-#piSettingsMsg
-{
-    float : left !important;
+#piSettingsMsg {
+    float: left !important;
 }

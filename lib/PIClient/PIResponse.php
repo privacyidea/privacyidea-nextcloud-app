@@ -293,7 +293,6 @@ class PIResponse
         }
     }
 
-
     /**
      * Get the WebAuthn token message if any were triggered.
      * @return string
@@ -309,7 +308,6 @@ class PIResponse
         }
         return "";
     }
-
 
     /**
      * @return array Array of PIChallenge objects representing the triggered token challenges.

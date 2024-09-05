@@ -92,7 +92,8 @@ Util::addStyle('privacyidea', 'settings-admin');
                     <label for="piForwardClientIP">Forward client IP</label>
                 </td>
                 <td>
-                    <em> Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.</em>
+                    <em> Send the "client" parameter to allow using the original IP address in the privacyIDEA
+                        policies.</em>
                 </td>
             </tr>
             <tr>

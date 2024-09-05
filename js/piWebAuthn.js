@@ -9,11 +9,15 @@ window.piWebauthn = piWebauthn;
 /**
  * WebAuthn wrapper functions for privacyIDEA.
  */
-(function(credentials) {
+(function (credentials)
+{
     'use strict';
 
     // Do not proceed if webAuthn is unsupported in this client.
-    if (!this) { return; }
+    if (!this)
+    {
+        return;
+    }
 
     /**
      * Convert a UTF-8 encoded base64 character to a base64 digit.
@@ -28,7 +32,8 @@ window.piWebauthn = piWebauthn;
      *
      * @returns {number} - The base64 digit.
      */
-    var b64ToUint6 = function(nChr) {
+    var b64ToUint6 = function (nChr)
+    {
         return nChr > 64 && nChr < 91
             ? nChr - 65
             : nChr > 96 && nChr < 123
@@ -55,7 +60,8 @@ window.piWebauthn = piWebauthn;
      *
      * @returns {number} - The UTF-8 encoded base64 character.
      */
-    var uint6ToB64 = function(nUint6) {
+    var uint6ToB64 = function (nUint6)
+    {
         return nUint6 < 26 ?
             nUint6 + 65
             : nUint6 < 52 ?
@@ -88,7 +94,8 @@ window.piWebauthn = piWebauthn;
      *
      * @returns {Uint8Array} - The decoded string.
      */
-    var base64DecToArr = function(sBase64, nBlockSize) {
+    var base64DecToArr = function (sBase64, nBlockSize)
+    {
         var sB64Enc = sBase64.replace(/[^A-Za-z0-9+\/]/g, "");
         var nInLen = sB64Enc.length;
         var nOutLen = nBlockSize ?
@@ -97,11 +104,14 @@ window.piWebauthn = piWebauthn;
             nInLen * 3 + 1 >>> 2;
         var aBytes = new Uint8Array(nOutLen);
 
-        for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
+        for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++)
+        {
             nMod4 = nInIdx & 3;
             nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx)) << 18 - 6 * nMod4;
-            if (nMod4 === 3 || nInLen - nInIdx === 1) {
-                for (nMod3 = 0; nMod3 < 3 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
+            if (nMod4 === 3 || nInLen - nInIdx === 1)
+            {
+                for (nMod3 = 0; nMod3 < 3 && nOutIdx < nOutLen; nMod3++, nOutIdx++)
+                {
                     aBytes[nOutIdx] = nUint24 >>> (16 >>> nMod3 & 24) & 255;
                 }
                 nUint24 = 0;
@@ -126,19 +136,25 @@ window.piWebauthn = piWebauthn;
      *
      * @returns {string} - The encoded base64.
      */
-    var base64EncArr = function(bytes) {
+    var base64EncArr = function (bytes)
+    {
         var aBytes = new Uint8Array(bytes)
         var eqLen = (3 - (aBytes.length % 3)) % 3;
         var sB64Enc = "";
 
-        for (var nMod3, nLen = aBytes.length, nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
+        for (var nMod3, nLen = aBytes.length, nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++)
+        {
             nMod3 = nIdx % 3;
 
             // Split the output in lines 76-characters long
-            if (nIdx > 0 && (nIdx * 4 / 3) % 76 === 0) { sB64Enc += "\r\n"; }
+            if (nIdx > 0 && (nIdx * 4 / 3) % 76 === 0)
+            {
+                sB64Enc += "\r\n";
+            }
 
             nUint24 |= aBytes[nIdx] << (16 >>> nMod3 & 24);
-            if (nMod3 === 2 || aBytes.length - nIdx === 1) {
+            if (nMod3 === 2 || aBytes.length - nIdx === 1)
+            {
                 sB64Enc += String.fromCharCode(
                     uint6ToB64(nUint24 >>> 18 & 63),
                     uint6ToB64(nUint24 >>> 12 & 63),
@@ -163,7 +179,8 @@ window.piWebauthn = piWebauthn;
      *
      * @returns {Uint8Array} - The decoded binary.
      */
-    var webAuthnBase64DecToArr = function(sBase64) {
+    var webAuthnBase64DecToArr = function (sBase64)
+    {
         return base64DecToArr(
             sBase64
                 .replace(/-/g, '+')
@@ -180,7 +197,8 @@ window.piWebauthn = piWebauthn;
      *
      * @returns {string} - The encoded base64.
      */
-    var webAuthnBase64EncArr = function(bytes) {
+    var webAuthnBase64EncArr = function (bytes)
+    {
         return base64EncArr(bytes)
             .replace(/\+/g, '-')
             .replace(/\//g, '_')
@@ -199,10 +217,12 @@ window.piWebauthn = piWebauthn;
      *
      * @returns {string} The decoded string.
      */
-    var utf8ArrToStr = function(aBytes) {
+    var utf8ArrToStr = function (aBytes)
+    {
         var sView = "";
 
-        for (var nPart, nLen = aBytes.length, nIdx = 0; nIdx < nLen; nIdx++) {
+        for (var nPart, nLen = aBytes.length, nIdx = 0; nIdx < nLen; nIdx++)
+        {
             nPart = aBytes[nIdx];
             sView += String.fromCharCode(
                 nPart > 251 && nPart < 254 && nIdx + 5 < nLen ?
@@ -248,7 +268,8 @@ window.piWebauthn = piWebauthn;
      *
      * @returns {Uint8Array} - The encoded string.
      */
-    var strToUtf8Arr = function(sDOMStr) {
+    var strToUtf8Arr = function (sDOMStr)
+    {
         var aBytes;
         var nChr;
         var nStrLen = sDOMStr.length;
@@ -258,7 +279,8 @@ window.piWebauthn = piWebauthn;
          * Determine the byte-length of the string when encoded as UTF-8.
          */
 
-        for (var nMapIdx = 0; nMapIdx < nStrLen; nMapIdx++) {
+        for (var nMapIdx = 0; nMapIdx < nStrLen; nMapIdx++)
+        {
             nChr = sDOMStr.charCodeAt(nMapIdx);
             nArrLen += nChr < 0x80 ?
                 1
@@ -280,34 +302,45 @@ window.piWebauthn = piWebauthn;
          * Perform the encoding.
          */
 
-        for (var nIdx = 0, nChrIdx = 0; nIdx < nArrLen; nChrIdx++) {
+        for (var nIdx = 0, nChrIdx = 0; nIdx < nArrLen; nChrIdx++)
+        {
             nChr = sDOMStr.charCodeAt(nChrIdx);
-            if (nChr < 128) {
+            if (nChr < 128)
+            {
                 /* one byte */
                 aBytes[nIdx++] = nChr;
-            } else if (nChr < 0x800) {
+            }
+            else if (nChr < 0x800)
+            {
                 /* two bytes */
                 aBytes[nIdx++] = 192 + (nChr >>> 6);
                 aBytes[nIdx++] = 128 + (nChr & 63);
-            } else if (nChr < 0x10000) {
+            }
+            else if (nChr < 0x10000)
+            {
                 /* three bytes */
                 aBytes[nIdx++] = 224 + (nChr >>> 12);
                 aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
                 aBytes[nIdx++] = 128 + (nChr & 63);
-            } else if (nChr < 0x200000) {
+            }
+            else if (nChr < 0x200000)
+            {
                 /* four bytes */
                 aBytes[nIdx++] = 240 + (nChr >>> 18);
                 aBytes[nIdx++] = 128 + (nChr >>> 12 & 63);
                 aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
                 aBytes[nIdx++] = 128 + (nChr & 63);
-            } else if (nChr < 0x4000000) {
+            }
+            else if (nChr < 0x4000000)
+            {
                 /* five bytes */
                 aBytes[nIdx++] = 248 + (nChr >>> 24);
                 aBytes[nIdx++] = 128 + (nChr >>> 18 & 63);
                 aBytes[nIdx++] = 128 + (nChr >>> 12 & 63);
                 aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
                 aBytes[nIdx++] = 128 + (nChr & 63);
-            } else /* if (nChr <= 0x7fffffff) */ {
+            }
+            else /* if (nChr <= 0x7fffffff) */ {
                 /* six bytes */
                 aBytes[nIdx++] = 252 + (nChr >>> 30);
                 aBytes[nIdx++] = 128 + (nChr >>> 24 & 63);
@@ -353,10 +386,12 @@ window.piWebauthn = piWebauthn;
      * @property {string} [userhandle] - The userHandle as reported by the authenticator.
      * @property {string} [assertionclientextensions] - The assertionClientExtensions, encoded in JSON.
      */
-    this.sign = function (webAuthnSignRequest) {
+    this.sign = function (webAuthnSignRequest)
+    {
         var publicKeyCredentialRequestOptions = {
             challenge: webAuthnBase64DecToArr(webAuthnSignRequest.challenge),
-            allowCredentials: webAuthnSignRequest.allowCredentials.map(function (x) {
+            allowCredentials: webAuthnSignRequest.allowCredentials.map(function (x)
+            {
                 return {
                     id: webAuthnBase64DecToArr(x.id),
                     type: x.type,
@@ -371,8 +406,12 @@ window.piWebauthn = piWebauthn;
         return navigator
             .credentials
             .get({publicKey: publicKeyCredentialRequestOptions})
-            .then(function (assertion) {
-                if (!assertion) { return Promise.reject(); }
+            .then(function (assertion)
+            {
+                if (!assertion)
+                {
+                    return Promise.reject();
+                }
 
                 var webAuthnSignResponse = {
                     credentialid: assertion.id,
@@ -381,11 +420,13 @@ window.piWebauthn = piWebauthn;
                     authenticatordata: webAuthnBase64EncArr(assertion.response.authenticatorData)
                 };
 
-                if (assertion.response.userHandle) {
+                if (assertion.response.userHandle)
+                {
                     webAuthnSignResponse.userhandle = utf8ArrToStr(
                         assertion.response.userHandle);
                 }
-                if (assertion.response.assertionClientExtensions) {
+                if (assertion.response.assertionClientExtensions)
+                {
                     webAuthnSignResponse.assertionclientextensions = webAuthnBase64EncArr(
                         strToUtf8Arr(JSON.stringify(assertion.response.assertionClientExtensions)))
                 }

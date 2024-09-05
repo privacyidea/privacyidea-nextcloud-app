@@ -20,12 +20,7 @@ class Admin implements ISettings
      */
     public function getForm(): TemplateResponse
     {
-        return new TemplateResponse(
-            'privacyidea',
-            'settings-admin',
-            [],
-            ''
-        );
+        return new TemplateResponse('privacyidea', 'settings-admin', [], '');
     }
 
     public function getSection(): string

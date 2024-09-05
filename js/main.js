@@ -94,7 +94,8 @@ function processWebauthn()
             piSetValue("webAuthnSignResponse", response);
             piSetValue("mode", "webauthn");
             document.forms["piLoginForm"].submit();
-        }).catch(function (error) {
+        }).catch(function (error)
+        {
             console.log("Error while signing WebAuthnSignRequest: ", error);
             window.alert("Error while signing WebAuthnSignRequest: " + error);
         });

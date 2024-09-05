@@ -1,40 +1,33 @@
-.tokenImages
-{
-    text-align : center !important;
+.tokenImages {
+    text-align: center !important;
 }
 
-#imgOtp
-{
-    vertical-align : unset !important;
+#imgOtp {
+    vertical-align: unset !important;
 }
 
-#otp, #passField
-{
-    width      : 230px !important;
-    text-align : center !important;
-    margin     : 0 0 5px !important;
+#otp, #passField {
+    width: 230px !important;
+    text-align: center !important;
+    margin: 0 0 5px !important;
 }
 
-#submitButton
-{
-    width      : 251px !important;
-    display    : inline !important;
-    text-align : center !important;
+#submitButton {
+    width: 251px !important;
+    display: inline !important;
+    text-align: center !important;
 }
 
-#alternateLoginOptions
-{
-    margin-top:35px !important;
+#alternateLoginOptions {
+    margin-top: 35px !important;
 }
 
-.alternateTokenButtons
-{
-    width:140px !important;
-    margin:15px 10px 7px !important;
+.alternateTokenButtons {
+    width: 140px !important;
+    margin: 15px 10px 7px !important;
 }
 
-#otpButton
-{
-    width:140px !important;
-    margin:15px 15px 7px !important;
+#otpButton {
+    width: 140px !important;
+    margin: 15px 15px 7px !important;
 }
