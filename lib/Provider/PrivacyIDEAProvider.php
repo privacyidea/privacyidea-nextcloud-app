@@ -53,6 +53,10 @@ class PrivacyIDEAProvider implements IProvider
         $this->groupManager = $groupManager;
         $this->trans = $trans;
         $this->session = $session;
+        if ($this->session->get("piAllowCreatingPIInstance") === true)
+        {
+            $this->pi = $this->createPrivacyIDEAInstance();
+        }
     }
 
     /**
@@ -72,6 +76,7 @@ class PrivacyIDEAProvider implements IProvider
         }
         else
         {
+            $this->session->set("piAllowCreatingPIInstance", true);
             $this->pi = $this->createPrivacyIDEAInstance();
         }
         $authenticationFlow = $this->getAppValue("piSelectedAuthFlow", "piAuthFlowDefault");
