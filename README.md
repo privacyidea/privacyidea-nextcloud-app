@@ -17,8 +17,13 @@ For more information see the Nextcloud documentation: https://docs.nextcloud.com
 3. Build webpack in privacyIDEA app directory: ``npm run build``. 
 4. In the Nextcloud WebUI go to settings -> apps -> disabled page with "Not enabled" apps by administrator and click "Enable" for the privacyIDEA application.
 
-## Protip
+## Protips
 
 You can enable and disable privacyIDEA app using command line. Simply go to your Nextcloud installation directory and run:
 - ``sudo -u www-data php occ app:enable privacyidea``
 - ``sudo -u www-data php occ app:disable privacyidea``
+
+Install node with nvm:
+- If you don't have nvm run: ``sudo apt update``, then: ``curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash``
+- Restart your terminal.
+- Install node: ``nvm install node``
