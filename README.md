@@ -27,3 +27,4 @@ Install node with nvm:
 - If you don't have nvm run: ``sudo apt update``, then: ``curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash``
 - Restart your terminal.
 - Install node: ``nvm install node``
+- To update node to new version: ``nvm install node --reinstall-packeges-from=current``
