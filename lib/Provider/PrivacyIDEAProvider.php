@@ -9,7 +9,7 @@ use OCA\PrivacyIDEA\PIClient\PIResponse;
 use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
 use OCP\Authentication\TwoFactorAuth\IProvider;
 use OCP\Authentication\TwoFactorAuth\TwoFactorException;
-use OCP\IAppConfig;
+use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -20,8 +20,8 @@ use Psr\Log\LoggerInterface;
 
 class PrivacyIDEAProvider implements IProvider
 {
-    /** @var IAppConfig */
-    private IAppConfig $appConfig;
+    /** @var IConfig */
+    private IConfig $config;
     /** @var LoggerInterface */
     private LoggerInterface $logger;
     /** @var IRequest */
@@ -38,16 +38,16 @@ class PrivacyIDEAProvider implements IProvider
     /**
      * PrivacyIDEAProvider constructor.
      *
-     * @param IAppConfig $appConfig
+     * @param IConfig $config
      * @param LoggerInterface $logger
      * @param IRequest $request
      * @param IGroupManager $groupManager
      * @param IL10N $trans
      * @param ISession $session
      */
-    public function __construct(IAppConfig $appConfig, LoggerInterface $logger, IRequest $request, IGroupManager $groupManager, IL10N $trans, ISession $session)
+    public function __construct(IConfig $config, LoggerInterface $logger, IRequest $request, IGroupManager $groupManager, IL10N $trans, ISession $session)
     {
-        $this->appConfig = $appConfig;
+        $this->config = $config;
         $this->logger = $logger;
         $this->request = $request;
         $this->groupManager = $groupManager;
@@ -603,7 +603,7 @@ class PrivacyIDEAProvider implements IProvider
      */
     private function getAppValue(string $key, $default): string
     {
-        return $this->appConfig->getValueString('privacyidea', $key, $default);
+        return $this->config->getAppValue('privacyidea', $key, $default);
     }
 
     /**
