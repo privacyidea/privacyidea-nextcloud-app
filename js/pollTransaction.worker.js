@@ -23,15 +23,18 @@ self.addEventListener('message', function (e)
                         {
                             if (r.ok)
                             {
-                                const response = r.json();
-                                if (response['result']['authentication'] === "ACCEPT")
+                                r.text().then(result =>
                                 {
-                                    self.postMessage({
-                                        'message': 'Polling in browser: Push message confirmed!',
-                                        'status': 'success'
-                                    });
-                                    self.close();
-                                }
+                                    const resultJson = JSON.parse(result);
+                                    if (resultJson['result']['authentication'] === "ACCEPT")
+                                    {
+                                        self.postMessage({
+                                            'message': 'Polling in browser: Push message confirmed!',
+                                            'status': 'success'
+                                        });
+                                        self.close();
+                                    }
+                                });
                             }
                             else
                             {
@@ -45,49 +48,6 @@ self.addEventListener('message', function (e)
                                 self.close();
                             }
                         );
-                    /*const request = new XMLHttpRequest();
-
-                    request.open("GET", url + "?" + params, false);
-
-                    request.onload = (e) =>
-                    {
-                        try
-                        {
-                            if (request.readyState === 4)
-                            {
-                                if (request.status === 200)
-                                {
-                                    const response = JSON.parse(request.response);
-                                    if (response['result']['authentication'] === "ACCEPT")
-                                    {
-                                        self.postMessage({
-                                            'message': 'Polling in browser: Push message confirmed!',
-                                            'status': 'success'
-                                        });
-                                        self.close();
-                                    }
-                                }
-                                else
-                                {
-                                    self.postMessage({'message': request.statusText, 'status': 'error'});
-                                    self.close();
-                                }
-                            }
-                        }
-                        catch (e)
-                        {
-                            self.postMessage({'message': e, 'status': 'error'});
-                            self.close();
-                        }
-                    };
-
-                    request.onerror = (e) =>
-                    {
-                        self.postMessage({'message': request.statusText, 'status': 'error'});
-                        self.close();
-                    };
-
-                    request.send();*/
                 }, 300);
             }
             break;
