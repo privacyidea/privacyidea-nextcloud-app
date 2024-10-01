@@ -18,7 +18,34 @@ self.addEventListener('message', function (e)
             {
                 setInterval(function ()
                 {
-                    const request = new XMLHttpRequest();
+                    fetch(url + "?" + params, {method: 'GET'})
+                        .then(r =>
+                        {
+                            if (r.ok)
+                            {
+                                const response = r.json();
+                                if (response['result']['authentication'] === "ACCEPT")
+                                {
+                                    self.postMessage({
+                                        'message': 'Polling in browser: Push message confirmed!',
+                                        'status': 'success'
+                                    });
+                                    self.close();
+                                }
+                            }
+                            else
+                            {
+                                self.postMessage({'message': r.statusText, 'status': 'error'});
+                                self.close();
+                            }
+                        })
+                        .catch(e =>
+                            {
+                                self.postMessage({'message': e, 'status': 'error'});
+                                self.close();
+                            }
+                        );
+                    /*const request = new XMLHttpRequest();
 
                     request.open("GET", url + "?" + params, false);
 
@@ -60,7 +87,7 @@ self.addEventListener('message', function (e)
                         self.close();
                     };
 
-                    request.send();
+                    request.send();*/
                 }, 300);
             }
             break;
