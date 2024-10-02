@@ -2,9 +2,9 @@
 /*.iml
 
 /vendor/
-/vendor-bin/
 
 /.php-cs-fixer.cache
 /tests/.phpunit.cache
 
 /node_modules/
+/vendor-bin/
