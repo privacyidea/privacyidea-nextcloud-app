@@ -127,16 +127,20 @@ class PrivacyIDEAProvider implements IProvider
             // Call /validate/check with a static pass from the configuration
             // This could already end up the authentication if the "passOnNoToken" policy is set.
             // Otherwise, it triggers the challenges.
-            $response = $this->pi->validateCheck($username, $this->getAppValue("piStaticPass", ""), "", $headers);
-            if ($response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
+            if ($this->session->get("piStaticPassDone") !== true)
             {
-                // Complete the authentication
-                $this->session->set("piSuccess", true);
-                $this->verifyChallenge($user, "");
-            }
-            else
-            {
-                $this->processPIResponse($response);
+                $response = $this->pi->validateCheck($username, $this->getAppValue("piStaticPass", ""), "", $headers);
+                $this->session->set("piStaticPassDone", true);
+                if ($response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT)
+                {
+                    // Complete the authentication
+                    $this->session->set("piSuccess", true);
+                    $this->verifyChallenge($user, "");
+                }
+                else
+                {
+                    $this->processPIResponse($response);
+                }
             }
         }
         elseif ($authenticationFlow === "piAuthFlowSeparateOTP")
