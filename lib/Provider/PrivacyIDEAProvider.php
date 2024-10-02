@@ -91,30 +91,33 @@ class PrivacyIDEAProvider implements IProvider
 
         if ($authenticationFlow === "piAuthFlowTriggerChallenge")
         {
-            if (!$this->pi->serviceAccountAvailable())
+            if (!empty($this->pi))
             {
-                $this->log("error", "Service account name or password is not set in config. Cannot trigger the challenges.");
-            }
-            else
-            {
-                if ($this->session->get("piTriggerChallengeDone") !== true)
+                if (!$this->pi->serviceAccountAvailable())
                 {
-                    try
+                    $this->log("error", "Service account name or password is not set in config. Cannot trigger the challenges.");
+                }
+                else
+                {
+                    if ($this->session->get("piTriggerChallengeDone") !== true)
                     {
-                        $response = $this->pi->triggerChallenge($username, $headers);
-                        $this->session->set("piTriggerChallengeDone", true);
-                        if ($response !== null)
+                        try
                         {
-                            $this->processPIResponse($response);
+                            $response = $this->pi->triggerChallenge($username, $headers);
+                            $this->session->set("piTriggerChallengeDone", true);
+                            if ($response !== null)
+                            {
+                                $this->processPIResponse($response);
+                            }
+                            else
+                            {
+                                $this->log("error", "No response from privacyIDEA server for triggerchallenge.");
+                            }
                         }
-                        else
+                        catch (PIBadRequestException $e)
                         {
-                            $this->log("error", "No response from privacyIDEA server for triggerchallenge.");
+                            $this->handlePIException($e);
                         }
-                    }
-                    catch (PIBadRequestException $e)
-                    {
-                        $this->handlePIException($e);
                     }
                 }
             }
