@@ -374,14 +374,18 @@ class PrivacyIDEAProvider implements IProvider
         {
             $pi = new PrivacyIDEA("privacyidea-nextcloud/1.0.0", $this->getAppValue("piURL", ""));
             $pi->setLogger($this->logger);
-            $pi->setSSLVerifyHost($this->getAppValue("piSSLVerify", "true"));
-            $pi->setSSLVerifyPeer($this->getAppValue("piSSLVerify", "true"));
+            $pi->setSSLVerifyHost($this->getAppValue("piSSLVerify", true));
+            $pi->setSSLVerifyPeer($this->getAppValue("piSSLVerify", true));
             $pi->setServiceAccountName($this->getAppValue("piServiceName", ""));
             $pi->setServiceAccountPass($this->getAppValue("piServicePass", ""));
             $pi->setServiceAccountRealm($this->getAppValue("piServiceRealm", ""));
             $pi->setRealm($this->getAppValue("piRealm", ""));
-            $pi->setForwardClientIP($this->getAppValue("piForwardClientIP", false));
             $pi->setNoProxy($this->getAppValue("piNoProxy", false));
+            if ($this->getAppValue("piForwardClientIP", false) && !empty($this->getClientIP()))
+            {
+                $pi->setForwardClientIP($this->getAppValue("piForwardClientIP", false));
+                $pi->setClientIP($this->getClientIP());
+            }
             return $pi;
         }
         else
@@ -616,23 +620,20 @@ class PrivacyIDEAProvider implements IProvider
     /**
      * Get the client IP address.
      *
-     * @return mixed|string
+     * @return string Client IP address or an empty string.
      */
-    public function getClientIP(): mixed
+    public function getClientIP(): string
     {
-        if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER))
+        $clientIP = $this->request->getRemoteAddress();
+        if (!empty($clientIP))
         {
-            return $_SERVER["HTTP_X_FORWARDED_FOR"];
+            return $clientIP;
         }
-        else if (array_key_exists('REMOTE_ADDR', $_SERVER))
+        else
         {
-            return $_SERVER["REMOTE_ADDR"];
+            $this->log("error", "Cannot get client IP address.");
+            return "";
         }
-        else if (array_key_exists('HTTP_CLIENT_IP', $_SERVER))
-        {
-            return $_SERVER["HTTP_CLIENT_IP"];
-        }
-        return '';
     }
 
     /**
