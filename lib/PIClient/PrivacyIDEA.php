@@ -59,6 +59,9 @@ class PrivacyIDEA
     /* @var bool Send the "client" parameter to allow using the original IP address in the privacyIDEA policies. */
     private bool $forwardClientIP = false;
 
+    /* @var string Client IP address. */
+    private string $clientIP = "";
+
     /* @var string Timeout for the request. */
     private string $timeout = "5";
 
@@ -363,20 +366,11 @@ class PrivacyIDEA
         assert('string' === gettype($httpMethod));
         assert('string' === gettype($endpoint));
 
-        // Add the client parameter if wished.
+        // Add the client parameter if forwarded.
         if ($this->forwardClientIP === true)
         {
-            $serverHeaders = $_SERVER;
-            foreach (array("X-Forwarded-For", "HTTP_X_FORWARDED_FOR", "REMOTE_ADDR") as $clientKey)
-            {
-                if (array_key_exists($clientKey, $serverHeaders))
-                {
-                    $clientIP = $serverHeaders[$clientKey];
-                    $this->log("debug", "Forwarding Client IP: " . $clientKey . ": " . $clientIP);
-                    $params['client'] = $clientIP;
-                    break;
-                }
-            }
+            $params['client'] = $this->clientIP;
+            $this->log("debug", "Forwarding Client IP: " . $this->clientIP);
         }
 
         // Ignore proxy settings if wished.
@@ -560,6 +554,14 @@ class PrivacyIDEA
     public function setForwardClientIP(bool $forwardClientIP): void
     {
         $this->forwardClientIP = $forwardClientIP;
+    }
+
+    /**
+     * @param string $clientIP Client IP address.
+     */
+    public function setClientIP(string $clientIP): void
+    {
+        $this->clientIP = $clientIP;
     }
 
     /**
