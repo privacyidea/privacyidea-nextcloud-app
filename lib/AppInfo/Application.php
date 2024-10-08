@@ -11,15 +11,19 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 class Application extends App implements IBootstrap
 {
-    public const APP_ID = 'privacyidea';
+	public const APP_ID = 'privacyidea';
 
-    /** @psalm-suppress PossiblyUnusedMethod */
-    public function __construct()
-    {
-        parent::__construct(self::APP_ID);
-    }
+	/** @psalm-suppress PossiblyUnusedMethod */
+	public function __construct()
+	{
+		parent::__construct(self::APP_ID);
+	}
 
-    public function register(IRegistrationContext $context): void {}
+	public function register(IRegistrationContext $context): void
+	{
+	}
 
-    public function boot(IBootContext $context): void {}
+	public function boot(IBootContext $context): void
+	{
+	}
 }
