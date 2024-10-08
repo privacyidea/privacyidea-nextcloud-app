@@ -56,11 +56,8 @@ class PrivacyIDEA
     /* @var string Realm for privacyIDEA service account. Optional to use the /validate/triggerchallenge endpoint. */
     private string $serviceAccountRealm = "";
 
-    /* @var bool Send the "client" parameter to allow using the original IP address in the privacyIDEA policies. */
-    private bool $forwardClientIP = false;
-
-    /* @var string Client IP address. */
-    private string $clientIP = "";
+    /* @var string Send the "client" parameter to allow using the original IP address in the privacyIDEA policies. */
+    private string $forwardClientIP = "";
 
     /* @var string Timeout for the request. */
     private string $timeout = "5";
@@ -367,10 +364,10 @@ class PrivacyIDEA
         assert('string' === gettype($endpoint));
 
         // Add the client parameter if forwarded.
-        if ($this->forwardClientIP === true)
+        if (!empty($this->forwardClientIP))
         {
-            $params['client'] = $this->clientIP;
-            $this->log("debug", "Forwarding Client IP: " . $this->clientIP);
+            $params['client'] = $this->forwardClientIP;
+            $this->log("debug", "Forwarding Client IP: " . $this->forwardClientIP);
         }
 
         // Ignore proxy settings if wished.
@@ -548,20 +545,12 @@ class PrivacyIDEA
     }
 
     /**
-     * @param bool $forwardClientIP Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.
+     * @param bool $clientIP Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.
      * @return void
      */
-    public function setForwardClientIP(bool $forwardClientIP): void
+    public function setForwardClientIP(bool $clientIP): void
     {
-        $this->forwardClientIP = $forwardClientIP;
-    }
-
-    /**
-     * @param string $clientIP Client IP address.
-     */
-    public function setClientIP(string $clientIP): void
-    {
-        $this->clientIP = $clientIP;
+        $this->forwardClientIP = $clientIP;
     }
 
     /**
