@@ -383,8 +383,7 @@ class PrivacyIDEAProvider implements IProvider
             $pi->setNoProxy($this->getAppValue("piNoProxy", false));
             if ($this->getAppValue("piForwardClientIP", false) && !empty($this->getClientIP()))
             {
-                $pi->setForwardClientIP($this->getAppValue("piForwardClientIP", false));
-                $pi->setClientIP($this->getClientIP());
+                $pi->setForwardClientIP($this->getClientIP());
             }
             return $pi;
         }
