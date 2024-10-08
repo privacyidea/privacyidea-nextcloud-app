@@ -8,3 +8,4 @@
 /tests/.phpunit.cache
 
 /node_modules/
+composer.lock
