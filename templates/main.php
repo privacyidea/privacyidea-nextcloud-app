@@ -19,13 +19,13 @@ Util::addStyle('privacyidea', 'main');
 <?php endif; ?>
 
 <!-- IMAGES -->
-<?php if (!empty($_['imgWebauthn']) && $_['mode'] === "webauthn") : ?>
+<?php if (!empty($_['imgWebauthn']) && $_['mode'] === 'webauthn') : ?>
     <img class="tokenImages" src="<?php p($_['imgWebauthn']); ?>" alt="WebAuthn image"><br><br>
 <?php endif;
-if (!empty($_['imgPush']) && $_['mode'] === "push") : ?>
+if (!empty($_['imgPush']) && $_['mode'] === 'push') : ?>
     <img class="tokenImages" src="<?php p($_['imgPush']); ?>" alt="Push image"><br><br>
 <?php endif;
-if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
+if (!empty($_['imgOTP']) && $_['mode'] === 'otp') : ?>
     <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOTP']); ?>" alt="OTP image"><br><br>
 <?php endif;?>
 
@@ -75,13 +75,10 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
     <input id="autoSubmit" type="hidden" name="autoSubmit"
            value="<?php if (isset($_['autoSubmit'])) : p($_['autoSubmit']); endif; ?>"/>
     <input id="mode" type="hidden" name="mode"
-           value="<?php if (isset($_['mode']))
-           {
-               p($_['mode']);
-           }
-           else
-           {
-               p("otp");
+           value="<?php if (isset($_['mode'])) {
+           	p($_['mode']);
+           } else {
+           	p('otp');
            } ?>"/>
 
     <!-- ALTERNATE LOGIN OPTIONS -->
