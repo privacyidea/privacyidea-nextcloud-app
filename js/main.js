@@ -80,7 +80,7 @@ function processWebauthn()
             + window.location.hostname
             + (window.location.port ? ':' + window.location.port : '');
     }
-    piSetValue("origin", window.origin); // todo check if this is correct (window.location.origin)
+    piSetValue("origin", window.origin);
 
     try
     {

@@ -16,27 +16,27 @@ namespace OCA\PrivacyIDEA\PIClient;
 
 class PIChallenge
 {
-    /* @var string Type of token this challenge is for. */
-    public string $type = "";
+	/* @var string Type of token this challenge is for. */
+	public string $type = '';
 
-    /* @var string Message extracted from this challenge. */
-    public string $message = "";
+	/* @var string Message extracted from this challenge. */
+	public string $message = '';
 
-    /* @var string Image data extracted from this challenge. */
-    public string $image = "";
+	/* @var string Image data extracted from this challenge. */
+	public string $image = '';
 
-    /* @var string TransactionId to reference this challenge in later requests. */
-    public string $transactionID = "";
+	/* @var string TransactionId to reference this challenge in later requests. */
+	public string $transactionID = '';
 
-    /* @var string Client mode in which the challenge should be processed. */
-    public string $clientMode = "";
+	/* @var string Client mode in which the challenge should be processed. */
+	public string $clientMode = '';
 
-    /* @var string Serial of token this challenge is for. */
-    public string $serial = "";
+	/* @var string Serial of token this challenge is for. */
+	public string $serial = '';
 
-    /* @var array Arbitrary attributes that can be appended to the challenge by the server. */
-    public array $attributes = array();
+	/* @var array Arbitrary attributes that can be appended to the challenge by the server. */
+	public array $attributes = [];
 
-    /* @var string WebAuthn sign request in JSON format */
-    public string $webAuthnSignRequest = "";
+	/* @var string WebAuthn sign request in JSON format */
+	public string $webAuthnSignRequest = '';
 }
