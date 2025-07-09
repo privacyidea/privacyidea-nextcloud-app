@@ -150,11 +150,14 @@ class PrivacyIDEAProvider implements IProvider
 		}
 		if ($this->session->get('piImgPush') !== null) {
 			$template->assign('imgPush', $this->session->get('piImgPush'));
-		}
-		if ($this->session->get('piImgOTP') !== null) {
-			$template->assign('imgOTP', $this->session->get('piImgOTP'));
-		}
-		$template->assign('activateAutoSubmitOtpLength', $this->getAppValue('piActivateAutoSubmitOtpLength', '0'));
+        }
+        if ($this->session->get('piImgOTP') !== null) {
+            $template->assign('imgOTP', $this->session->get('piImgOTP'));
+        }
+        if ($this->session->get('piEnrollmentLink') !== null) {
+            $template->assign('enrollmentLink', $this->session->get('piEnrollmentLink'));
+        }
+        $template->assign('activateAutoSubmitOtpLength', $this->getAppValue('piActivateAutoSubmitOtpLength', '0'));
 		$template->assign('autoSubmitOtpLength', $this->getAppValue('piAutoSubmitOtpLength', '6'));
 		$template->assign('pollInBrowser', $this->getAppValue('piPollInBrowser', '0'));
 		$template->assign('pollInBrowserUrl', $this->getAppValue('piPollInBrowserURL', ''));
@@ -343,7 +346,7 @@ class PrivacyIDEAProvider implements IProvider
 				$this->session->set('piWebAuthnSignRequest', $response->getWebauthnSignRequest());
 			}
 
-			// Search for the images
+			// Search for the images & enrollment link
 			foreach ($response->getMultiChallenge() as $challenge) {
 				if (!empty($challenge->image)) {
 					if (!empty($challenge->clientMode) && $challenge->clientMode === 'interactive') {
@@ -354,6 +357,9 @@ class PrivacyIDEAProvider implements IProvider
 						$this->session->set('piImageWebAuthn', $challenge->image);
 					}
 				}
+                if (!empty($challenge->enrollmentLink)) {
+                    $this->session->set('piEnrollmentLink', $challenge->enrollmentLink);
+                }
 			}
 		} elseif (!empty($response->getErrorCode())) {
 			// privacyIDEA returned an error, prepare it to display.
