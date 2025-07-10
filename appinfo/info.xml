@@ -19,7 +19,7 @@
     <namespace>PrivacyIDEA</namespace>
     <category>security</category>
     <dependencies>
-        <nextcloud min-version="29" max-version="30"/>
+        <nextcloud min-version="29" max-version="31"/>
     </dependencies>
     <two-factor-providers>
         <provider>OCA\PrivacyIDEA\Provider\PrivacyIDEAProvider</provider>
