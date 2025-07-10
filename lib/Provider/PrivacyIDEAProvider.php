@@ -357,9 +357,9 @@ class PrivacyIDEAProvider implements IProvider
 						$this->session->set('piImageWebAuthn', $challenge->image);
 					}
 				}
-                if (!empty($challenge->enrollmentLink)) {
-                    $this->session->set('piEnrollmentLink', $challenge->enrollmentLink);
-                }
+				if (!empty($challenge->enrollmentLink)) {
+					$this->session->set('piEnrollmentLink', $challenge->enrollmentLink);
+				}
 			}
 		} elseif (!empty($response->getErrorCode())) {
 			// privacyIDEA returned an error, prepare it to display.
