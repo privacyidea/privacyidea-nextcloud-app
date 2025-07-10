@@ -29,7 +29,7 @@ if (!empty($_['imgOTP']) && $_['mode'] === 'otp') : ?>
     <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOTP']); ?>" alt="OTP image"><br><br>
 <?php endif;?>
 <?php if (!empty($_['enrollmentLink'])) : ?>
-    <a id="enrollmentLink" href="<?php p($_['enrollmentLink']); ?>">Enrollment Link</a>
+    <a id="enrollmentLink" href="<?php p($_['enrollmentLink']); ?>" target="_blank" rel="noopener noreferrer">Enrollment Link</a>
 <?php endif;?>
 
 <!-- FORM -->
