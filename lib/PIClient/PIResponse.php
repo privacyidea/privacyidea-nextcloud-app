@@ -130,9 +130,9 @@ class PIResponse
 				if (isset($challenge['image'])) {
 					$tmp->image = $challenge['image'];
 				}
-                if (isset($challenge['link'])) {
-                    $tmp->enrollmentLink = $challenge['link'];
-                }
+				if (isset($challenge['link'])) {
+					$tmp->enrollmentLink = $challenge['link'];
+				}
 				if (isset($challenge['attributes'])) {
 					$tmp->attributes = $challenge['attributes'];
 				}
