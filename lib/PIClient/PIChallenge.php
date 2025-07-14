@@ -25,6 +25,9 @@ class PIChallenge
 	/* @var string Image data extracted from this challenge. */
 	public string $image = '';
 
+    /* @var string Enrollment link if available. */
+    public string $enrollmentLink = '';
+
 	/* @var string TransactionId to reference this challenge in later requests. */
 	public string $transactionID = '';
 

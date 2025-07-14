@@ -18,7 +18,7 @@ Util::addStyle('privacyidea', 'main');
     <br>
 <?php endif; ?>
 
-<!-- IMAGES -->
+<!-- IMAGES & ENROLLMENT LINK -->
 <?php if (!empty($_['imgWebauthn']) && $_['mode'] === 'webauthn') : ?>
     <img class="tokenImages" src="<?php p($_['imgWebauthn']); ?>" alt="WebAuthn image"><br><br>
 <?php endif;
@@ -28,23 +28,23 @@ if (!empty($_['imgPush']) && $_['mode'] === 'push') : ?>
 if (!empty($_['imgOTP']) && $_['mode'] === 'otp') : ?>
     <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOTP']); ?>" alt="OTP image"><br><br>
 <?php endif;?>
+<?php if (!empty($_['enrollmentLink'])) : ?>
+    <a id="enrollmentLink" href="<?php p($_['enrollmentLink']); ?>" target="_blank" rel="noopener noreferrer">Enrollment Link</a>
+<?php endif;?>
 
 <!-- FORM -->
 <form method="POST" id="piLoginForm" name="piLoginForm">
     <?php if (!isset($_['hideOTPField']) || !$_['hideOTPField']) : ?>
     <?php if (isset($_['separateOTP']) && $_['separateOTP']) : ?>
         <label>
-            <input id="passField" type="password" name="passField" placeholder="Password" autocomplete="off" required
-                   autofocus>
+            <input id="passField" type="password" name="passField" placeholder="Password" autocomplete="off" required autofocus>
         </label>
         <?php endif; ?>
         <label>
-            <input id="otp" type="password" name="challenge" placeholder="OTP" autocomplete="off" required
-                   autofocus>
+            <input id="otp" type="password" name="challenge" placeholder="OTP" autocomplete="off" required autofocus>
         </label>
         <br>
-        <input id="submitButton" type="submit" class="button"
-               value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
+        <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
     <?php endif; ?>
 
     <!-- Hidden input that saves the changes -->
