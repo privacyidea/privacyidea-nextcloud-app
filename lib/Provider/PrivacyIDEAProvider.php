@@ -68,12 +68,12 @@ class PrivacyIDEAProvider implements IProvider
 	 */
 	public function getTemplate(IUser $user): Template
 	{
-		if ($this->isTwoFactorAuthEnabledForUser($user) === false) {
-			$this->session->set('piNoAuthRequired', true);
-			$this->verifyChallenge($user, '');
+		if ($this->isTwoFactorAuthEnabledForUser($user)) {
+            $this->session->set('piAllowCreatingPIInstance', true);
+            $this->pi = $this->createPrivacyIDEAInstance();
 		} else {
-			$this->session->set('piAllowCreatingPIInstance', true);
-			$this->pi = $this->createPrivacyIDEAInstance();
+            $this->session->set('piNoAuthRequired', true);
+            $this->verifyChallenge($user, '');
 		}
 		$authenticationFlow = $this->getAppValue('piSelectedAuthFlow', 'piAuthFlowDefault');
 		$this->log('debug', 'Selected authentication flow: ' . $authenticationFlow);
