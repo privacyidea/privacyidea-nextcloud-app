@@ -22,6 +22,9 @@ class PIResponse
 	/* @var string Message from the response. Should be shown to the user. */
 	private string $message = '';
 
+    /* @var string Token's serial. */
+    private string $serial = '';
+
 	/* @var string Transaction ID is used to reference the challenges contained in this response in later requests. */
 	private string $transactionID = '';
 
@@ -42,6 +45,15 @@ class PIResponse
 
 	/* @var string Authentication Status. */
 	private string $authenticationStatus = '';
+
+    /* @var string Passkey challenge in JSON string. */
+    private string $passkeyChallenge = '';
+
+    /* @var string Passkey registration. */
+    private string $passkeyRegistration = '';
+
+    /* @var string Username returned from the privacyIDEA server. */
+    private string $username = '';
 
 	/* @var string If an error occurred, the error code will be set here. */
 	private string $errorCode = '';
@@ -86,6 +98,12 @@ class PIResponse
 		if (isset($map['detail']['message'])) {
 			$ret->message = $map['detail']['message'];
 		}
+        if (isset($map['detail']['username'])) {
+            $ret->username = $map['detail']['username'];
+        }
+        if (isset($map['detail']['serial'])) {
+            $ret->serial = $map['detail']['serial'];
+        }
 		if (isset($map['detail']['transaction_id'])) {
 			$ret->transactionID = $map['detail']['transaction_id'];
 		}
@@ -99,6 +117,14 @@ class PIResponse
 				$ret->preferredClientMode = $map['detail']['preferred_client_mode'];
 			}
 		}
+        if (!empty($map['detail']['passkey'])) {
+            $ret->passkeyChallenge = $map['detail']['passkey'];
+            // The passkey challenge can contain a transaction ID, use that if none was set prior.
+            // This happens if the passkey challenge was requested via /validate/initialize.
+            if (empty($ret->transactionID)) {
+                $ret->transactionID = $map['detail']['passkey']['transaction_id'];
+            }
+        }
 
 		// Check if the authentication status is legit
 		$r = null;
@@ -139,11 +165,13 @@ class PIResponse
 				if (isset($challenge['client_mode'])) {
 					$tmp->clientMode = $challenge['client_mode'];
 				}
-
 				if ($tmp->type === 'webauthn') {
 					$t = $challenge['attributes']['webAuthnSignRequest'];
 					$tmp->webAuthnSignRequest = json_encode($t);
 				}
+                if (!empty($challenge['passkeyRegistration'])) { //todo check if this shouldn't be in challenge->attributes
+                    $ret->passkeyRegistration = $tmp->passkeyRegistration;
+                }
 
 				$ret->multiChallenge[] = $tmp;
 			}
@@ -194,6 +222,42 @@ class PIResponse
 		return '';
 	}
 
+    /**
+     * Get the Passkey message if any were triggered..
+     * @return string
+     */
+    public function getPasskeyMessage(): string
+    {
+        foreach ($this->multiChallenge as $challenge) {
+            if ($challenge->type === 'passkey') {
+                return $challenge->message;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Get the Passkey challenge in JSON format.
+     * This is used to create a passkey request.
+     *
+     * @return string Passkey challenge.
+     */
+    public function getPasskeyChallenge(): string
+    {
+        return $this->passkeyChallenge;
+    }
+
+    /**
+     * Get the Passkey registration in JSON format.
+     * This is used to create a passkey registration request.
+     *
+     * @return string Passkey registration.
+     */
+    public function getPasskeyRegistration(): string
+    {
+        return $this->passkeyRegistration;
+    }
+
 	/**
 	 * @return string Combined messages of all triggered token.
 	 */
@@ -201,6 +265,14 @@ class PIResponse
 	{
 		return $this->messages;
 	}
+
+    /**
+     * @return string Token's serial.
+     */
+    public function getSerial(): string
+    {
+        return $this->serial;
+    }
 
 	/**
 	 * @return string Message from the response. Should be shown to the user.
