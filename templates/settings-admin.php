@@ -204,15 +204,6 @@ Util::addStyle('privacyidea', 'settings-admin');
         <table>
             <tr>
                 <td>
-                    <input id="piWebAuthnSignRequest" type="checkbox" class="checkbox">
-                    <label for="piWebAuthnSignRequest">Activate WebAuthn Sign Request</label>
-                </td>
-                <td>
-                    <em>Enable the WebAuthn Sign Request to allow using passkeys.</em>
-                </td>
-            </tr>
-            <tr>
-                <td>
                     <input id="piDisablePasskey" type="checkbox" class="checkbox">
                     <label for="piDisablePasskey">Disable Passkey Authentication</label>
                 </td>
