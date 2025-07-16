@@ -247,6 +247,17 @@ document.addEventListener("DOMContentLoaded", function ()
         setValue("piStaticPass", value);
     });
 
+    /* Passkeys */
+    getValue("piDisablePasskey", function (piDisablePasskey)
+    {
+        $("#piSettings #piDisablePasskey").prop('checked', piDisablePasskey === "1");
+    });
+    document.getElementById("piDisablePasskey").addEventListener("change", function ()
+    {
+        let checked = $(this).is(":checked");
+        setValue("piDisablePasskey", checked ? "1" : "0");
+    });
+
     /* Poll in browser */
     getValue("piPollInBrowser", function (piPollInBrowser)
     {
