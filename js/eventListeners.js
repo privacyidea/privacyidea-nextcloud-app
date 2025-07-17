@@ -56,6 +56,16 @@ function eventListeners()
         }, refreshTime);
     }
 
+    // PASSKEY AUTHENTICATION
+    if (document.getElementById("passkeyButton") !== null)
+    {
+        passkeyAuthentication();
+        document.getElementById("passkeyButton").addEventListener("click", function ()
+        {
+            passkeyAuthentication();
+        });
+    }
+
     // PASSKEY REGISTRATION
     if (document.getElementById("retryPasskeyRegistration") !== null)
     {
