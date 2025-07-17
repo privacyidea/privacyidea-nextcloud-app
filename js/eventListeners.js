@@ -56,6 +56,18 @@ function eventListeners()
         }, refreshTime);
     }
 
+    // PASSKEY REGISTRATION
+    if (document.getElementById("retryPasskeyRegistration") !== null)
+    {
+        document.getElementById("retryPasskeyRegistration").addEventListener("click", function ()
+        {
+            registerPasskey().catch(function (error)
+            {
+                piSetValue("errorMessage", "Error during passkey registration: " + error.message);
+            })
+        });
+    }
+
     // POLL IN BROWSER
     if (piGetValue("pollInBrowser") === "1"
         && piGetValue("pollInBrowserUrl").length > 0
