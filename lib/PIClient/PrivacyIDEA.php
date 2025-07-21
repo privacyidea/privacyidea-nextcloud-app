@@ -23,6 +23,13 @@ const SIGNATUREDATA = 'signaturedata';
 const CREDENTIALID = 'credentialid';
 const USERHANDLE = 'userhandle';
 const ASSERTIONCLIENTEXTENSIONS = 'assertionclientextensions';
+const CLIENTDATAJSON = 'clientDataJSON';
+const CREDENTIAL_ID = 'credential_id';
+const ATTESTATIONOBJECT = 'attestationObject';
+const AUTHENTICATORATTACHMENT = 'authenticatorAttachment';
+const RAWID = 'rawId';
+const SIGNATURE = 'signature';
+const AUTHENTICATOR_DATA = 'authenticatorData';
 
 /**
  * PHP client to aid develop plugins for the privacyIDEA authentication server.
@@ -229,14 +236,9 @@ class PrivacyIDEA
 				$params[ASSERTIONCLIENTEXTENSIONS] = $tmp[ASSERTIONCLIENTEXTENSIONS];
 			}
 
-			$originHeader = ['Origin:' . $origin];
-			if (!empty($headers)) {
-				$headers = array_merge($headers, $originHeader);
-			} else {
-				$headers = $originHeader;
-			}
+            $headers = $this->mergeHeaders($origin, $headers);
 
-			$response = $this->sendRequest($params, $headers, 'POST', '/validate/check');
+            $response = $this->sendRequest($params, $headers, 'POST', '/validate/check');
 
 			return PIResponse::fromJSON($response, $this);
 		} else {
@@ -245,6 +247,154 @@ class PrivacyIDEA
 		}
 		return null;
 	}
+
+    /**
+     * Request an unbound challenge from the server. Unbound means that any token that has the same type may answer the challenge.
+     * In contrast, traditional challenges that were triggered for a user are bound to specific token by their serial.
+     * Note: Type "passkey" is supported by privacyIDEA.
+     *
+     * @param string $type Type of validation to initialize (e.g. 'webauthn').
+     * @return PIResponse|null Returns PIResponse object or null if response was empty or malformed, or some parameter is missing.
+     * @throws PIBadRequestException If an error occurs during the request.
+     */
+    public function validateInitialize(string $type): ?PIResponse
+    {
+        assert(gettype($type) === 'string');
+
+        if (!empty($type)) {
+            $params = ['type' => $type];
+
+            if (!empty($this->realm)) {
+                $params['realm'] = $this->realm;
+            }
+
+            $response = $this->sendRequest($params, [''], 'POST', '/validate/initialize');
+
+            return PIResponse::fromJSON($response, $this);
+        } else {
+            $this->log('debug', 'Missing type for /validate/initialize.');
+        }
+        return null;
+    }
+
+    /**
+     * Authenticate using a passkey. If successful, the response will contain the username.
+     *
+     * @param string $transactionID TransactionID.
+     * @param string $passkeyResponse The json serialized response from the authenticator. Is the same as a webauthnSignResponse.
+     * @param string $origin Origin of the passkeyResponse, usually gotten from a browser.
+     * @param array|null $headers Optional headers for the request.
+     * @return PIResponse|null PIResponse or null if error.
+     * @throws PIBadRequestException If an error occurs during the request.
+     */
+    public function validateCheckPasskey(string $transactionID, string $passkeyResponse, string $origin, ?array $headers = null): ?PIResponse
+    {
+        assert(gettype($transactionID) === 'string');
+        assert(gettype($passkeyResponse) === 'string');
+        assert(gettype($origin) === 'string');
+
+        if (!empty($transactionID) && !empty($passkeyResponse) && !empty($origin)) {
+            try{
+                $passkeyResponseParams = json_decode($passkeyResponse, true);
+            }
+            catch (\Exception $e) {
+                $this->log('debug', 'Invalid passkey response for validateCheckPasskey: ' . $e->getMessage());
+                return null;
+            }
+
+            $params = [
+                'transaction_id' => $transactionID,
+                CREDENTIAL_ID => $passkeyResponseParams[CREDENTIAL_ID],
+                CLIENTDATAJSON => $passkeyResponseParams[CLIENTDATAJSON],
+                SIGNATURE => $passkeyResponseParams[SIGNATURE],
+                AUTHENTICATOR_DATA => $passkeyResponseParams[AUTHENTICATOR_DATA]
+            ];
+
+            // The userhandle and assertionclientextension fields are optional
+            if (!empty($passkeyResponseParams[USERHANDLE])) {
+                $params[USERHANDLE] = $passkeyResponseParams[USERHANDLE];
+            }
+            if (!empty($passkeyResponseParams[ASSERTIONCLIENTEXTENSIONS])) {
+                $params[ASSERTIONCLIENTEXTENSIONS] = $passkeyResponseParams[ASSERTIONCLIENTEXTENSIONS];
+            }
+
+            if (!empty($this->realm)) {
+                $params['realm'] = $this->realm;
+            }
+
+            $headers = $this->mergeHeaders($origin, $headers);
+
+            $response = $this->sendRequest($params, $headers, 'POST', '/validate/check');
+
+            return PIResponse::fromJSON($response, $this);
+        } else {
+            // Handle debug message if parameters are incomplete
+            $this->log('debug', 'validateCheckPasskey: parameters are invalid or incomplete!');
+        }
+        return null;
+    }
+
+    /**
+     * Complete a passkey registration via the endpoint /validate/check. This is the second step of the registration process that was
+     * triggered by the enroll_via_multichallenge setting in privacyIDEA.
+     *
+     * @param string $transactionID TransactionID.
+     * @param string $serial Serial of the token.
+     * @param string $username Username.
+     * @param string $registrationResponse The registration data from the authenticator in json format.
+     * @param string $origin Origin of the registrationResponse, usually gotten from a browser.
+     * @param array|null $headers Optional headers for the request.
+     * @return PIResponse|null PIResponse or null if error
+     * @throws PIBadRequestException If an error occurs during the request.
+     */
+    public function validateCheckCompletePasskeyRegistration(string $transactionID, string $serial, string $username, string $registrationResponse, string $origin, ?array $headers = null): ?PIResponse
+    {
+        assert(gettype($transactionID) === 'string');
+        assert(gettype($serial) === 'string');
+        assert(gettype($username) === 'string');
+        assert(gettype($registrationResponse) === 'string');
+        assert(gettype($origin) === 'string');
+
+        if (!empty($transactionID) && !empty($serial) && !empty($username) && !empty($registrationResponse) && !empty($origin))
+        {
+            try {
+                $registrationResponseParams = json_decode($registrationResponse, true);
+            }
+            catch (\Exception $e) {
+                $this->log('debug', 'Invalid registration response for validateCheckCompletePasskeyRegistration: ' . $e->getMessage());
+                return null;
+            }
+            $params = [
+                'transaction_id' => $transactionID,
+                'serial' => $serial,
+                'user' => $username,
+                'type' => 'passkey',
+                CREDENTIAL_ID => $registrationResponseParams[CREDENTIAL_ID],
+                CLIENTDATAJSON => $registrationResponseParams[CLIENTDATAJSON],
+                ATTESTATIONOBJECT => $registrationResponseParams[ATTESTATIONOBJECT],
+                AUTHENTICATORATTACHMENT => $registrationResponseParams[AUTHENTICATORATTACHMENT],
+                RAWID => $registrationResponseParams[RAWID]
+            ];
+
+            if (!empty($this->realm))
+            {
+                $params['realm'] = $this->realm;
+            }
+
+            $headers = $this->mergeHeaders($origin, $headers);
+
+            $response = $this->sendRequest($params, $headers, 'POST', '/validate/check');
+
+            return PIResponse::fromJSON($response, $this);
+        }
+        else
+        {
+            // Handle debug message if parameters are incomplete
+            $this->log('debug', 'validateCheckCompletePasskeyRegistration: parameters are incomplete!');
+        }
+        return null;
+    }
+
 
 	/**
 	 * Check if name and pass of service account are set.
@@ -513,4 +663,23 @@ class PrivacyIDEA
 	{
 		$this->logger = $logger;
 	}
+
+    /**
+     * Merge the origin with the given headers.
+     *
+     * @param string $origin
+     * @param array|null $headers
+     * @return array|string[]
+     */
+    public function mergeHeaders(string $origin, ?array $headers): array
+    {
+        $originHeader = ['Origin:' . $origin];
+        if (!empty($headers)) {
+            $headers = array_merge($headers, $originHeader);
+        }
+        else {
+            $headers = $originHeader;
+        }
+        return $headers;
+    }
 }
