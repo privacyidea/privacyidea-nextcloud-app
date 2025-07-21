@@ -139,6 +139,15 @@ class PrivacyIDEAProvider implements IProvider
 		if ($this->session->get('piWebAuthnSignRequest') !== null) {
 			$template->assign('webAuthnSignRequest', $this->session->get('piWebAuthnSignRequest'));
 		}
+        if ($this->session->get('piPasskeyRegistration') !== null) {
+            $template->assign('passkeyRegistration', $this->session->get('piPasskeyRegistration'));
+        }
+        if ($this->session->get('piPasskeyRegistrationSerial') !== null) {
+            $template->assign('passkeyRegistrationSerial', $this->session->get('piPasskeyRegistrationSerial'));
+        }
+        if ($this->session->get('piPasskeyChallenge') !== null) {
+            $template->assign('passkeyChallenge', $this->session->get('piPasskeyChallenge'));
+        }
 		if ($this->session->get('piPushAvailable')) {
 			$template->assign('pushAvailable', $this->session->get('piPushAvailable'));
 		}
@@ -345,6 +354,15 @@ class PrivacyIDEAProvider implements IProvider
 			if (in_array('webauthn', $triggeredTokens)) {
 				$this->session->set('piWebAuthnSignRequest', $response->getWebauthnSignRequest());
 			}
+            // Passkey registration
+            if (!empty($response->getPasskeyRegistration()) && !empty($response->getSerial())) {
+                $this->session->set('piPasskeyRegistration', $response->getPasskeyRegistration());
+                $this->session->set('piPasskeyRegistrationSerial', $response->getSerial());
+            }
+            // Passkey challenge
+            if (!empty($response->getPasskeyChallenge())) {
+                $this->session->set('piPasskeyChallenge', $response->getPasskeyChallenge());
+            }
 
 			// Search for the images & enrollment link
 			foreach ($response->getMultiChallenge() as $challenge) {
