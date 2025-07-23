@@ -150,9 +150,13 @@ class PIResponse
 			foreach ($mc as $challenge) {
 				$tmp = new PIChallenge();
 				$tmp->transactionID = $challenge['transaction_id'];
-				$tmp->message = $challenge['message'];
+                if (isset($challenge['message'])) {
+                    $tmp->message = $challenge['message'];
+                }
 				$tmp->serial = $challenge['serial'];
-				$tmp->type = $challenge['type'];
+                if (isset($challenge['type'])) {
+                    $tmp->type = $challenge['type'];
+                }
 				if (isset($challenge['image'])) {
 					$tmp->image = $challenge['image'];
 				}
@@ -169,8 +173,11 @@ class PIResponse
 					$t = $challenge['attributes']['webAuthnSignRequest'];
 					$tmp->webAuthnSignRequest = json_encode($t);
 				}
-                if (!empty($challenge['passkeyRegistration'])) { //todo check if this shouldn't be in challenge->attributes
-                    $ret->passkeyRegistration = $tmp->passkeyRegistration;
+                if (!empty($challenge['passkeyChallenge'])) {
+                    $ret->passkeyChallenge = json_encode($challenge['passkeyChallenge']);
+                }
+                if (!empty($challenge['passkeyRegistration'])) {
+                    $ret->passkeyRegistration = json_encode($challenge['passkeyRegistration']);
                 }
 
 				$ret->multiChallenge[] = $tmp;
@@ -179,7 +186,21 @@ class PIResponse
 		return $ret;
 	}
 
-	// Getters
+    /**
+     * Check if the authentication was successful.
+     * This is true if the authentication status is ACCEPT or if there are no multi-challenges.
+     * If there are multi-challenges, the value must be true and no multi-challenge must be present.
+     *
+     * @return bool True if the authentication was successful, false otherwise.
+     */
+    public function isAuthenticationSuccessful(): bool
+    {
+        if ($this->authenticationStatus != AuthenticationStatus::ACCEPT || !empty($this->multiChallenge)) {
+            return $this->value && (empty($this->multiChallenge));
+        } else {
+            return true;
+        }
+    }
 
 	/**
 	 * Get an array with all triggered token types.
