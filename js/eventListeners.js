@@ -32,6 +32,28 @@ function eventListeners()
         piChangeMode("otp");
     });
 
+    // PASSKEY AUTHENTICATION
+    if (document.getElementById("passkeyButton") !== null)
+    {
+        passkeyAuthentication();
+        document.getElementById("passkeyButton").addEventListener("click", function ()
+        {
+            passkeyAuthentication();
+        });
+    }
+
+    // PASSKEY REGISTRATION
+    if (document.getElementById("retryPasskeyRegistration") !== null)
+    {
+        document.getElementById("retryPasskeyRegistration").addEventListener("click", function ()
+        {
+            registerPasskey().catch(function (error)
+            {
+                piSetValue("errorMessage", "Error during passkey registration: " + error.message);
+            })
+        });
+    }
+
     // POLL BY RELOAD
     if (document.getElementById("mode").value === "push")
     {
@@ -54,28 +76,6 @@ function eventListeners()
         {
             document.forms["piLoginForm"].submit();
         }, refreshTime);
-    }
-
-    // PASSKEY AUTHENTICATION
-    if (document.getElementById("passkeyButton") !== null)
-    {
-        passkeyAuthentication();
-        document.getElementById("passkeyButton").addEventListener("click", function ()
-        {
-            passkeyAuthentication();
-        });
-    }
-
-    // PASSKEY REGISTRATION
-    if (document.getElementById("retryPasskeyRegistration") !== null)
-    {
-        document.getElementById("retryPasskeyRegistration").addEventListener("click", function ()
-        {
-            registerPasskey().catch(function (error)
-            {
-                piSetValue("errorMessage", "Error during passkey registration: " + error.message);
-            })
-        });
     }
 
     // POLL IN BROWSER
