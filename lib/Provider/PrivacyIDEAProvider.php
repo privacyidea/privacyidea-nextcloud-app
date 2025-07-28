@@ -287,7 +287,7 @@ class PrivacyIDEAProvider implements IProvider
         if (!empty($this->request->getParam('passkeyRegistrationResponse'))) {
             $transactionID = $this->session->get('piTransactionID');
             $passkeyRegistrationSerial = $this->request->getParam('passkeyRegistrationSerial'); //todo check if request or session here
-            $passkeyRegistrationResponse = $this->request->getParam('piPasskeyRegistrationResponse');
+            $passkeyRegistrationResponse = $this->request->getParam('passkeyRegistrationResponse');
             $origin = $this->request->getParam('origin');
             $piResponse = $this->pi->validateCheckCompletePasskeyRegistration($transactionID, $passkeyRegistrationSerial, $username, $passkeyRegistrationResponse, $origin, $headers);
             if (!empty($piResponse)) {
