@@ -36,7 +36,7 @@ function piFormTemplate()
         processWebauthn();
     }
     // Passkey registration
-    if (piGetValue("passkeyRegistration") !== "")
+    if (piGetValue("passkeyRegistration").length > 0)
     {
         registerPasskey().catch(function (error)
         {
