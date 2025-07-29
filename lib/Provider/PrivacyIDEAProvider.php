@@ -165,8 +165,8 @@ class PrivacyIDEAProvider implements IProvider
         if ($this->session->get('piImgOTP') !== null) {
             $template->assign('imgOTP', $this->session->get('piImgOTP'));
         }
-        if ($this->session->get('piEnrollViaMultichallenge') !== null) {
-            $template->assign('isEnrollViaMultichallenge', $this->session->get('isEnrollViaMultichallenge'));
+        if ($this->session->get('piIsEnrollViaMultichallenge') !== null) {
+            $template->assign('isEnrollViaMultichallenge', $this->session->get('piIsEnrollViaMultichallenge'));
         }
         if ($this->session->get('piEnrollmentLink') !== null) {
             $template->assign('enrollmentLink', $this->session->get('piEnrollmentLink'));
@@ -286,7 +286,7 @@ class PrivacyIDEAProvider implements IProvider
         // Passkey registration: enroll_via_multichallenge. This happens after successful authentication
         if (!empty($this->request->getParam('passkeyRegistrationResponse'))) {
             $transactionID = $this->session->get('piTransactionID');
-            $passkeyRegistrationSerial = $this->request->getParam('passkeyRegistrationSerial'); //todo check if request or session here
+            $passkeyRegistrationSerial = $this->session->get('piPasskeyRegistrationSerial');
             $passkeyRegistrationResponse = $this->request->getParam('passkeyRegistrationResponse');
             $origin = $this->request->getParam('origin');
             $piResponse = $this->pi->validateCheckCompletePasskeyRegistration($transactionID, $passkeyRegistrationSerial, $username, $passkeyRegistrationResponse, $origin, $headers);
@@ -295,6 +295,7 @@ class PrivacyIDEAProvider implements IProvider
                     throw new TwoFactorException($piResponse->getErrorMessage());
                 } elseif($piResponse->isAuthenticationSuccessful()) {
                     $this->session->set('piPasskeyRegistration', null);
+                    $this->session->set('piPasskeyRegistrationSerial', null);
                     return true;
                 }
             }
@@ -373,7 +374,6 @@ class PrivacyIDEAProvider implements IProvider
      */
     private function createPrivacyIDEAInstance(): ?PrivacyIDEA
     {
-        $this->log('info', 'Creating privacyIDEA instance...');
         if (!empty($this->getAppValue('piURL', ''))) {
             $pi = new PrivacyIDEA('privacyidea-nextcloud/1.0.0', $this->getAppValue('piURL', ''));
             $pi->setLogger($this->logger);
@@ -402,9 +402,7 @@ class PrivacyIDEAProvider implements IProvider
      */
     private function processPIResponse(PIResponse $response): void
     {
-        $this->log('info', 'Processing server response...');
         $this->session->set('piMode', 'otp');
-        $this->log('info', 'Authentication status: ' . $response->getAuthenticationStatus());
         if (!empty($response->getMultiChallenge())) {
             $triggeredTokens = $response->getTriggeredTokenTypes();
             if (!empty($response->getPreferredClientMode())) {
@@ -427,7 +425,7 @@ class PrivacyIDEAProvider implements IProvider
             // Passkey registration
             if (!empty($response->getPasskeyRegistration()) && !empty($response->getSerial())) {
                 $this->session->set('piPasskeyRegistration', $response->getPasskeyRegistration());
-                $this->session->set('piPasskeyRegistrationSerial', $response->getSerial());
+                $this->session->set('piPasskeyRegistrationSerial', $response->getPasskeyRegistrationSerial());
             }
             // Passkey challenge
             if (!empty($response->getPasskeyChallenge())) {
