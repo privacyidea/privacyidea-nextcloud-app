@@ -72,7 +72,7 @@ class PrivacyIDEA
 	/* @var bool Ignore the system-wide proxy settings and send the authentication requests directly to privacyIDEA. */
 	private bool $noProxy = false;
 
-	/* @var object|null Implementation of the PILog interface. */
+	/* @var object|null Implementation of the log interface. */
 	private ?object $logger = null;
 
 	/**
@@ -656,7 +656,7 @@ class PrivacyIDEA
 	}
 
 	/**
-	 * @param object|null $logger Implementation of the PILog interface.
+	 * @param object|null $logger
 	 * @return void
 	 */
 	public function setLogger(?object $logger): void
