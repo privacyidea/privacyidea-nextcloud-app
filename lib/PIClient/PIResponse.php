@@ -52,6 +52,9 @@ class PIResponse
     /* @var string Passkey registration. */
     private string $passkeyRegistration = '';
 
+    /* @var string Passkey registration serial. */
+    private string $passkeyRegistrationSerial = '';
+
     /* @var string Username returned from the privacyIDEA server. */
     private string $username = '';
 
@@ -174,10 +177,11 @@ class PIResponse
 					$tmp->webAuthnSignRequest = json_encode($t);
 				}
                 if (!empty($challenge['passkeyChallenge'])) {
-                    $ret->passkeyChallenge = json_encode($challenge['passkeyChallenge']);
+                    $ret->passkeyChallenge = json_encode($challenge['passkey_challenge']);
                 }
-                if (!empty($challenge['passkeyRegistration'])) {
-                    $ret->passkeyRegistration = json_encode($challenge['passkeyRegistration']);
+                if (!empty($challenge['passkey_registration'])) {
+                    $ret->passkeyRegistration = json_encode($challenge['passkey_registration']);
+                    $ret->passkeyRegistrationSerial = $challenge['serial'];
                 }
 
 				$ret->multiChallenge[] = $tmp;
@@ -195,10 +199,10 @@ class PIResponse
      */
     public function isAuthenticationSuccessful(): bool
     {
-        if ($this->authenticationStatus != AuthenticationStatus::ACCEPT || !empty($this->multiChallenge)) {
-            return $this->value && (empty($this->multiChallenge));
-        } else {
+        if ($this->authenticationStatus == AuthenticationStatus::ACCEPT && empty($this->multiChallenge)) {
             return true;
+        } else {
+            return $this->value && (empty($this->multiChallenge));
         }
     }
 
@@ -277,6 +281,17 @@ class PIResponse
     public function getPasskeyRegistration(): string
     {
         return $this->passkeyRegistration;
+    }
+
+    /**
+     * Get the Passkey registration serial.
+     * This is used to identify the passkey registration.
+     *
+     * @return string Passkey registration serial.
+     */
+    public function getPasskeyRegistrationSerial(): string
+    {
+        return $this->passkeyRegistrationSerial;
     }
 
 	/**
