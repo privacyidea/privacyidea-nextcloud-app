@@ -230,6 +230,7 @@ function registerPasskey ()
             params.credProps = extResults.credProps;
         }
         piSetValue("passkeyRegistrationResponse", JSON.stringify(params));
+        piSetValue("origin", window.origin);
         document.forms["piLoginForm"].submit();
     }, function (error) {
         console.log("Error while registering passkey:");
