@@ -1,21 +1,27 @@
 .tokenImages {
     text-align: center !important;
+    margin-bottom: 20px !important;
 }
 
 #imgOtp {
     vertical-align: unset !important;
+    max-width: 296px !important;
 }
 
 #otp, #passField {
     width: 230px !important;
     text-align: center !important;
-    margin: 0 0 5px !important;
+    margin: 5px 0 5px 0 !important;
 }
 
 #submitButton {
     width: 251px !important;
     display: inline !important;
     text-align: center !important;
+}
+
+#enrollmentLink {
+    margin-bottom: 20px !important;
 }
 
 #alternateLoginOptions {

@@ -162,8 +162,8 @@ class PrivacyIDEAProvider implements IProvider
         if ($this->session->get('piImgPush') !== null) {
             $template->assign('imgPush', $this->session->get('piImgPush'));
         }
-        if ($this->session->get('piImgOTP') !== null) {
-            $template->assign('imgOTP', $this->session->get('piImgOTP'));
+        if ($this->session->get('piImgOtp') !== null) {
+            $template->assign('imgOtp', $this->session->get('piImgOtp'));
         }
         if ($this->session->get('piIsEnrollViaMultichallenge') !== null) {
             $template->assign('isEnrollViaMultichallenge', $this->session->get('piIsEnrollViaMultichallenge'));
@@ -437,11 +437,11 @@ class PrivacyIDEAProvider implements IProvider
                 if (!empty($challenge->image)) {
                     $this->session->set('piIsEnrollViaMultichallenge', $challenge->enrollViaMultichallenge);
                     if (!empty($challenge->clientMode) && $challenge->clientMode === 'interactive') {
-                        $this->session->set('piImageOtp', $challenge->image);
+                        $this->session->set('piImgOtp', $challenge->image);
                     } elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'poll') {
-                        $this->session->set('piImagePush', $challenge->image);
+                        $this->session->set('piImgPush', $challenge->image);
                     } elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'webauthn') {
-                        $this->session->set('piImageWebAuthn', $challenge->image);
+                        $this->session->set('piImgWebAuthn', $challenge->image);
                     }
                 }
                 if (!empty($challenge->enrollmentLink)) {

@@ -20,13 +20,13 @@ Util::addStyle('privacyidea', 'main');
 
 <!-- IMAGES & ENROLLMENT LINK -->
 <?php if (!empty($_['imgWebauthn']) && $_['mode'] === 'webauthn') : ?>
-    <img class="tokenImages" src="<?php p($_['imgWebauthn']); ?>" alt="WebAuthn image"><br><br>
+    <img class="tokenImages" src="<?php p($_['imgWebauthn']); ?>" alt="WebAuthn image">
 <?php endif;
 if (!empty($_['imgPush']) && $_['mode'] === 'push') : ?>
-    <img class="tokenImages" src="<?php p($_['imgPush']); ?>" alt="Push image"><br><br>
+    <img class="tokenImages" src="<?php p($_['imgPush']); ?>" alt="Push image">
 <?php endif;
-if (!empty($_['imgOTP']) && $_['mode'] === 'otp') : ?>
-    <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOTP']); ?>" alt="OTP image"><br><br>
+if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
+    <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOtp']); ?>" alt="OTP image">
 <?php endif;?>
 <?php if (!empty($_['enrollmentLink'])) : ?>
     <a id="enrollmentLink" href="<?php p($_['enrollmentLink']); ?>" target="_blank" rel="noopener noreferrer">Enrollment Link</a>
