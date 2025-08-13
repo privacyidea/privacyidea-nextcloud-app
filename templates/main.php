@@ -34,7 +34,7 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
 
 <!-- FORM -->
 <form method="POST" id="piLoginForm" name="piLoginForm">
-    <?php if (!isset($_['hideOTPField']) || !$_['hideOTPField']) : ?>
+    <div id="otpSection">
         <?php if (isset($_['separateOTP']) && $_['separateOTP']) : ?>
             <label>
                 <input id="passField" type="password" name="passField" placeholder="Password" autocomplete="off" required autofocus>
@@ -45,7 +45,7 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
         </label>
         <br>
         <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
-    <?php endif; ?>
+    </div>
 
     <!-- Hidden input that saves the changes -->
     <input id="modeChanged" type="hidden" name="modeChanged" value="0"/>
@@ -88,10 +88,7 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
            value="<?php if (isset($_['mode'])) { p($_['mode']); } else { p('otp'); } ?>"/>
 
     <!-- PASSKEY INIT & AUTHENTICATION -->
-    <?php if (!empty($_['passkeyChallenge'])) : ?>
-        <input id="passkeyButton" type="button" name="passkeyButton"
-               value="<?php if (isset($_['passkeyButton'])) : p($_['passkeyButton']); endif; ?>"/>
-    <?php elseif (empty($_['passkeyRegistration']) && !empty($_['isEnrollViaMultichallenge'])
+    <?php if (empty($_['passkeyRegistration']) && !empty($_['isEnrollViaMultichallenge'])
                     && $_['isEnrollViaMultichallenge'] === true && !$_['isDisablePasskey']) : ?>
         <button id="initPasskeyLogin" type="button" name="initPasskeyLogin">
             <?php if (isset($_['initPasskeyLogin'])) : p($_['initPasskeyLogin']); endif; ?>
@@ -112,8 +109,10 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
             </strong>
         </label>
         <br>
-        <input class="alternateTokenButtons" id="webAuthnButton" name="webAuthnButton"
-               type="button" value="WebAuthn"/>
+        <?php if (!empty($_['passkeyChallenge'])) : ?>
+        <input class="alternateTokenButtons" id="passkeyButton" type="button" name="passkeyButton" value="Passkey"/>
+        <?php endif; ?>
+        <input class="alternateTokenButtons" id="webAuthnButton" name="webAuthnButton" type="button" value="WebAuthn"/>
         <input class="alternateTokenButtons" id="pushButton" name="pushButton" type="button" value="Push"/>
         <input id="otpButton" name="otpButton" type="button" value="OTP"/>
     </div>
