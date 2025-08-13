@@ -40,6 +40,6 @@ class PIChallenge
 	/* @var array Arbitrary attributes that can be appended to the challenge by the server. */
 	public array $attributes = [];
 
-	/* @var string WebAuthn sign request in JSON format */
+	/* @var string WebAuthn sign request in JSON format. */
 	public string $webAuthnSignRequest = '';
 }

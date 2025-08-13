@@ -121,7 +121,7 @@ class PIResponse
 			}
 		}
         if (!empty($map['detail']['passkey'])) {
-            $ret->passkeyChallenge = $map['detail']['passkey'];
+            $ret->passkeyChallenge = json_encode($map['detail']['passkey']);
             // The passkey challenge can contain a transaction ID, use that if none was set prior.
             // This happens if the passkey challenge was requested via /validate/initialize.
             if (empty($ret->transactionID)) {
@@ -173,11 +173,10 @@ class PIResponse
 					$tmp->clientMode = $challenge['client_mode'];
 				}
 				if ($tmp->type === 'webauthn') {
-					$t = $challenge['attributes']['webAuthnSignRequest'];
-					$tmp->webAuthnSignRequest = json_encode($t);
+                    $tmp->webAuthnSignRequest = json_encode($challenge['attributes']['webAuthnSignRequest']);
 				}
-                if (!empty($challenge['passkeyChallenge'])) {
-                    $ret->passkeyChallenge = json_encode($challenge['passkey_challenge']);
+                if ($tmp->type === 'passkey') {
+                    $ret->passkeyChallenge = json_encode($challenge);
                 }
                 if (!empty($challenge['passkey_registration'])) {
                     $ret->passkeyRegistration = json_encode($challenge['passkey_registration']);
