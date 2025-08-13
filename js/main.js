@@ -18,8 +18,7 @@ function piFormTemplate()
     }
     if (piGetValue("mode") === "push")
     {
-        piDisableElement("otp");
-        piDisableElement("submitButton");
+        piDisableElement("otpSection");
         piDisableElement("pushButton");
         piEnableElement("otpButton");
     }
@@ -130,56 +129,6 @@ function base64URLToBytes (base64URLString)
         bytes[i] = binary.charCodeAt(i);
     }
     return buffer;
-}
-
-// Convert a byte array to a base64 string
-// Used for passkey authentication
-function bytesToBase64 (bytes)
-{
-    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte),).join("");
-    return btoa(binString);
-}
-
-function passkeyAuthentication ()
-{
-    if (piGetValue("mode") === "push")
-    {
-        piChangeMode("passkey");
-    }
-    let passkeyChallenge = piGetValue("passkeyChallenge");
-    if (!passkeyChallenge)
-    {
-        console.log("Passkey Authentication: Challenge data is empty!");
-    }
-    else
-    {
-        piSetValue("passkeyLoginCancelled", "0");
-        let challengeObject = JSON.parse(passkeyChallenge.replace(/(&quot;)/g, "\""));
-        let userVerification = "preferred";
-        if ([ "required", "preferred", "discouraged" ].includes(challengeObject.user_verification))
-        {
-            userVerification = challengeObject.user_verification;
-        }
-        navigator.credentials.get({
-            publicKey: {
-                challenge: Uint8Array.from(challengeObject.challenge, c => c.charCodeAt(0)),
-                rpId: challengeObject.rpId, userVerification: userVerification,
-            },
-        }).then(credential => {
-            let params = {
-                transaction_id: challengeObject.transaction_id, credential_id: credential.id,
-                authenticatorData: bytesToBase64(new Uint8Array(credential.response.authenticatorData)),
-                clientDataJSON: bytesToBase64(new Uint8Array(credential.response.clientDataJSON)),
-                signature: bytesToBase64(new Uint8Array(credential.response.signature)),
-                userHandle: bytesToBase64(new Uint8Array(credential.response.userHandle)),
-            };
-            piSetValue("passkeySignResponse", JSON.stringify(params));
-            document.forms["piLoginForm"].submit();
-        }, function (error) {
-            console.log("Error during passkey authentication: " + error);
-            piSetValue("passkeyLoginCancelled", "1");
-        });
-    }
 }
 
 function registerPasskey ()
