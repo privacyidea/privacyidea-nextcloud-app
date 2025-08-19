@@ -16,12 +16,13 @@ namespace OCA\PrivacyIDEA\PIClient;
 
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
+use function OCP\Log\logger;
 
 const AUTHENTICATORDATA = 'authenticatordata';
 const CLIENTDATA = 'clientdata';
 const SIGNATUREDATA = 'signaturedata';
 const CREDENTIALID = 'credentialid';
-const USERHANDLE = 'userhandle';
+const USERHANDLE = 'userHandle';
 const ASSERTIONCLIENTEXTENSIONS = 'assertionclientextensions';
 const CLIENTDATAJSON = 'clientDataJSON';
 const CREDENTIAL_ID = 'credential_id';
@@ -71,9 +72,6 @@ class PrivacyIDEA
 
 	/* @var bool Ignore the system-wide proxy settings and send the authentication requests directly to privacyIDEA. */
 	private bool $noProxy = false;
-
-	/* @var object|null Implementation of the log interface. */
-	private ?object $logger = null;
 
 	/**
 	 * PrivacyIDEA constructor.
@@ -552,7 +550,7 @@ class PrivacyIDEA
 		curl_close($curlInstance);
 
 		// Log the response
-		if ($endpoint != '/auth' && $this->logger != null) {
+		if ($endpoint != '/auth') {
 			$retJson = json_decode($ret, true);
 			$this->log('debug', $endpoint . ' returned ' . json_encode($retJson, JSON_PRETTY_PRINT));
 		}
@@ -567,17 +565,16 @@ class PrivacyIDEA
 	 * @param $level
 	 * @param $message
 	 */
-	public function log($level, $message): void
+	private function log($level, $message): void
 	{
-		$context = ['app' => 'privacyIDEA'];
 		if ($level === 'debug') {
-			$this->logger->debug($message, $context);
+            logger('privacyIDEA')->info($message); //todo temporarily use info level for debug messages
 		}
 		if ($level === 'info') {
-			$this->logger->info($message, $context);
+            logger('privacyIDEA')->info($message);
 		}
 		if ($level === 'error') {
-			$this->logger->error($message, $context);
+            logger('privacyIDEA')->error($message);
 		}
 	}
 
@@ -653,15 +650,6 @@ class PrivacyIDEA
 	public function setNoProxy(bool $noProxy): void
 	{
 		$this->$noProxy = $noProxy;
-	}
-
-	/**
-	 * @param object|null $logger
-	 * @return void
-	 */
-	public function setLogger(?object $logger): void
-	{
-		$this->logger = $logger;
 	}
 
     /**
