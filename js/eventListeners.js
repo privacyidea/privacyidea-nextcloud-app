@@ -35,7 +35,10 @@ function eventListeners()
     // PASSKEY AUTHENTICATION
     if (document.getElementById("passkeyButton") !== null)
     {
-        passkeyAuthentication();
+        if (document.getElementById("mode").value === "push")
+        {
+            passkeyAuthentication();
+        }
         document.getElementById("passkeyButton").addEventListener("click", function ()
         {
             passkeyAuthentication();
