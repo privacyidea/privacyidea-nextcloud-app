@@ -22,7 +22,7 @@ function piFormTemplate()
         piDisableElement("pushButton");
         piEnableElement("otpButton");
     }
-    if (piGetValue("pushAvailable") !== "1" && piGetValue("webAuthnSignRequest").length < 1)
+    if (piGetValue("pushAvailable") !== "1" && piGetValue("webAuthnSignRequest").length < 1 && piGetValue("passkeyChallenge").length < 1)
     {
         console.log("Disabling alternate login options");
         piDisableElement("alternateLoginOptions");
