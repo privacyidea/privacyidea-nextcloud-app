@@ -292,11 +292,10 @@ class PrivacyIDEA
         assert(gettype($origin) === 'string');
 
         if (!empty($transactionID) && !empty($passkeyResponse) && !empty($origin)) {
-            try{
-                $passkeyResponseParams = json_decode($passkeyResponse, true);
-            }
-            catch (\Exception $e) {
-                $this->log('debug', 'Invalid passkey response for validateCheckPasskey: ' . $e->getMessage());
+            $passkeyResponseParams = json_decode($passkeyResponse, true);
+
+            if (!is_array($passkeyResponseParams)) {
+                $this->log('debug', 'Invalid passkey response for validateCheckPasskey. Expected an array.');
                 return null;
             }
 
@@ -321,7 +320,6 @@ class PrivacyIDEA
             }
 
             $headers = $this->mergeHeaders($origin, $headers);
-
             $response = $this->sendRequest($params, $headers, 'POST', '/validate/check');
 
             return PIResponse::fromJSON($response, $this);
@@ -568,7 +566,7 @@ class PrivacyIDEA
 	private function log($level, $message): void
 	{
 		if ($level === 'debug') {
-            logger('privacyIDEA')->info($message); //todo temporarily use info level for debug messages
+            logger('privacyIDEA')->info($message); // Temporarily use info level for debug messages
 		}
 		if ($level === 'info') {
             logger('privacyIDEA')->info($message);
