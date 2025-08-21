@@ -199,6 +199,8 @@ class PrivacyIDEAProvider implements IProvider
 
         // Add translations
         $template->assign('verify', $this->trans->t('Verify'));
+        $template->assign('retryPasskeyRegistration', $this->trans->t('Retry Passkey Registration'));
+        $template->assign('initPasskeyLogin', $this->trans->t('Initialize Passkey'));
         $template->assign('alternateLoginOptions', $this->trans->t('Alternate Login Options'));
 
         return $template;
@@ -430,6 +432,7 @@ class PrivacyIDEAProvider implements IProvider
             // Passkey challenge
             if (!empty($response->getPasskeyChallenge())) {
                 $this->session->set('piPasskeyChallenge', $response->getPasskeyChallenge());
+                $this->session->set('piPasskeyTransactionID', $response->getTransactionID());
             }
 
             // Search for the images & enrollment link
