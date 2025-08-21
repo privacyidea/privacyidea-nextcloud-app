@@ -88,8 +88,7 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
            value="<?php if (isset($_['mode'])) { p($_['mode']); } else { p('otp'); } ?>"/>
 
     <!-- PASSKEY INIT & AUTHENTICATION -->
-    <?php if (empty($_['passkeyRegistration']) && !empty($_['isEnrollViaMultichallenge'])
-                    && $_['isEnrollViaMultichallenge'] === true && !$_['isDisablePasskey']) : ?>
+    <?php if (empty($_['passkeyRegistration']) && empty($_['isDisablePasskey']) && empty($_['isEnrollViaMultichallenge'])) : ?>
         <button id="initPasskeyLogin" type="button" name="initPasskeyLogin">
             <?php if (isset($_['initPasskeyLogin'])) : p($_['initPasskeyLogin']); endif; ?>
         </button>
