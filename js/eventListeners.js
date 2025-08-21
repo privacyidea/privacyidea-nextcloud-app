@@ -32,16 +32,25 @@ function eventListeners()
         piChangeMode("otp");
     });
 
-    // PASSKEY AUTHENTICATION
+    // PASSKEY INIT AND AUTHENTICATE
+    if (document.getElementById("initPasskeyLogin") !== null)
+    {
+        document.getElementById("initPasskeyLogin").addEventListener("click", function ()
+        {
+            piSetValue("passkeyLoginRequested", "1");
+            document.forms["piLoginForm"].submit();
+        });
+    }
+
     if (document.getElementById("passkeyButton") !== null)
     {
-        if (document.getElementById("mode").value === "push")
+        if (piGetValue("mode") === "push")
         {
-            passkeyAuthentication();
+            piPasskeyAuthentication();
         }
         document.getElementById("passkeyButton").addEventListener("click", function ()
         {
-            passkeyAuthentication();
+            piPasskeyAuthentication();
         });
     }
 
@@ -58,7 +67,7 @@ function eventListeners()
     }
 
     // POLL BY RELOAD
-    if (document.getElementById("mode").value === "push")
+    if (piGetValue("mode") === "push")
     {
         const pollingIntervals = [4, 3, 2];
         let loadCounter = document.getElementById("loadCounter").value;
@@ -127,58 +136,6 @@ function eventListeners()
             piSetValue("pollInBrowserFailed", true);
             piEnableElement("pushButton");
         }
-    }
-}
-
-
-// Convert a byte array to a base64 string
-// Used for passkey authentication
-function bytesToBase64 (bytes)
-{
-    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte),).join("");
-    return btoa(binString);
-}
-
-function passkeyAuthentication ()
-{
-    if (piGetValue("mode") === "push")
-    {
-        piChangeMode("passkey");
-    }
-    let passkeyChallenge = piGetValue("passkeyChallenge");
-    if (!passkeyChallenge)
-    {
-        console.log("Passkey Authentication: Challenge data is empty!");
-    }
-    else
-    {
-        piSetValue("passkeyLoginCancelled", "0");
-        let challengeObject = JSON.parse(passkeyChallenge.replace(/(&quot;)/g, "\""));
-        let userVerification = "preferred";
-        if ([ "required", "preferred", "discouraged" ].includes(challengeObject.user_verification))
-        {
-            userVerification = challengeObject.user_verification;
-        }
-        navigator.credentials.get({
-            publicKey: {
-                challenge: Uint8Array.from(challengeObject.challenge, c => c.charCodeAt(0)),
-                rpId: challengeObject.rpId, userVerification: userVerification,
-            },
-        }).then(credential => {
-            let params = {
-                transaction_id: challengeObject.transaction_id, credential_id: credential.id,
-                authenticatorData: bytesToBase64(new Uint8Array(credential.response.authenticatorData)),
-                clientDataJSON: bytesToBase64(new Uint8Array(credential.response.clientDataJSON)),
-                signature: bytesToBase64(new Uint8Array(credential.response.signature)),
-                userHandle: bytesToBase64(new Uint8Array(credential.response.userHandle)),
-            };
-            piSetValue("passkeySignResponse", JSON.stringify(params));
-            piSetValue("origin", window.origin);
-            document.forms["piLoginForm"].submit();
-        }, function (error) {
-            console.log("Error during passkey authentication: " + error);
-            piSetValue("passkeyLoginCancelled", "1");
-        });
     }
 }
 
