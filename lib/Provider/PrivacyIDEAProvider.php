@@ -200,7 +200,7 @@ class PrivacyIDEAProvider implements IProvider
         // Add translations
         $template->assign('verify', $this->trans->t('Verify'));
         $template->assign('retryPasskeyRegistration', $this->trans->t('Retry Passkey Registration'));
-        $template->assign('initPasskeyLogin', $this->trans->t('Initialize Passkey'));
+        $template->assign('initPasskeyLogin', $this->trans->t('Sign in with Passkey'));
         $template->assign('alternateLoginOptions', $this->trans->t('Alternate Login Options'));
 
         return $template;
