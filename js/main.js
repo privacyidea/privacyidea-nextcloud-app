@@ -24,7 +24,6 @@ function piFormTemplate()
     }
     if (piGetValue("pushAvailable") !== "1" && piGetValue("webAuthnSignRequest").length < 1 && piGetValue("passkeyChallenge").length < 1)
     {
-        console.log("Disabling alternate login options");
         piDisableElement("alternateLoginOptions");
     }
     if (piGetValue("mode") === "webauthn")
@@ -33,6 +32,12 @@ function piFormTemplate()
         piDisableElement("submitButton");
         piEnableElement("otpButton");
         processWebauthn();
+    }
+    // Passkey authentication
+    if (piGetValue("mode") === "passkey")
+    {
+        piDisableElement("initPasskeyLogin");
+        piPasskeyAuthentication();
     }
     // Passkey registration
     if (piGetValue("passkeyRegistration").length > 0)
