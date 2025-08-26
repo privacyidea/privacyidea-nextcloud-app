@@ -36,7 +36,6 @@ function piFormTemplate()
     // Passkey authentication
     if (piGetValue("mode") === "passkey")
     {
-        piDisableElement("initPasskeyLogin");
         piPasskeyAuthentication();
     }
     // Passkey registration
