@@ -268,22 +268,11 @@ class PrivacyIDEAProvider implements IProvider
             }
         }
 
-        // Passkey login requested: Get a challenge and return
-        if ($this->request->getParam('passkeyLoginRequested') === '1') {
-            $piResponse = $this->pi->validateInitialize("passkey");
-            if (!empty($piResponse)) {
-                $this->session->set('piPasskeyMessage', $piResponse->getPasskeyMessage());
-                $this->session->set('piPasskeyChallenge', $piResponse->getPasskeyChallenge());
-                $this->session->set('piMode', 'passkey');
-                $this->session->set('piPasskeyTransactionID', $piResponse->getTransactionID());
-                throw new TwoFactorException(' ');
-            }
-        }
-
         // Passkey login cancelled: Remove the challenge and passkey transaction ID
         if ($this->request->getParam('passkeyLoginCancelled') === '1') {
             $this->session->set('piPasskeyChallenge', '');
             $this->session->set('piPasskeyTransactionID', null);
+            throw new TwoFactorException(' ');
         }
 
         // Passkey registration: enroll_via_multichallenge. This happens after successful authentication
