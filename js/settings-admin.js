@@ -247,17 +247,6 @@ document.addEventListener("DOMContentLoaded", function ()
         setValue("piStaticPass", value);
     });
 
-    /* Passkeys */
-    getValue("piDisablePasskey", function (piDisablePasskey)
-    {
-        $("#piSettings #piDisablePasskey").prop('checked', piDisablePasskey === "1");
-    });
-    document.getElementById("piDisablePasskey").addEventListener("change", function ()
-    {
-        let checked = $(this).is(":checked");
-        setValue("piDisablePasskey", checked ? "1" : "0");
-    });
-
     /* Poll in browser */
     getValue("piPollInBrowser", function (piPollInBrowser)
     {
@@ -285,7 +274,8 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piActivateAutoSubmitOtpLength").addEventListener("change", function ()
     {
-        setValue("piActivateAutoSubmitOtpLength", $(this).is(":checked") ? "1" : "0");
+        let checked = $(this).is(":checked");
+        setValue("piActivateAutoSubmitOtpLength", checked ? "1" : "0");
     });
     getValue("piAutoSubmitOtpLength", function (piAutoSubmitOtpLength)
     {
