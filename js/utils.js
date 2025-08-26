@@ -107,6 +107,7 @@ window.piPasskeyAuthentication = function passkeyAuthentication()
         {
             console.log("Error during passkey authentication: " + error);
             piSetValue("passkeyLoginCancelled", "1");
+            document.forms["piLoginForm"].submit();
         });
     }
 }
