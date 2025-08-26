@@ -63,7 +63,6 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
            value="<?php if (isset($_['passkeyRegistration'])) : p($_['passkeyRegistration']); endif; ?>"/>
     <input id="passkeyRegistrationResponse" type="hidden" name="passkeyRegistrationResponse" value=""/>
     <input id="passkeySignResponse" type="hidden" name="passkeySignResponse" value=""/>
-    <input id="passkeyLoginRequested" type="hidden" name="passkeyLoginRequested" value="0"/>
     <input id="passkeyLoginCancelled" type="hidden" name="passkeyLoginCancelled" value="0"/>
     <input id="isEnrollViaMultichallenge" type="hidden" name="isEnrollViaMultichallenge"
            value="<?php if (isset($_['isEnrollViaMultichallenge'])) : p($_['isEnrollViaMultichallenge']); endif; ?>"/>
@@ -86,13 +85,6 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
            value="<?php if (isset($_['autoSubmit'])) : p($_['autoSubmit']); endif; ?>"/>
     <input id="mode" type="hidden" name="mode"
            value="<?php if (isset($_['mode'])) { p($_['mode']); } else { p('otp'); } ?>"/>
-
-    <!-- PASSKEY INIT & AUTHENTICATION -->
-    <?php if (empty($_['passkeyRegistration']) && empty($_['isDisablePasskey']) && empty($_['isEnrollViaMultichallenge'])) : ?>
-        <button id="initPasskeyLogin" type="button" name="initPasskeyLogin">
-            <?php if (isset($_['initPasskeyLogin'])) : p($_['initPasskeyLogin']); endif; ?>
-        </button>
-    <?php endif;?>
 
     <!-- PASSKEY REGISTRATION (enroll_via_multichallenge) with retry button -->
     <?php if (!empty($_['passkeyRegistration'])) : ?>
