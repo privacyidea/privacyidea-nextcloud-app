@@ -200,20 +200,6 @@ Util::addStyle('privacyidea', 'settings-admin');
         </table>
         <hr>
 
-        <h2>Passkeys</h2>
-        <table>
-            <tr>
-                <td>
-                    <input id="piDisablePasskey" type="checkbox" class="checkbox">
-                    <label for="piDisablePasskey">Disable Passkey Authentication</label>
-                </td>
-                <td>
-                    <em>Check this to disable the Passkey authentication.</em>
-                </td>
-            </tr>
-        </table>
-        <hr>
-
         <h2>Poll in browser</h2>
         <table>
             <tr>
