@@ -32,16 +32,7 @@ function eventListeners()
         piChangeMode("otp");
     });
 
-    // PASSKEY INIT AND AUTHENTICATE
-    if (document.getElementById("initPasskeyLogin") !== null)
-    {
-        document.getElementById("initPasskeyLogin").addEventListener("click", function ()
-        {
-            piSetValue("passkeyLoginRequested", "1");
-            document.forms["piLoginForm"].submit();
-        });
-    }
-
+    // PASSKEY AUTHENTICATION
     if (document.getElementById("passkeyButton") !== null)
     {
         if (piGetValue("mode") === "push")
