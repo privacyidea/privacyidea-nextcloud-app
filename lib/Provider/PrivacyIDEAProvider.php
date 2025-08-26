@@ -175,7 +175,6 @@ class PrivacyIDEAProvider implements IProvider
         $template->assign('autoSubmitOtpLength', $this->getAppValue('piAutoSubmitOtpLength', '6'));
         $template->assign('pollInBrowser', $this->getAppValue('piPollInBrowser', '0'));
         $template->assign('pollInBrowserUrl', $this->getAppValue('piPollInBrowserURL', ''));
-        $template->assign('isDisablePasskey', $this->getAppValue('piDisablePasskey', '0'));
         if ($this->session->get('piTransactionID') !== null) {
             $template->assign('transactionID', $this->session->get('piTransactionID'));
         }
