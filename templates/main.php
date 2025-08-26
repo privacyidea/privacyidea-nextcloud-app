@@ -41,7 +41,7 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
             </label>
         <?php endif; ?>
         <label>
-            <input id="otp" type="password" name="challenge" placeholder="OTP" autocomplete="off" autofocus>
+            <input id="otp" type="password" name="challenge" placeholder="One-Time-Password" autocomplete="off" autofocus>
         </label>
         <br>
         <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
