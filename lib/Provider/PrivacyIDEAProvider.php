@@ -284,7 +284,7 @@ class PrivacyIDEAProvider implements IProvider
             if (!empty($piResponse)) {
                 if (!empty($piResponse->getErrorMessage())) {
                     throw new TwoFactorException($piResponse->getErrorMessage());
-                } elseif($piResponse->isAuthenticationSuccessful()) {
+                } elseif ($piResponse->isAuthenticationSuccessful()) {
                     $this->session->set('piPasskeyRegistration', null);
                     $this->session->set('piPasskeyRegistrationSerial', null);
                     return true;
