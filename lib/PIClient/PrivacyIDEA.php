@@ -563,7 +563,7 @@ class PrivacyIDEA
 	 * @param $level
 	 * @param $message
 	 */
-	private function log($level, $message): void
+	public function log($level, $message): void
 	{
 		if ($level === 'debug') {
             logger('privacyIDEA')->info($message); // Temporarily use info level for debug messages
