@@ -84,7 +84,11 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
     <input id="autoSubmit" type="hidden" name="autoSubmit"
            value="<?php if (isset($_['autoSubmit'])) : p($_['autoSubmit']); endif; ?>"/>
     <input id="mode" type="hidden" name="mode"
-           value="<?php if (isset($_['mode'])) { p($_['mode']); } else { p('otp'); } ?>"/>
+           value="<?php if (isset($_['mode'])) {
+           	p($_['mode']);
+           } else {
+           	p('otp');
+           } ?>"/>
 
     <!-- PASSKEY REGISTRATION (enroll_via_multichallenge) with retry button -->
     <?php if (!empty($_['passkeyRegistration'])) : ?>
