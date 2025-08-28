@@ -1,7 +1,4 @@
 {
-	"require-dev": {
-		"php-cs-fixer-custom-fixers/php-cs-fixer-custom-fixers": "^2.23"
-	},
 	"config": {
 		"platform": {
 			"php": "8.1"
