@@ -44,8 +44,5 @@ jobs:
       - name: Install dependencies from composer-bin
         run: composer bin all install --ansi
 
-      - name: Install PHP CS Fixer
-        run: composer global require friendsofphp/php-cs-fixer
-
       - name: Lint
         run: composer run cs:check || ( echo 'Please run `composer run cs:fix` to format your code' && exit 1 )
