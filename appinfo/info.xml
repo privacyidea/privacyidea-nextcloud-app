@@ -12,7 +12,6 @@
     <version>1.0.0</version>
     <licence>agpl</licence>
     <author mail="lukas.matusiewicz@netknights.it">Lukas Matusiewicz</author>
-    <repository>https://github.com/privacyidea/privacyidea-nextcloud-app</repository>
     <bugs>https://github.com/privacyidea/privacyidea-nextcloud-app/issues</bugs>
     <screenshot small-thumbnail="https://raw.githubusercontent.com/privacyidea/privacyidea-nextcloud-app/master/img/app-screenshot.png">https://raw.githubusercontent.com/privacyidea/privacyidea-nextcloud-app/master/img/app-screenshot.png</screenshot>
     <website>https://privacyidea.org</website>
