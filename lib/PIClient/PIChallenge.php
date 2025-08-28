@@ -28,6 +28,9 @@ class PIChallenge
     /* @var string Enrollment link if available. */
     public string $enrollmentLink = '';
 
+    /* @var bool Whether the token enrollment via multichallenge is optional. */
+    public bool $isEnrollViaMultichallengeOptional = false;
+
 	/* @var string TransactionId to reference this challenge in later requests. */
 	public string $transactionID = '';
 
