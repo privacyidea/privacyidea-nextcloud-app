@@ -31,7 +31,8 @@
     },
 	"require-dev": {
 		"nextcloud/ocp": "dev-stable31",
-		"roave/security-advisories": "dev-latest"
+		"roave/security-advisories": "dev-latest",
+		"friendsofphp/php-cs-fixer": "^3.0"
 	},
 	"config": {
 		"allow-plugins": {
