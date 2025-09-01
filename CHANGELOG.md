@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Passkey token triggered by PIN support.
-- Passkey registration support.
+- Passkey token, usable with PIN/Triggerchallenge.
+- Passkey registration.
 - Improved error handling and user feedback during authentication and registration processes.
 - Minor bug fixes and performance improvements.
 
