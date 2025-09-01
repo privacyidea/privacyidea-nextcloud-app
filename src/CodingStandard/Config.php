@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OCA\PrivacyIDEA\CodingStandard;
 
 use PhpCsFixer\Config as Base;
-use PhpCsFixerCustomFixers;
+use PhpCsFixerCustomFixers\Fixers;
 
 class Config extends Base {
     public function __construct($name = 'default') {
