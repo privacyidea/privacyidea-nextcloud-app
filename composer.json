@@ -32,7 +32,8 @@
 	"require-dev": {
 		"nextcloud/ocp": "dev-stable31",
 		"roave/security-advisories": "dev-latest",
-		"friendsofphp/php-cs-fixer": "*"
+		"friendsofphp/php-cs-fixer": "*",
+		"kubawerlos/php-cs-fixer-custom-fixers": "^3.22"
 	},
 	"config": {
 		"allow-plugins": {
