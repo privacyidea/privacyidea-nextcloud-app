@@ -161,14 +161,17 @@ class PrivacyIDEAProvider implements IProvider
 		if ($this->session->get('piImgPush') !== null) {
 			$template->assign('imgPush', $this->session->get('piImgPush'));
 		}
+		if ($this->session->get('piImgSmartphone') !== null) {
+			$template->assign('imgSmartphone', $this->session->get('piImgSmartphone'));
+		}
 		if ($this->session->get('piImgOtp') !== null) {
 			$template->assign('imgOtp', $this->session->get('piImgOtp'));
 		}
-		if ($this->session->get('piIsEnrollViaMultichallenge') !== null) {
-			$template->assign('isEnrollViaMultichallenge', $this->session->get('piIsEnrollViaMultichallenge'));
-		}
 		if ($this->session->get('piEnrollmentLink') !== null) {
 			$template->assign('enrollmentLink', $this->session->get('piEnrollmentLink'));
+		}
+		if ($this->session->get('piEnrollViaMultichallengeOptional') !== null) {
+			$template->assign('isEnrollViaMultichallengeOptional', $this->session->get('piEnrollViaMultichallengeOptional'));
 		}
 		$template->assign('activateAutoSubmitOtpLength', $this->getAppValue('piActivateAutoSubmitOtpLength', '0'));
 		$template->assign('autoSubmitOtpLength', $this->getAppValue('piAutoSubmitOtpLength', '6'));
@@ -198,6 +201,7 @@ class PrivacyIDEAProvider implements IProvider
 
 		// Add translations
 		$template->assign('verify', $this->trans->t('Verify'));
+		$template->assign('cancelEnrollment', $this->trans->t('Cancel Enrollment'));
 		$template->assign('retryPasskeyRegistration', $this->trans->t('Retry Passkey Registration'));
 		$template->assign('initPasskeyLogin', $this->trans->t('Sign in with Passkey'));
 		$template->assign('alternateLoginOptions', $this->trans->t('Alternate Login Options'));
@@ -271,6 +275,20 @@ class PrivacyIDEAProvider implements IProvider
 			$this->session->set('piPasskeyChallenge', '');
 			$this->session->set('piPasskeyTransactionID', null);
 			throw new TwoFactorException(' ');
+		}
+
+		// Cancel enrollment via multichallenge if requested
+		if (!empty($this->request->getParam('cancelEnrollment'))) {
+			$piResponse = $this->pi->validateCheckCancelEnrollment($transactionID, $headers);
+			if (!empty($piResponse)) {
+				if (!empty($piResponse->getErrorMessage())) {
+					throw new TwoFactorException($piResponse->getErrorMessage());
+				} elseif ($piResponse->isAuthenticationSuccessful()) {
+					$this->session->set('piPasskeyRegistration', null);
+					$this->session->set('piPasskeyRegistrationSerial', null);
+					return true;
+				}
+			}
 		}
 
 		// Passkey registration: enroll_via_multichallenge. This happens after successful authentication
@@ -425,17 +443,23 @@ class PrivacyIDEAProvider implements IProvider
 			// Search for the images & enrollment link
 			foreach ($response->getMultiChallenge() as $challenge) {
 				if (!empty($challenge->image)) {
-					$this->session->set('piIsEnrollViaMultichallenge', $challenge->enrollViaMultichallenge);
 					if (!empty($challenge->clientMode) && $challenge->clientMode === 'interactive') {
 						$this->session->set('piImgOtp', $challenge->image);
 					} elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'poll') {
-						$this->session->set('piImgPush', $challenge->image);
+						if ($challenge->type === 'push') {
+							$this->session->set('piImgPush', $challenge->image);
+						} elseif ($challenge->type === 'smartphone') {
+							$this->session->set('piImgSmartphone', $challenge->image);
+						}
 					} elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'webauthn') {
 						$this->session->set('piImgWebAuthn', $challenge->image);
 					}
 				}
 				if (!empty($challenge->enrollmentLink)) {
 					$this->session->set('piEnrollmentLink', $challenge->enrollmentLink);
+				}
+				if (!empty($challenge->isEnrollViaMultichallengeOptional)) {
+					$this->session->set('piEnrollViaMultichallengeOptional', $challenge->isEnrollViaMultichallengeOptional);
 				}
 			}
 		} elseif (!empty($response->getErrorCode())) {
