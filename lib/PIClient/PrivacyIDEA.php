@@ -372,6 +372,37 @@ class PrivacyIDEA
 	}
 
 	/**
+	 * Cancel an ongoing enrollment via multichallenge. This is done by sending a request to the /validate/check endpoint.
+	 * This request only contains the transaction ID and the cancel_enrollment parameter set to true.
+	 *
+	 * @param string $transactionID TransactionID of the ongoing enrollment.
+	 * @throws PIBadRequestException
+	 */
+	public function validateCheckCancelEnrollment(string $transactionID, ?array $headers = null): ?PIResponse
+	{
+		assert(gettype($transactionID) === 'string');
+		if (!empty($transactionID)) {
+			$params = ['transaction_id' => $transactionID, 'cancel_enrollment' => 'true'];
+
+			if (!empty($this->realm)) {
+				$params['realm'] = $this->realm;
+			}
+
+			if (empty($headers)) {
+				$headers = [''];
+			}
+
+			$response = $this->sendRequest($params, $headers, 'POST', '/validate/check');
+
+			return PIResponse::fromJSON($response, $this);
+		} else {
+			// Handle debug message if parameters are incomplete
+			$this->log('debug', 'validateCheckCancelEnrollment: transactionID is missing!');
+		}
+		return null;
+	}
+
+	/**
 	 * Check if name and pass of service account are set.
 	 * @return bool
 	 */
