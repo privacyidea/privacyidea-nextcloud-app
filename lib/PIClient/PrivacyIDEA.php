@@ -248,35 +248,6 @@ class PrivacyIDEA
 	}
 
 	/**
-	 * Request an unbound challenge from the server. Unbound means that any token that has the same type may answer the challenge.
-	 * In contrast, traditional challenges that were triggered for a user are bound to specific token by their serial.
-	 * Note: Type "passkey" is supported by privacyIDEA.
-	 *
-	 * @param string $type Type of validation to initialize (e.g. 'webauthn').
-	 * @return PIResponse|null Returns PIResponse object or null if response was empty or malformed, or some parameter is missing.
-	 * @throws PIBadRequestException If an error occurs during the request.
-	 */
-	public function validateInitialize(string $type): ?PIResponse
-	{
-		assert(gettype($type) === 'string');
-
-		if (!empty($type)) {
-			$params = ['type' => $type];
-
-			if (!empty($this->realm)) {
-				$params['realm'] = $this->realm;
-			}
-
-			$response = $this->sendRequest($params, [''], 'POST', '/validate/initialize');
-
-			return PIResponse::fromJSON($response, $this);
-		} else {
-			$this->log('debug', 'Missing type for /validate/initialize.');
-		}
-		return null;
-	}
-
-	/**
 	 * Authenticate using a passkey. If successful, the response will contain the username.
 	 *
 	 * @param string $transactionID TransactionID.
@@ -589,6 +560,24 @@ class PrivacyIDEA
 		return $ret;
 	}
 
+    /**
+     * Merge the origin with the given headers.
+     *
+     * @param string $origin
+     * @param array|null $headers
+     * @return array|string[]
+     */
+    public function mergeHeaders(string $origin, ?array $headers): array
+    {
+        $originHeader = ['Origin:' . $origin];
+        if (!empty($headers)) {
+            $headers = array_merge($headers, $originHeader);
+        } else {
+            $headers = $originHeader;
+        }
+        return $headers;
+    }
+
 	/**
 	 * Log a message with the given log level.
 	 *
@@ -680,23 +669,5 @@ class PrivacyIDEA
 	public function setNoProxy(bool $noProxy): void
 	{
 		$this->$noProxy = $noProxy;
-	}
-
-	/**
-	 * Merge the origin with the given headers.
-	 *
-	 * @param string $origin
-	 * @param array|null $headers
-	 * @return array|string[]
-	 */
-	public function mergeHeaders(string $origin, ?array $headers): array
-	{
-		$originHeader = ['Origin:' . $origin];
-		if (!empty($headers)) {
-			$headers = array_merge($headers, $originHeader);
-		} else {
-			$headers = $originHeader;
-		}
-		return $headers;
 	}
 }
