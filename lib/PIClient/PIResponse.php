@@ -167,6 +167,9 @@ class PIResponse
 				if (isset($challenge['link'])) {
 					$tmp->enrollmentLink = $challenge['link'];
 				}
+				if (isset($challenge['enroll_via_multichallenge_optional'])) {
+					$tmp->isEnrollViaMultichallengeOptional = $challenge['enroll_via_multichallenge_optional'];
+				}
 				if (isset($challenge['attributes'])) {
 					$tmp->attributes = $challenge['attributes'];
 				}
