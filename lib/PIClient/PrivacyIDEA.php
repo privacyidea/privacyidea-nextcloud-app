@@ -300,7 +300,13 @@ class PrivacyIDEA
 				return null;
 			}
 
-			$params = ['transaction_id' => $transactionID, CREDENTIAL_ID => $passkeyResponseParams[CREDENTIAL_ID], CLIENTDATAJSON => $passkeyResponseParams[CLIENTDATAJSON], SIGNATURE => $passkeyResponseParams[SIGNATURE], AUTHENTICATOR_DATA => $passkeyResponseParams[AUTHENTICATOR_DATA]];
+			$params = [
+				'transaction_id' => $transactionID,
+				CREDENTIAL_ID => $passkeyResponseParams[CREDENTIAL_ID],
+				CLIENTDATAJSON => $passkeyResponseParams[CLIENTDATAJSON],
+				SIGNATURE => $passkeyResponseParams[SIGNATURE],
+				AUTHENTICATOR_DATA => $passkeyResponseParams[AUTHENTICATOR_DATA]
+			];
 
 			// The userhandle and assertionclientextension fields are optional
 			if (!empty($passkeyResponseParams[USERHANDLE])) {
@@ -353,7 +359,17 @@ class PrivacyIDEA
 				$this->log('debug', 'Invalid registration response for validateCheckCompletePasskeyRegistration: ' . $e->getMessage());
 				return null;
 			}
-			$params = ['transaction_id' => $transactionID, 'serial' => $serial, 'user' => $username, 'type' => 'passkey', CREDENTIAL_ID => $registrationResponseParams[CREDENTIAL_ID], CLIENTDATAJSON => $registrationResponseParams[CLIENTDATAJSON], ATTESTATIONOBJECT => $registrationResponseParams[ATTESTATIONOBJECT], AUTHENTICATORATTACHMENT => $registrationResponseParams[AUTHENTICATORATTACHMENT], RAWID => $registrationResponseParams[RAWID]];
+			$params = [
+				'transaction_id' => $transactionID,
+				'serial' => $serial,
+				'user' => $username,
+				'type' => 'passkey',
+				CREDENTIAL_ID => $registrationResponseParams[CREDENTIAL_ID],
+				CLIENTDATAJSON => $registrationResponseParams[CLIENTDATAJSON],
+				ATTESTATIONOBJECT => $registrationResponseParams[ATTESTATIONOBJECT],
+				AUTHENTICATORATTACHMENT => $registrationResponseParams[AUTHENTICATORATTACHMENT],
+				RAWID => $registrationResponseParams[RAWID]
+			];
 
 			if (!empty($this->realm)) {
 				$params['realm'] = $this->realm;
@@ -382,7 +398,10 @@ class PrivacyIDEA
 	{
 		assert(gettype($transactionID) === 'string');
 		if (!empty($transactionID)) {
-			$params = ['transaction_id' => $transactionID, 'cancel_enrollment' => 'true'];
+			$params = [
+				'transaction_id' => $transactionID,
+				'cancel_enrollment' => 'true'
+			];
 
 			if (!empty($this->realm)) {
 				$params['realm'] = $this->realm;
@@ -424,7 +443,10 @@ class PrivacyIDEA
 			return '';
 		}
 
-		$params = ['username' => $this->serviceAccountName, 'password' => $this->serviceAccountPass];
+		$params = [
+			'username' => $this->serviceAccountName,
+			'password' => $this->serviceAccountPass
+		];
 		if ($this->serviceAccountRealm != null && $this->serviceAccountRealm != '') {
 			$params['realm'] = $this->serviceAccountRealm;
 		}
