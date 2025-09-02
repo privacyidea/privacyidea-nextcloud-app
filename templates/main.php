@@ -25,6 +25,9 @@ Util::addStyle('privacyidea', 'main');
 if (!empty($_['imgPush']) && $_['mode'] === 'push') : ?>
     <img class="tokenImages" src="<?php p($_['imgPush']); ?>" alt="Push image">
 <?php endif;
+if (!empty($_['imgSmartphone']) && $_['mode'] === 'push') : ?>
+    <img class="tokenImages" src="<?php p($_['imgSmartphone']); ?>" alt="Smartphone image">
+<?php endif;
 if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
     <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOtp']); ?>" alt="OTP image">
 <?php endif;?>
@@ -45,6 +48,11 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
         </label>
         <br>
         <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
+        <?php if (!empty($_['isEnrollmentViaMultichallengeOptional'])) : ?>
+            <label>
+                <input id="cancelEnrollment" type="button" class="button" value="<?php if (isset($_['cancelEnrollment'])) : p($_['cancelEnrollment']); endif; ?>">
+            </label>
+        <?php endif; ?>
     </div>
 
     <!-- Hidden input that saves the changes -->
@@ -64,8 +72,8 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
     <input id="passkeyRegistrationResponse" type="hidden" name="passkeyRegistrationResponse" value=""/>
     <input id="passkeySignResponse" type="hidden" name="passkeySignResponse" value=""/>
     <input id="passkeyLoginCancelled" type="hidden" name="passkeyLoginCancelled" value="0"/>
-    <input id="isEnrollViaMultichallenge" type="hidden" name="isEnrollViaMultichallenge"
-           value="<?php if (isset($_['isEnrollViaMultichallenge'])) : p($_['isEnrollViaMultichallenge']); endif; ?>"/>
+    <input id="isEnrollViaMultichallengeOptional" type="hidden" name="isEnrollViaMultichallengeOptional"
+           value="<?php if (isset($_['isEnrollViaMultichallengeOptional'])) : p($_['isEnrollViaMultichallengeOptional']); endif; ?>"/>
     <input id="pushAvailable" type="hidden" name="pushAvailable"
            value="<?php if (isset($_['pushAvailable'])) : p($_['pushAvailable']); endif; ?>"/>
     <input id="otpAvailable" type="hidden" name="otpAvailable"
