@@ -560,23 +560,23 @@ class PrivacyIDEA
 		return $ret;
 	}
 
-    /**
-     * Merge the origin with the given headers.
-     *
-     * @param string $origin
-     * @param array|null $headers
-     * @return array|string[]
-     */
-    public function mergeHeaders(string $origin, ?array $headers): array
-    {
-        $originHeader = ['Origin:' . $origin];
-        if (!empty($headers)) {
-            $headers = array_merge($headers, $originHeader);
-        } else {
-            $headers = $originHeader;
-        }
-        return $headers;
-    }
+	/**
+	 * Merge the origin with the given headers.
+	 *
+	 * @param string $origin
+	 * @param array|null $headers
+	 * @return array|string[]
+	 */
+	public function mergeHeaders(string $origin, ?array $headers): array
+	{
+		$originHeader = ['Origin:' . $origin];
+		if (!empty($headers)) {
+			$headers = array_merge($headers, $originHeader);
+		} else {
+			$headers = $originHeader;
+		}
+		return $headers;
+	}
 
 	/**
 	 * Log a message with the given log level.
