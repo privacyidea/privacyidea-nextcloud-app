@@ -20,16 +20,16 @@ Util::addStyle('privacyidea', 'main');
 
 <!-- IMAGES & ENROLLMENT LINK -->
 <?php if (!empty($_['imgWebauthn']) && $_['mode'] === 'webauthn') : ?>
-    <img class="tokenImages" src="<?php p($_['imgWebauthn']); ?>" alt="WebAuthn image">
+    <img class="tokenImages" src="<?php p($_['imgWebauthn']); ?>" alt="WebAuthn Image">
 <?php endif;
 if (!empty($_['imgPush']) && $_['mode'] === 'push') : ?>
-    <img class="tokenImages" src="<?php p($_['imgPush']); ?>" alt="Push image">
+    <img class="tokenImages" src="<?php p($_['imgPush']); ?>" alt="Push Image">
 <?php endif;
 if (!empty($_['imgSmartphone']) && $_['mode'] === 'push') : ?>
-    <img class="tokenImages" src="<?php p($_['imgSmartphone']); ?>" alt="Smartphone image">
+    <img class="tokenImages" src="<?php p($_['imgSmartphone']); ?>" alt="Smartphone Container Image">
 <?php endif;
 if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
-    <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOtp']); ?>" alt="OTP image">
+    <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOtp']); ?>" alt="OTP Image">
 <?php endif;?>
 <?php if (!empty($_['enrollmentLink'])) : ?>
     <a id="enrollmentLink" href="<?php p($_['enrollmentLink']); ?>" target="_blank" rel="noopener noreferrer">Enrollment Link</a>
