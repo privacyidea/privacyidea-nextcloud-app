@@ -149,8 +149,8 @@ class PrivacyIDEAProvider implements IProvider
 		if ($this->session->get('piPasskeyChallenge') !== null) {
 			$template->assign('passkeyChallenge', $this->session->get('piPasskeyChallenge'));
 		}
-		if ($this->session->get('piPushAvailable')) {
-			$template->assign('pushAvailable', $this->session->get('piPushAvailable'));
+		if ($this->session->get('piPushOrSmartphoneContainerAvailable')) {
+			$template->assign('isPushAvailable', $this->session->get('piPushOrSmartphoneContainerAvailable'));
 		}
 		if ($this->session->get('piOTPAvailable')) {
 			$template->assign('otpAvailable', $this->session->get('piOTPAvailable'));
@@ -273,7 +273,8 @@ class PrivacyIDEAProvider implements IProvider
 		if ($this->request->getParam('passkeyLoginCancelled') === '1') {
 			$this->session->set('piPasskeyChallenge', '');
 			$this->session->set('piPasskeyTransactionID', null);
-			throw new TwoFactorException(' ');
+            $this->session->set('piMode', 'otp');
+            throw new TwoFactorException(' ');
 		}
 
 		// Cancel enrollment via multichallenge if requested
@@ -421,7 +422,7 @@ class PrivacyIDEAProvider implements IProvider
 				}
 				$this->log('debug', 'Preferred client mode: ' . $this->session->get('piMode'));
 			}
-			$this->session->set('piPushAvailable', in_array('push', $triggeredTokens));
+			$this->session->set('piPushOrSmartphoneContainerAvailable', $response->isPushOrSmartphoneContainerAvailable());
 			$this->session->set('piOTPAvailable', true);
 			$this->session->set('piMessage', $response->getMessages());
 			$this->session->set('piTransactionID', $response->getTransactionID());
