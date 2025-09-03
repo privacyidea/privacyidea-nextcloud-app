@@ -230,20 +230,20 @@ class PIResponse
 		return '';
 	}
 
-    /**
-     * Check if any Push or Smartphone container challenge is available.
-     *
-     * @return bool True if a Push or Smartphone container challenge is available, false otherwise.
-     */
-    public function isPushOrSmartphoneContainerAvailable(): bool
-    {
-        foreach ($this->multiChallenge as $challenge) {
-            if ($this->isPushOrSmartphoneContainer($challenge->type)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	/**
+	 * Check if any Push or Smartphone container challenge is available.
+	 *
+	 * @return bool True if a Push or Smartphone container challenge is available, false otherwise.
+	 */
+	public function isPushOrSmartphoneContainerAvailable(): bool
+	{
+		foreach ($this->multiChallenge as $challenge) {
+			if ($this->isPushOrSmartphoneContainer($challenge->type)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Get the Push token message if any were triggered.
@@ -441,12 +441,13 @@ class PIResponse
 		return $this->errorMessage;
 	}
 
-    /**
-     * Check if any of the triggered challenges is a Push or Smartphone container.
-     *
-     * @return bool True if any challenge is of type 'push' or 'smartphone', false otherwise.
-     */
-    private function isPushOrSmartphoneContainer(string $type): bool {
-        return $type === 'push' || $type === 'smartphone';
-    }
+	/**
+	 * Check if any of the triggered challenges is a Push or Smartphone container.
+	 *
+	 * @return bool True if any challenge is of type 'push' or 'smartphone', false otherwise.
+	 */
+	private function isPushOrSmartphoneContainer(string $type): bool
+	{
+		return $type === 'push' || $type === 'smartphone';
+	}
 }

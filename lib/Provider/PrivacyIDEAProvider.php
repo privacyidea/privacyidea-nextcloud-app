@@ -273,8 +273,8 @@ class PrivacyIDEAProvider implements IProvider
 		if ($this->request->getParam('passkeyLoginCancelled') === '1') {
 			$this->session->set('piPasskeyChallenge', '');
 			$this->session->set('piPasskeyTransactionID', null);
-            $this->session->set('piMode', 'otp');
-            throw new TwoFactorException(' ');
+			$this->session->set('piMode', 'otp');
+			throw new TwoFactorException(' ');
 		}
 
 		// Cancel enrollment via multichallenge if requested
