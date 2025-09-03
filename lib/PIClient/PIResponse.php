@@ -56,9 +56,6 @@ class PIResponse
 	/* @var string Passkey registration serial. */
 	private string $passkeyRegistrationSerial = '';
 
-	/* @var string Username returned from the privacyIDEA server. */
-	private string $username = '';
-
 	/* @var string If an error occurred, the error code will be set here. */
 	private string $errorCode = '';
 
@@ -101,9 +98,6 @@ class PIResponse
 		}
 		if (isset($map['detail']['message'])) {
 			$ret->message = $map['detail']['message'];
-		}
-		if (isset($map['detail']['username'])) {
-			$ret->username = $map['detail']['username'];
 		}
 		if (isset($map['detail']['serial'])) {
 			$ret->serial = $map['detail']['serial'];
@@ -236,14 +230,29 @@ class PIResponse
 		return '';
 	}
 
+    /**
+     * Check if any Push or Smartphone container challenge is available.
+     *
+     * @return bool True if a Push or Smartphone container challenge is available, false otherwise.
+     */
+    public function isPushOrSmartphoneContainerAvailable(): bool
+    {
+        foreach ($this->multiChallenge as $challenge) {
+            if ($this->isPushOrSmartphoneContainer($challenge->type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 	/**
 	 * Get the Push token message if any were triggered.
 	 * @return string
 	 */
-	public function getPushMessage(): string
+	public function getPushOrSmartphoneContainerMessage(): string
 	{
 		foreach ($this->multiChallenge as $challenge) {
-			if ($challenge->type === 'push') {
+			if ($this->isPushOrSmartphoneContainer($challenge->type)) {
 				return $challenge->message;
 			}
 		}
@@ -431,4 +440,13 @@ class PIResponse
 	{
 		return $this->errorMessage;
 	}
+
+    /**
+     * Check if any of the triggered challenges is a Push or Smartphone container.
+     *
+     * @return bool True if any challenge is of type 'push' or 'smartphone', false otherwise.
+     */
+    private function isPushOrSmartphoneContainer(string $type): bool {
+        return $type === 'push' || $type === 'smartphone';
+    }
 }
