@@ -4,7 +4,7 @@ function piFormTemplate()
     {
         piDisableElement("webAuthnButton");
     }
-    if (piGetValue("pushAvailable") !== "1")
+    if (piGetValue("isPushAvailable") !== "1")
     {
         piDisableElement("pushButton");
     }
@@ -22,7 +22,7 @@ function piFormTemplate()
         piDisableElement("pushButton");
         piEnableElement("otpButton");
     }
-    if (piGetValue("pushAvailable") !== "1" && piGetValue("webAuthnSignRequest").length < 1 && piGetValue("passkeyChallenge").length < 1)
+    if (piGetValue("isPushAvailable") !== "1" && piGetValue("webAuthnSignRequest").length < 1 && piGetValue("passkeyChallenge").length < 1)
     {
         piDisableElement("alternateLoginOptions");
     }

@@ -74,8 +74,8 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
     <input id="passkeyLoginCancelled" type="hidden" name="passkeyLoginCancelled" value="0"/>
     <input id="isEnrollViaMultichallengeOptional" type="hidden" name="isEnrollViaMultichallengeOptional"
            value="<?php if (isset($_['isEnrollViaMultichallengeOptional'])) : p($_['isEnrollViaMultichallengeOptional']); endif; ?>"/>
-    <input id="pushAvailable" type="hidden" name="pushAvailable"
-           value="<?php if (isset($_['pushAvailable'])) : p($_['pushAvailable']); endif; ?>"/>
+    <input id="isPushAvailable" type="hidden" name="isPushAvailable"
+           value="<?php if (isset($_['isPushAvailable'])) : p($_['isPushAvailable']); endif; ?>"/>
     <input id="otpAvailable" type="hidden" name="otpAvailable"
            value="<?php if (isset($_['otpAvailable'])) : p($_['otpAvailable']); endif; ?>"/>
     <input id="loadCounter" type="hidden" name="loadCounter"
