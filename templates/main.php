@@ -48,12 +48,12 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
         </label>
         <br>
         <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
-        <?php if (!empty($_['isEnrollmentViaMultichallengeOptional'])) : ?>
-            <label>
-                <input id="cancelEnrollment" type="button" class="button" value="<?php if (isset($_['cancelEnrollment'])) : p($_['cancelEnrollment']); endif; ?>">
-            </label>
-        <?php endif; ?>
     </div>
+    <?php if (!empty($_['isEnrollmentViaMultichallengeOptional'])) : ?>
+        <label>
+            <input id="cancelEnrollment" type="button" class="button" value="<?php if (isset($_['cancelEnrollment'])) : p($_['cancelEnrollment']); endif; ?>">
+        </label>
+    <?php endif; ?>
 
     <!-- Hidden input that saves the changes -->
     <input id="modeChanged" type="hidden" name="modeChanged" value="0"/>
@@ -117,6 +117,6 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
         <?php endif; ?>
         <input class="alternateTokenButtons" id="webAuthnButton" name="webAuthnButton" type="button" value="WebAuthn"/>
         <input class="alternateTokenButtons" id="pushButton" name="pushButton" type="button" value="Push"/>
-        <input id="otpButton" name="otpButton" type="button" value="OTP"/>
+        <input class="alternateTokenButtons" id="otpButton" name="otpButton" type="button" value="OTP"/>
     </div>
 </form>
