@@ -56,6 +56,9 @@ class PIResponse
 	/* @var string Passkey registration serial. */
 	private string $passkeyRegistrationSerial = '';
 
+    /* @var bool Whether any of the challenges is part of an enrollment via multichallenge. */
+    private bool $isEnrollViaMultichallenge = false;
+
 	/* @var string If an error occurred, the error code will be set here. */
 	private string $errorCode = '';
 
@@ -115,6 +118,9 @@ class PIResponse
 				$ret->preferredClientMode = $map['detail']['preferred_client_mode'];
 			}
 		}
+        if (!empty($map['detail']['enroll_via_multichallenge'])) {
+            $ret->isEnrollViaMultichallenge = $map['detail']['enroll_via_multichallenge'];
+        }
 		if (!empty($map['detail']['passkey'])) {
 			$ret->passkeyChallenge = json_encode($map['detail']['passkey']);
 			// The passkey challenge can contain a transaction ID, use that if none was set prior.
@@ -305,6 +311,16 @@ class PIResponse
 	{
 		return $this->passkeyRegistrationSerial;
 	}
+
+    /**
+     * Check if any of the triggered challenges is part of an enrollment via multichallenge.
+     *
+     * @return bool True if any challenge is part of an enrollment via multichallenge, false otherwise.
+     */
+    public function isEnrollViaMultichallenge(): bool
+    {
+        return $this->isEnrollViaMultichallenge;
+    }
 
 	/**
 	 * @return string Combined messages of all triggered token.
