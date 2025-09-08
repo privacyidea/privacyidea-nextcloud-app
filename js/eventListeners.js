@@ -35,10 +35,6 @@ function eventListeners()
     // PASSKEY AUTHENTICATION
     if (document.getElementById("passkeyButton") !== null)
     {
-        if (piGetValue("mode") === "push")
-        {
-            piPasskeyAuthentication();
-        }
         document.getElementById("passkeyButton").addEventListener("click", function ()
         {
             piPasskeyAuthentication();
@@ -60,7 +56,7 @@ function eventListeners()
     // POLL BY RELOAD
     if (piGetValue("mode") === "push")
     {
-        const pollingIntervals = [4, 3, 2];
+        const pollingIntervals = [8, 5, 4];
         let loadCounter = document.getElementById("loadCounter").value;
         let refreshTime;
 
