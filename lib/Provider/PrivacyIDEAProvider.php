@@ -445,14 +445,26 @@ class PrivacyIDEAProvider implements IProvider
 				if (!empty($challenge->image)) {
 					if (!empty($challenge->clientMode) && $challenge->clientMode === 'interactive') {
 						$this->session->set('piImgOtp', $challenge->image);
+                        if ($response->isEnrollViaMultichallenge()) {
+                            $this->session->set('piMode', 'otp');
+                        }
 					} elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'poll') {
 						if ($challenge->type === 'push') {
 							$this->session->set('piImgPush', $challenge->image);
+                            if ($response->isEnrollViaMultichallenge()) {
+                                $this->session->set('piMode', 'push');
+                            }
 						} elseif ($challenge->type === 'smartphone') {
 							$this->session->set('piImgSmartphone', $challenge->image);
+                            if ($response->isEnrollViaMultichallenge()) {
+                                $this->session->set('piMode', 'push');
+                            }
 						}
 					} elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'webauthn') {
 						$this->session->set('piImgWebAuthn', $challenge->image);
+                        if ($response->isEnrollViaMultichallenge()) {
+                            $this->session->set('piMode', 'webauthn');
+                        }
 					}
 				}
 				if (!empty($challenge->enrollmentLink)) {
