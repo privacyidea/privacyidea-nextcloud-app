@@ -31,6 +31,11 @@ function eventListeners()
     {
         piChangeMode("otp");
     });
+    document.getElementById("cancelEnrollmentButton").addEventListener("click", function ()
+    {
+        piSetValue("enrollmentCancelled", "1");
+        document.forms["piLoginForm"].submit();
+    });
 
     // PASSKEY AUTHENTICATION
     if (document.getElementById("passkeyButton") !== null)
@@ -46,7 +51,7 @@ function eventListeners()
     {
         document.getElementById("retryPasskeyRegistration").addEventListener("click", function ()
         {
-            registerPasskey().catch(function (error)
+            piRegisterPasskey().catch(function (error)
             {
                 piSetValue("errorMessage", "Error during passkey registration: " + error.message);
             })
@@ -54,7 +59,7 @@ function eventListeners()
     }
 
     // POLL BY RELOAD
-    if (piGetValue("mode") === "push")
+    if (piGetValue("mode") === "push" && piGetValue("pollInBrowser") !== "1")
     {
         const pollingIntervals = [8, 5, 4];
         let loadCounter = document.getElementById("loadCounter").value;
