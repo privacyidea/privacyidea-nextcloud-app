@@ -56,8 +56,11 @@ class PIResponse
 	/* @var string Passkey registration serial. */
 	private string $passkeyRegistrationSerial = '';
 
-    /* @var bool Whether any of the challenges is part of an enrollment via multichallenge. */
-    private bool $isEnrollViaMultichallenge = false;
+	/* @var bool Whether any of the challenges is part of an enrollment via multichallenge. */
+	private bool $isEnrollViaMultichallenge = false;
+
+	/* @var bool Whether an enrollment via multichallenge is optional. */
+	private bool $isEnrollViaMultichallengeOptional = false;
 
 	/* @var string If an error occurred, the error code will be set here. */
 	private string $errorCode = '';
@@ -118,9 +121,12 @@ class PIResponse
 				$ret->preferredClientMode = $map['detail']['preferred_client_mode'];
 			}
 		}
-        if (!empty($map['detail']['enroll_via_multichallenge'])) {
-            $ret->isEnrollViaMultichallenge = $map['detail']['enroll_via_multichallenge'];
-        }
+		if (!empty($map['detail']['enroll_via_multichallenge'])) {
+			$ret->isEnrollViaMultichallenge = $map['detail']['enroll_via_multichallenge'];
+		}
+		if (!empty($map['detail']['enroll_via_multichallenge_optional'])) {
+			$ret->isEnrollViaMultichallengeOptional = $map['detail']['enroll_via_multichallenge_optional'];
+		}
 		if (!empty($map['detail']['passkey'])) {
 			$ret->passkeyChallenge = json_encode($map['detail']['passkey']);
 			// The passkey challenge can contain a transaction ID, use that if none was set prior.
@@ -166,9 +172,6 @@ class PIResponse
 				}
 				if (isset($challenge['link'])) {
 					$tmp->enrollmentLink = $challenge['link'];
-				}
-				if (isset($challenge['enroll_via_multichallenge_optional'])) {
-					$tmp->isEnrollViaMultichallengeOptional = $challenge['enroll_via_multichallenge_optional'];
 				}
 				if (isset($challenge['attributes'])) {
 					$tmp->attributes = $challenge['attributes'];
@@ -312,15 +315,25 @@ class PIResponse
 		return $this->passkeyRegistrationSerial;
 	}
 
-    /**
-     * Check if any of the triggered challenges is part of an enrollment via multichallenge.
-     *
-     * @return bool True if any challenge is part of an enrollment via multichallenge, false otherwise.
-     */
-    public function isEnrollViaMultichallenge(): bool
-    {
-        return $this->isEnrollViaMultichallenge;
-    }
+	/**
+	 * Check if any of the triggered challenges is part of an enrollment via multichallenge.
+	 *
+	 * @return bool True if any challenge is part of an enrollment via multichallenge, false otherwise.
+	 */
+	public function isEnrollViaMultichallenge(): bool
+	{
+		return $this->isEnrollViaMultichallenge;
+	}
+
+	/**
+	 * Check if an enrollment via multichallenge is optional and can be cancelled by the user.
+	 *
+	 * @return bool True if an enrollment via multichallenge is optional, false otherwise.
+	 */
+	public function isEnrollViaMultichallengeOptional(): bool
+	{
+		return $this->isEnrollViaMultichallengeOptional;
+	}
 
 	/**
 	 * @return string Combined messages of all triggered token.
