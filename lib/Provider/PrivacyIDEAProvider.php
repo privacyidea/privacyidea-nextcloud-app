@@ -168,7 +168,10 @@ class PrivacyIDEAProvider implements IProvider
 			$template->assign('imgOtp', $this->session->get('piImgOtp'));
 		}
 		if ($this->session->get('piEnrollmentLink') !== null) {
-			$template->assign('enrollmentLink', $this->session->get('piEnrollmentLink'));
+			$template->assign('link', $this->session->get('piEnrollmentLink'));
+		}
+		if ($this->session->get('piEnrollViaMultichallenge') !== null) {
+			$template->assign('isEnrollViaMultichallenge', $this->session->get('piEnrollViaMultichallenge'));
 		}
 		if ($this->session->get('piEnrollViaMultichallengeOptional') !== null) {
 			$template->assign('isEnrollViaMultichallengeOptional', $this->session->get('piEnrollViaMultichallengeOptional'));
@@ -204,6 +207,7 @@ class PrivacyIDEAProvider implements IProvider
 		$template->assign('cancelEnrollment', $this->trans->t('Cancel Enrollment'));
 		$template->assign('retryPasskeyRegistration', $this->trans->t('Retry Passkey Registration'));
 		$template->assign('alternateLoginOptions', $this->trans->t('Alternate Login Options'));
+		$template->assign('enrollmentLink', $this->trans->t('Enrollment Link'));
 
 		return $template;
 	}
@@ -278,7 +282,7 @@ class PrivacyIDEAProvider implements IProvider
 		}
 
 		// Cancel enrollment via multichallenge if requested
-		if (!empty($this->request->getParam('cancelEnrollment'))) {
+		if (!empty($this->request->getParam('enrollmentCancelled'))) {
 			$piResponse = $this->pi->validateCheckCancelEnrollment($transactionID, $headers);
 			if (!empty($piResponse)) {
 				if (!empty($piResponse->getErrorMessage())) {
@@ -432,6 +436,7 @@ class PrivacyIDEAProvider implements IProvider
 			// Passkey registration
 			if (!empty($response->getPasskeyRegistration()) && !empty($response->getSerial())) {
 				$this->session->set('piPasskeyRegistration', $response->getPasskeyRegistration());
+				$this->session->set('piMessage', $response->getMessage());
 				$this->session->set('piPasskeyRegistrationSerial', $response->getPasskeyRegistrationSerial());
 			}
 			// Passkey challenge
@@ -445,33 +450,36 @@ class PrivacyIDEAProvider implements IProvider
 				if (!empty($challenge->image)) {
 					if (!empty($challenge->clientMode) && $challenge->clientMode === 'interactive') {
 						$this->session->set('piImgOtp', $challenge->image);
-                        if ($response->isEnrollViaMultichallenge()) {
-                            $this->session->set('piMode', 'otp');
-                        }
+						if ($response->isEnrollViaMultichallenge()) {
+							$this->session->set('piMode', 'otp');
+						}
 					} elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'poll') {
 						if ($challenge->type === 'push') {
 							$this->session->set('piImgPush', $challenge->image);
-                            if ($response->isEnrollViaMultichallenge()) {
-                                $this->session->set('piMode', 'push');
-                            }
+							if ($response->isEnrollViaMultichallenge()) {
+								$this->session->set('piMode', 'push');
+							}
 						} elseif ($challenge->type === 'smartphone') {
 							$this->session->set('piImgSmartphone', $challenge->image);
-                            if ($response->isEnrollViaMultichallenge()) {
-                                $this->session->set('piMode', 'push');
-                            }
+							if ($response->isEnrollViaMultichallenge()) {
+								$this->session->set('piMode', 'push');
+							}
 						}
 					} elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'webauthn') {
 						$this->session->set('piImgWebAuthn', $challenge->image);
-                        if ($response->isEnrollViaMultichallenge()) {
-                            $this->session->set('piMode', 'webauthn');
-                        }
+						if ($response->isEnrollViaMultichallenge()) {
+							$this->session->set('piMode', 'webauthn');
+						}
 					}
 				}
 				if (!empty($challenge->enrollmentLink)) {
 					$this->session->set('piEnrollmentLink', $challenge->enrollmentLink);
 				}
-				if (!empty($challenge->isEnrollViaMultichallengeOptional)) {
-					$this->session->set('piEnrollViaMultichallengeOptional', $challenge->isEnrollViaMultichallengeOptional);
+				if (!empty($response->isEnrollViaMultichallenge())) {
+					$this->session->set('piEnrollViaMultichallenge', true);
+				}
+				if (!empty($response->isEnrollViaMultichallengeOptional())) {
+					$this->session->set('piEnrollViaMultichallengeOptional', true);
 				}
 			}
 		} elseif (!empty($response->getErrorCode())) {
