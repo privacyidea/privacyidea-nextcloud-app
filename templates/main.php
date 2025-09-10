@@ -31,9 +31,13 @@ if (!empty($_['imgSmartphone']) && $_['mode'] === 'push') : ?>
 if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
     <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOtp']); ?>" alt="OTP Image">
 <?php endif;?>
-<?php if (!empty($_['enrollmentLink'])) : ?>
-    <a id="enrollmentLink" href="<?php p($_['enrollmentLink']); ?>" target="_blank" rel="noopener noreferrer">Enrollment Link</a>
+<?php if (!empty($_['link'])) : ?>
+    <a id="enrollmentLink" href="<?php p($_['link']); ?>" target="_blank" rel="noopener noreferrer"><?php if (isset($_['enrollmentLink'])) : p($_['enrollmentLink']); endif; ?></a>
+    <br>
 <?php endif;?>
+<label>
+    <input id="cancelEnrollmentButton" type="button" class="button" value="<?php if (isset($_['cancelEnrollment'])) : p($_['cancelEnrollment']); endif; ?>">
+</label>
 
 <!-- FORM -->
 <form method="POST" id="piLoginForm" name="piLoginForm">
@@ -49,11 +53,6 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
         <br>
         <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
     </div>
-    <?php if (!empty($_['isEnrollmentViaMultichallengeOptional'])) : ?>
-        <label>
-            <input id="cancelEnrollment" type="button" class="button" value="<?php if (isset($_['cancelEnrollment'])) : p($_['cancelEnrollment']); endif; ?>">
-        </label>
-    <?php endif; ?>
 
     <!-- Hidden input that saves the changes -->
     <input id="modeChanged" type="hidden" name="modeChanged" value="0"/>
@@ -72,8 +71,11 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
     <input id="passkeyRegistrationResponse" type="hidden" name="passkeyRegistrationResponse" value=""/>
     <input id="passkeySignResponse" type="hidden" name="passkeySignResponse" value=""/>
     <input id="passkeyLoginCancelled" type="hidden" name="passkeyLoginCancelled" value="0"/>
+    <input id="isEnrollViaMultichallenge" type="hidden" name="isEnrollViaMultichallenge"
+           value="<?php if (isset($_['isEnrollViaMultichallenge'])) : p($_['isEnrollViaMultichallenge']); endif; ?>"/>
     <input id="isEnrollViaMultichallengeOptional" type="hidden" name="isEnrollViaMultichallengeOptional"
            value="<?php if (isset($_['isEnrollViaMultichallengeOptional'])) : p($_['isEnrollViaMultichallengeOptional']); endif; ?>"/>
+    <input id="enrollmentCancelled" type="hidden" name="enrollmentCancelled" value=""/>
     <input id="isPushAvailable" type="hidden" name="isPushAvailable"
            value="<?php if (isset($_['isPushAvailable'])) : p($_['isPushAvailable']); endif; ?>"/>
     <input id="otpAvailable" type="hidden" name="otpAvailable"
