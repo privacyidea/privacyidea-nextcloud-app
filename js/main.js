@@ -108,9 +108,7 @@ function processWebauthn()
     try
     {
         const requestJson = JSON.parse(piGetValue("webAuthnSignRequest"));
-        console.log("WebAuthn sign request in json: " + requestJson);
         const webAuthnSignResponse = piWebauthn.sign(requestJson);
-        console.log("WebAuthn sign response: " + webAuthnSignResponse);
         webAuthnSignResponse.then(function (credentials)
         {
             const response = JSON.stringify(credentials);
@@ -120,13 +118,11 @@ function processWebauthn()
         }).catch(function (error)
         {
             console.log("Error while signing WebAuthnSignRequest: ", error);
-            window.alert("Error while signing WebAuthnSignRequest: " + error);
         });
     }
     catch (error)
     {
         console.log("Error while signing WebAuthnSignRequest: " + error);
-        window.alert("Error while signing WebAuthnSignRequest: " + error);
     }
 }
 
