@@ -44,11 +44,11 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
     <div id="otpSection">
         <?php if (isset($_['separateOTP']) && $_['separateOTP']) : ?>
             <label>
-                <input id="passField" type="password" name="passField" placeholder="Password" autocomplete="new-password" required autofocus>
+                <input id="passField" type="text" name="passField" placeholder="Password" autocomplete="off" required autofocus>
             </label>
         <?php endif; ?>
         <label>
-            <input id="otp" type="password" name="challenge" placeholder="One-Time-Password" autocomplete="new-password" autofocus>
+            <input id="otp" type="text" name="challenge" placeholder="One-Time-Password" autocomplete="off" autofocus>
         </label>
         <br>
         <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
