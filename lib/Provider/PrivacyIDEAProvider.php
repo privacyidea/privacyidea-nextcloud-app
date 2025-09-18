@@ -204,10 +204,10 @@ class PrivacyIDEAProvider implements IProvider
 
 		// Add translations
 		$template->assign('verify', $this->trans->t('Verify'));
-		$template->assign('cancelEnrollment', $this->trans->t('Cancel Enrollment'));
-		$template->assign('retryPasskeyRegistration', $this->trans->t('Retry Passkey Registration'));
-		$template->assign('alternateLoginOptions', $this->trans->t('Alternate Login Options'));
-		$template->assign('enrollmentLink', $this->trans->t('Enrollment Link'));
+		$template->assign('cancelEnrollment', $this->trans->t('Cancel enrollment'));
+		$template->assign('retryPasskeyRegistration', $this->trans->t('Retry passkey registration'));
+		$template->assign('alternateLoginOptions', $this->trans->t('Alternate login options'));
+		$template->assign('enrollmentLink', $this->trans->t('Enrollment link'));
 
 		return $template;
 	}
