@@ -258,9 +258,11 @@ class PrivacyIDEAProvider implements IProvider
 				$piResponse = $this->pi->validateCheckPasskey($passkeyTransactionID, $passkeySignResponse, $origin, $headers);
 				if (!empty($piResponse)) {
 					if ($piResponse->isAuthenticationSuccessful()) {
-						$this->log('debug', 'Passkey authentication successful!');
 						$this->session->set('piSuccess', true);
 						return true;
+					} elseif ($piResponse->getAuthenticationStatus() === AuthenticationStatus::CHALLENGE) {
+						$this->processPIResponse($piResponse);
+						throw new TwoFactorException(' ');
 					} elseif ($piResponse->getAuthenticationStatus() === AuthenticationStatus::REJECT) {
 						$this->log('error', 'Passkey authentication rejected!');
 						$this->session->set('piErrorMessage', 'Passkey authentication rejected!');
@@ -275,9 +277,7 @@ class PrivacyIDEAProvider implements IProvider
 
 		// Passkey login cancelled: Remove the challenge and passkey transaction ID
 		if ($this->request->getParam('passkeyLoginCancelled') === '1') {
-			$this->session->set('piPasskeyChallenge', '');
-			$this->session->set('piPasskeyTransactionID', null);
-			$this->session->set('piMode', 'otp');
+            $this->session->set('piMode', 'otp');
 			throw new TwoFactorException(' ');
 		}
 
