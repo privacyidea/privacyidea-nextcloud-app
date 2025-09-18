@@ -36,8 +36,7 @@ function piFormTemplate()
     }
     if (piGetValue("mode") === "webauthn")
     {
-        piDisableElement("otp");
-        piDisableElement("submitButton");
+        piDisableElement("otpSection");
         piEnableElement("otpButton");
         processWebauthn();
     }
@@ -118,11 +117,13 @@ function processWebauthn()
         }).catch(function (error)
         {
             console.log("Error while signing WebAuthnSignRequest: ", error);
+            piChangeMode("otp");
         });
     }
     catch (error)
     {
         console.log("Error while signing WebAuthnSignRequest: " + error);
+        piChangeMode("otp");
     }
 }
 
