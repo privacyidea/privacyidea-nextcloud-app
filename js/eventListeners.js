@@ -42,6 +42,8 @@ function eventListeners()
     {
         document.getElementById("passkeyButton").addEventListener("click", function ()
         {
+            piDisableElement("otpSection");
+            piEnableElement("otpButton");
             piPasskeyAuthentication();
         });
     }
