@@ -92,11 +92,7 @@ class PrivacyIDEAProvider implements IProvider
 						try {
 							$response = $this->pi->triggerChallenge($username, $headers);
 							$this->session->set('piTriggerChallengeDone', true);
-							if ($response !== null) {
-								$this->processPIResponse($response);
-							} else {
-								$this->log('error', 'No response from privacyIDEA server for triggerchallenge.');
-							}
+							$this->processPIResponse($response);
 						} catch (PIBadRequestException $e) {
 							$this->handlePIException($e);
 						}
