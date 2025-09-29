@@ -361,8 +361,9 @@ class PrivacyIDEAProvider implements IProvider
 	 */
 	private function createPrivacyIDEAInstance(): ?PrivacyIDEA
 	{
-		if (!empty($this->getAppValue('piURL', ''))) {
-			$pi = new PrivacyIDEA('privacyidea-nextcloud/1.1.0', $this->getAppValue('piURL', ''));
+		$piUrl = $this->getAppValue('piURL', '');
+		if (!empty($piUrl)) {
+			$pi = new PrivacyIDEA('privacyidea-nextcloud/1.1.0', $piUrl);
 			$pi->setSSLVerifyHost($this->getAppValue('piSSLVerify', true));
 			$pi->setSSLVerifyPeer($this->getAppValue('piSSLVerify', true));
 			$pi->setServiceAccountName($this->getAppValue('piServiceName', ''));
