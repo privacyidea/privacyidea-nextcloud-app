@@ -8,6 +8,11 @@ All notable changes to this project will be documented in this file.
 
 - Passkey token, usable with PIN/Triggerchallenge.
 - Passkey registration.
+- Smartphone container enrollment.
+- enroll_via_multichallenge cancellable if enabled in privacyIDEA.
+
+### Improvements
+
 - Improved error handling and user feedback during authentication and registration processes.
 - Minor bug fixes and performance improvements.
 
