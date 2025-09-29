@@ -129,73 +129,39 @@ class PrivacyIDEAProvider implements IProvider
 		// Set options, tokens and load counter to the template
 		$template = new Template('privacyidea', 'main');
 
-		if (!empty($this->session->get('piMessage'))) {
-			$template->assign('message', $this->session->get('piMessage'));
-		} else {
-			$template->assign('message', $this->getAppValue('piDefaultMessage', 'Please enter the OTP!'));
-		}
-		if ($this->session->get('piMode') !== null) {
-			$template->assign('mode', $this->session->get('piMode'));
-		}
-		if ($this->session->get('piWebAuthnSignRequest') !== null) {
-			$template->assign('webAuthnSignRequest', $this->session->get('piWebAuthnSignRequest'));
-		}
-		if ($this->session->get('piPasskeyRegistration') !== null) {
-			$template->assign('passkeyRegistration', $this->session->get('piPasskeyRegistration'));
-		}
-		if ($this->session->get('piPasskeyRegistrationSerial') !== null) {
-			$template->assign('passkeyRegistrationSerial', $this->session->get('piPasskeyRegistrationSerial'));
-		}
-		if ($this->session->get('piPasskeyChallenge') !== null) {
-			$template->assign('passkeyChallenge', $this->session->get('piPasskeyChallenge'));
-		}
-		if ($this->session->get('piPushOrSmartphoneContainerAvailable')) {
-			$template->assign('isPushAvailable', $this->session->get('piPushOrSmartphoneContainerAvailable'));
-		}
-		if ($this->session->get('piOTPAvailable')) {
-			$template->assign('otpAvailable', $this->session->get('piOTPAvailable'));
-		}
-		if ($this->session->get('piImgWebauthn') !== null) {
-			$template->assign('imgWebauthn', $this->session->get('piImgWebauthn'));
-		}
-		if ($this->session->get('piImgPush') !== null) {
-			$template->assign('imgPush', $this->session->get('piImgPush'));
-		}
-		if ($this->session->get('piImgSmartphone') !== null) {
-			$template->assign('imgSmartphone', $this->session->get('piImgSmartphone'));
-		}
-		if ($this->session->get('piImgOtp') !== null) {
-			$template->assign('imgOtp', $this->session->get('piImgOtp'));
-		}
-		if ($this->session->get('piEnrollmentLink') !== null) {
-			$template->assign('link', $this->session->get('piEnrollmentLink'));
-		}
-		if ($this->session->get('piEnrollViaMultichallenge') !== null) {
-			$template->assign('isEnrollViaMultichallenge', $this->session->get('piEnrollViaMultichallenge'));
-		}
-		if ($this->session->get('piEnrollViaMultichallengeOptional') !== null) {
-			$template->assign('isEnrollViaMultichallengeOptional', $this->session->get('piEnrollViaMultichallengeOptional'));
-		}
-		$template->assign('activateAutoSubmitOtpLength', $this->getAppValue('piActivateAutoSubmitOtpLength', '0'));
-		$template->assign('autoSubmitOtpLength', $this->getAppValue('piAutoSubmitOtpLength', '6'));
-		$template->assign('pollInBrowser', $this->getAppValue('piPollInBrowser', '0'));
-		$template->assign('pollInBrowserUrl', $this->getAppValue('piPollInBrowserURL', ''));
-		if ($this->session->get('piTransactionID') !== null) {
-			$template->assign('transactionID', $this->session->get('piTransactionID'));
-		}
-		if ($this->session->get('piSeparateOTP') !== null && $this->session->get('piSeparateOTP') === true) {
-			$template->assign('separateOTP', $this->session->get('piSeparateOTP'));
-		}
-		if ($this->session->get('piPollInBrowserFailed') !== null && $this->session->get('piPollInBrowserFailed') === true) {
-			$template->assign('pollInBrowserFailed', $this->session->get('piPollInBrowserFailed'));
-		}
-		if ($this->session->get('piErrorMessage') !== null) {
-			$template->assign('errorMessage', $this->session->get('piErrorMessage'));
-		}
-		if ($this->session->get('piAutoSubmit') !== null && $this->session->get('piAutoSubmit') === true) {
-			$template->assign('autoSubmit', $this->session->get('piAutoSubmit'));
+		$sessionToTemplate = [
+			'piMessage' => ['message', $this->getAppValue('piDefaultMessage', 'Please enter the OTP!')],
+			'piMode' => ['mode', null],
+			'piWebAuthnSignRequest' => ['webAuthnSignRequest', null],
+			'piPasskeyRegistration' => ['passkeyRegistration', null],
+			'piPasskeyRegistrationSerial' => ['passkeyRegistrationSerial', null],
+			'piPasskeyChallenge' => ['passkeyChallenge', null],
+			'piPushOrSmartphoneContainerAvailable' => ['isPushAvailable', null],
+			'piOTPAvailable' => ['otpAvailable', null],
+			'piImgWebauthn' => ['imgWebauthn', null],
+			'piImgPush' => ['imgPush', null],
+			'piImgSmartphone' => ['imgSmartphone', null],
+			'piImgOtp' => ['imgOtp', null],
+			'piEnrollmentLink' => ['link', null],
+			'piEnrollViaMultichallenge' => ['isEnrollViaMultichallenge', null],
+			'piEnrollViaMultichallengeOptional' => ['isEnrollViaMultichallengeOptional', null],
+			'piTransactionID' => ['transactionID', null],
+			'piSeparateOTP' => ['separateOTP', null],
+			'piPollInBrowserFailed' => ['pollInBrowserFailed', null],
+			'piErrorMessage' => ['errorMessage', null],
+			'piAutoSubmit' => ['autoSubmit', null],
+		];
+
+		foreach ($sessionToTemplate as $sessionKey => [$tplKey, $default]) {
+			$val = $this->session->get($sessionKey);
+			if ($val !== null) {
+				$template->assign($tplKey, $val);
+			} elseif ($sessionKey === 'piMessage' && empty($val)) {
+				$template->assign($tplKey, $default);
+			}
 		}
 
+		// Load counter for PUSH polling
 		$loads = 1;
 		if ($this->session->get('piLoadCounter') !== null) {
 			$loads = $this->session->get('piLoadCounter');
@@ -277,7 +243,7 @@ class PrivacyIDEAProvider implements IProvider
 
 		// Passkey login cancelled: Remove the challenge and passkey transaction ID
 		if ($this->request->getParam('passkeyLoginCancelled') === '1') {
-            $this->session->set('piMode', 'otp');
+			$this->session->set('piMode', 'otp');
 			throw new TwoFactorException(' ');
 		}
 
