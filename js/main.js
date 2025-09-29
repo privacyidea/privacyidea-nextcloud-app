@@ -1,56 +1,58 @@
 function piFormTemplate()
 {
-    if (piGetValue("webAuthnSignRequest") === "")
-    {
-        piDisableElement("webAuthnButton");
-    }
-    if (piGetValue("isPushAvailable") !== "1")
-    {
-        piDisableElement("pushButton");
-    }
-    if (piGetValue("otpAvailable") !== "1")
-    {
-        piDisableElement("otpButton");
-    }
-    if (piGetValue("mode") === "otp" || piGetValue("mode").length < 1)
-    {
-        piDisableElement("otpButton");
-    }
-    if (piGetValue("mode") === "push")
+    // Cache values to avoid repeated DOM lookups
+    const webAuthnSignRequest = piGetValue("webAuthnSignRequest");
+    const isPushAvailable = piGetValue("isPushAvailable");
+    const otpAvailable = piGetValue("otpAvailable");
+    const mode = piGetValue("mode");
+    const passkeyRegistration = piGetValue("passkeyRegistration");
+    const passkeyChallenge = piGetValue("passkeyChallenge");
+    const isEnrollViaMultichallenge = piGetValue("isEnrollViaMultichallenge");
+    const isEnrollViaMultichallengeOptional = piGetValue("isEnrollViaMultichallengeOptional");
+
+    if (webAuthnSignRequest === "") piDisableElement("webAuthnButton");
+    if (isPushAvailable !== "1") piDisableElement("pushButton");
+    if (otpAvailable !== "1") piDisableElement("otpButton");
+    if (mode === "otp" || mode.length < 1) piDisableElement("otpButton");
+
+    if (mode === "push")
     {
         piDisableElement("otpSection");
         piDisableElement("pushButton");
         piEnableElement("otpButton");
     }
-    if (piGetValue("passkeyRegistration").length > 0)
+
+    if (passkeyRegistration.length > 0)
     {
         piDisableElement("alternateLoginOptions");
         piDisableElement("otpSection");
     }
-    if (piGetValue("isPushAvailable") !== "1"
-        && piGetValue("webAuthnSignRequest").length < 1
-        && piGetValue("passkeyChallenge").length < 1
-        || piGetValue("isEnrollViaMultichallenge") === "1")
+
+    if (isPushAvailable !== "1" &&
+        webAuthnSignRequest.length < 1 &&
+        passkeyChallenge.length < 1 ||
+        isEnrollViaMultichallenge === "1")
     {
         piDisableElement("alternateLoginOptions");
     }
-    if (piGetValue("mode") === "webauthn")
+
+    if (mode === "webauthn")
     {
         piDisableElement("otpSection");
         piEnableElement("otpButton");
         processWebauthn();
     }
-    if (piGetValue("isEnrollViaMultichallengeOptional") !== "1")
-    {
-        piDisableElement("cancelEnrollmentButton");
-    }
+
+    if (isEnrollViaMultichallengeOptional !== "1") piDisableElement("cancelEnrollmentButton");
+
     // Passkey authentication
-    if (piGetValue("mode") === "passkey")
+    if (mode === "passkey")
     {
         piPasskeyAuthentication();
     }
+
     // Passkey registration
-    if (piGetValue("passkeyRegistration").length > 0)
+    if (passkeyRegistration.length > 0)
     {
         piRegisterPasskey().catch(function (error)
         {
