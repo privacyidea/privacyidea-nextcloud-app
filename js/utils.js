@@ -1,58 +1,40 @@
-window.piGetValue = function getValue(id)
-{
+window.piGetValue = function getValue(id) {
     const element = document.getElementById(id);
-    if (element === null)
-    {
+    if (element === null) {
         console.log(id + " is null!");
         return "";
     }
-    else
-    {
-        return element.value;
-    }
+    return element.value;
 }
 
-window.piSetValue = function setValue(id, value)
-{
+window.piSetValue = function setValue(id, value) {
     const element = document.getElementById(id);
-    if (element !== null)
-    {
+    if (element !== null) {
         element.value = value;
-    }
-    else
-    {
+    } else {
         console.log(id + " is null!");
     }
 }
 
-window.piDisableElement = function disableElement(id)
-{
+window.piDisableElement = function disableElement(id) {
     const element = document.getElementById(id);
-    if (element !== null)
-    {
+    if (element !== null) {
         element.style.display = "none";
-    }
-    else
-    {
+    } else {
         console.log(id + " is null!");
     }
 }
 
-window.piEnableElement = function enableElement(id)
-{
+window.piEnableElement = function enableElement(id) {
     const element = document.getElementById(id);
-    if (element !== null)
-    {
+    if (element !== null) {
         element.style.display = "initial";
-    }
-    else
-    {
+    } else {
         console.log(id + " is null!");
     }
 }
 
-window.piChangeMode = function changeMode(newMode)
-{
+window.piChangeMode = function changeMode(newMode) {
     document.getElementById("mode").value = newMode;
     document.getElementById("modeChanged").value = "1";
     document.forms["piLoginForm"].submit();
@@ -66,7 +48,7 @@ function bytesToBase64(bytes)
     return btoa(binString);
 }
 
-// Convert a byte array to a base64 string
+// Convert a base64url string to a byte array
 // Used for passkey registration
 function base64URLToBytes (base64URLString)
 {
