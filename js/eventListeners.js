@@ -4,12 +4,14 @@ function eventListeners()
     if (piGetValue("autoSubmit"))
     {
         document.forms["piLoginForm"].submit();
+        return;
     }
 
     // AUTO SUBMIT BY OTP LENGTH
     if (piGetValue("activateAutoSubmitOtpLength") === "1")
     {
-        document.getElementById("otp").addEventListener("keyup", function ()
+        const otpInput = document.getElementById("otp");
+        otpInput && otpInput.addEventListener("keyup", function ()
         {
             if (piGetValue('otp').length === parseInt(piGetValue("autoSubmitOtpLength")))
             {
@@ -19,28 +21,24 @@ function eventListeners()
     }
 
     // BUTTON LISTENERS
-    document.getElementById("webAuthnButton").addEventListener("click", function ()
-    {
-        piChangeMode("webauthn");
-    });
-    document.getElementById("pushButton").addEventListener("click", function ()
-    {
-        piChangeMode("push");
-    });
-    document.getElementById("otpButton").addEventListener("click", function ()
-    {
-        piChangeMode("otp");
-    });
-    document.getElementById("cancelEnrollmentButton").addEventListener("click", function ()
-    {
-        piSetValue("enrollmentCancelled", "1");
-        document.forms["piLoginForm"].submit();
+    [
+        ["webAuthnButton", () => piChangeMode("webauthn")],
+        ["pushButton", () => piChangeMode("push")],
+        ["otpButton", () => piChangeMode("otp")],
+        ["cancelEnrollmentButton", () => {
+            piSetValue("enrollmentCancelled", "1");
+            document.forms["piLoginForm"].submit();
+        }]
+    ].forEach(([id, handler]) => {
+        const el = document.getElementById(id);
+        el && el.addEventListener("click", handler);
     });
 
     // PASSKEY AUTHENTICATION
-    if (document.getElementById("passkeyButton") !== null)
+    const passkeyBtn = document.getElementById("passkeyButton");
+    if (passkeyBtn)
     {
-        document.getElementById("passkeyButton").addEventListener("click", function ()
+        passkeyBtn.addEventListener("click", function ()
         {
             piDisableElement("otpSection");
             piEnableElement("otpButton");
@@ -49,14 +47,15 @@ function eventListeners()
     }
 
     // PASSKEY REGISTRATION
-    if (document.getElementById("retryPasskeyRegistration") !== null)
+    const retryPasskeyBtn = document.getElementById("retryPasskeyRegistration");
+    if (retryPasskeyBtn)
     {
-        document.getElementById("retryPasskeyRegistration").addEventListener("click", function ()
+        retryPasskeyBtn.addEventListener("click", function ()
         {
             piRegisterPasskey().catch(function (error)
             {
                 piSetValue("errorMessage", "Error during passkey registration: " + error.message);
-            })
+            });
         });
     }
 
@@ -64,46 +63,31 @@ function eventListeners()
     if (piGetValue("mode") === "push" && piGetValue("pollInBrowser") !== "1")
     {
         const pollingIntervals = [8, 5, 4];
-        let loadCounter = document.getElementById("loadCounter").value;
-        let refreshTime;
-
-        if (loadCounter > (pollingIntervals.length - 1))
-        {
-            refreshTime = pollingIntervals[(pollingIntervals.length - 1)];
-        }
-        else
-        {
-            refreshTime = pollingIntervals[Number(loadCounter - 1)];
-        }
-
-        refreshTime *= 1000;
-
-        window.setTimeout(function ()
-        {
-            document.forms["piLoginForm"].submit();
-        }, refreshTime);
+        let loadCounter = Number(document.getElementById("loadCounter").value) || 1;
+        let refreshTime = pollingIntervals[Math.min(loadCounter - 1, pollingIntervals.length - 1)] * 1000;
+        window.setTimeout(() => document.forms["piLoginForm"].submit(), refreshTime);
     }
 
     // POLL IN BROWSER
-    if (piGetValue("pollInBrowser") === "1"
-        && piGetValue("pollInBrowserUrl").length > 0
-        && piGetValue("transactionID").length > 0)
+    if (piGetValue("pollInBrowser") === "1" &&
+        piGetValue("pollInBrowserUrl").length > 0 &&
+        piGetValue("transactionID").length > 0)
     {
         piDisableElement("pushButton");
         let worker;
-        if (typeof (Worker) !== "undefined")
+        if (typeof Worker !== "undefined")
         {
-            if (typeof (worker) == "undefined")
+            if (!worker)
             {
                 worker = new Worker("/apps/privacyidea/js/pollTransaction.worker.js");
-                document.getElementById("submitButton").addEventListener('click', function (e)
+                document.getElementById("submitButton").addEventListener('click', function ()
                 {
                     worker.terminate();
                     worker = undefined;
                 });
-                worker.postMessage({'cmd': 'url', 'msg': piGetValue("pollInBrowserUrl")});
-                worker.postMessage({'cmd': 'transactionID', 'msg': piGetValue("transactionID")});
-                worker.postMessage({'cmd': 'start'});
+                worker.postMessage({ 'cmd': 'url', 'msg': piGetValue("pollInBrowserUrl") });
+                worker.postMessage({ 'cmd': 'transactionID', 'msg': piGetValue("transactionID") });
+                worker.postMessage({ 'cmd': 'start' });
                 worker.addEventListener('message', function (e)
                 {
                     let data = e.data;
@@ -125,7 +109,6 @@ function eventListeners()
         else
         {
             console.log("Sorry! No Web Worker support.");
-            worker.terminate();
             piSetValue("errorMessage", "Poll in browser error: The browser doesn't support the Web Worker.");
             piSetValue("pollInBrowserFailed", true);
             piEnableElement("pushButton");
@@ -134,7 +117,4 @@ function eventListeners()
 }
 
 // Wait until the document is ready
-document.addEventListener("DOMContentLoaded", function ()
-{
-    eventListeners();
-});
+document.addEventListener("DOMContentLoaded", eventListeners);
