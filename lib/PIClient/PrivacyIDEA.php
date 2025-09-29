@@ -599,12 +599,7 @@ class PrivacyIDEA
 	public function mergeHeaders(string $origin, ?array $headers): array
 	{
 		$originHeader = ['Origin:' . $origin];
-		if (!empty($headers)) {
-			$headers = array_merge($headers, $originHeader);
-		} else {
-			$headers = $originHeader;
-		}
-		return $headers;
+        return array_merge((array) $headers, $originHeader);
 	}
 
 	/**
