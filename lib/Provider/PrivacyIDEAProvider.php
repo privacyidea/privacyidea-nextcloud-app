@@ -84,27 +84,25 @@ class PrivacyIDEAProvider implements IProvider
 				$headers = $this->getHeadersToForward($headersFromConfig);
 			}
 
-			if ($authenticationFlow === 'piAuthFlowTriggerChallenge') {
-				if (!empty($this->pi)) {
-					if (!$this->pi->serviceAccountAvailable()) {
-						$this->log('error', 'Service account name or password is not set in config. Cannot trigger the challenges.');
-					} else {
-						if ($this->session->get('piTriggerChallengeDone') !== true) {
-							try {
-								$response = $this->pi->triggerChallenge($username, $headers);
-								$this->session->set('piTriggerChallengeDone', true);
-								if ($response !== null) {
-									$this->processPIResponse($response);
-								} else {
-									$this->log('error', 'No response from privacyIDEA server for triggerchallenge.');
-								}
-							} catch (PIBadRequestException $e) {
-								$this->handlePIException($e);
+			if (!empty($this->pi) && $authenticationFlow === 'piAuthFlowTriggerChallenge') {
+				if (!$this->pi->serviceAccountAvailable()) {
+					$this->log('error', 'Service account name or password is not set in config. Cannot trigger the challenges.');
+				} else {
+					if ($this->session->get('piTriggerChallengeDone') !== true) {
+						try {
+							$response = $this->pi->triggerChallenge($username, $headers);
+							$this->session->set('piTriggerChallengeDone', true);
+							if ($response !== null) {
+								$this->processPIResponse($response);
+							} else {
+								$this->log('error', 'No response from privacyIDEA server for triggerchallenge.');
 							}
+						} catch (PIBadRequestException $e) {
+							$this->handlePIException($e);
 						}
 					}
 				}
-			} elseif ($authenticationFlow === 'piAuthFlowSendStaticPass') {
+			} elseif (!empty($this->pi) && $authenticationFlow === 'piAuthFlowSendStaticPass') {
 				// Call /validate/check with a static pass from the configuration
 				// This could already end up the authentication if the "passOnNoToken" policy is set.
 				// Otherwise, it triggers the challenges.
@@ -161,11 +159,15 @@ class PrivacyIDEAProvider implements IProvider
 			}
 		}
 
-		// Add configuration options to the template
-		$template->assign('activateAutoSubmitOtpLength', $this->getAppValue('piActivateAutoSubmitOtpLength', '0'));
-		$template->assign('autoSubmitOtpLength', $this->getAppValue('piAutoSubmitOtpLength', '6'));
-		$template->assign('pollInBrowser', $this->getAppValue('piPollInBrowser', '0'));
-		$template->assign('pollInBrowserUrl', $this->getAppValue('piPollInBrowserURL', ''));
+		$configForTemplate = [
+			'activateAutoSubmitOtpLength' => [$this->getAppValue('piActivateAutoSubmitOtpLength', '0')],
+			'autoSubmitOtpLength' => [$this->getAppValue('piAutoSubmitOtpLength', '6')],
+			'pollInBrowser' => [$this->getAppValue('piPollInBrowser', '0')],
+			'pollInBrowserUrl' => [$this->getAppValue('piPollInBrowserURL', '')],
+		];
+		foreach ($configForTemplate as $tplKey => [$val]) {
+			$template->assign($tplKey, $val);
+		}
 
 		// Load counter for PUSH polling
 		$loads = 1;
@@ -175,11 +177,16 @@ class PrivacyIDEAProvider implements IProvider
 		$template->assign('loadCounter', $loads);
 
 		// Add translations
-		$template->assign('verify', $this->trans->t('Verify'));
-		$template->assign('cancelEnrollment', $this->trans->t('Cancel enrollment'));
-		$template->assign('retryPasskeyRegistration', $this->trans->t('Retry passkey registration'));
-		$template->assign('alternateLoginOptions', $this->trans->t('Alternate login options'));
-		$template->assign('enrollmentLink', $this->trans->t('Enrollment link'));
+		$translationsForTemplate = [
+			'verify' => [$this->trans->t('Verify')],
+			'cancelEnrollment' => [$this->trans->t('Cancel enrollment')],
+			'retryPasskeyRegistration' => [$this->trans->t('Retry passkey registration')],
+			'alternateLoginOptions' => [$this->trans->t('Alternate login options')],
+			'enrollmentLink' => [$this->trans->t('Enrollment link')],
+		];
+		foreach ($translationsForTemplate as $tplKey => [$val]) {
+			$template->assign($tplKey, $val);
+		}
 
 		return $template;
 	}
