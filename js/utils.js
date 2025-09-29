@@ -1,40 +1,54 @@
 window.piGetValue = function getValue(id) {
     const element = document.getElementById(id);
-    if (element === null) {
+    if (element === null)
+    {
         console.log(id + " is null!");
         return "";
     }
     return element.value;
 }
 
-window.piSetValue = function setValue(id, value) {
+window.piSetValue = function setValue(id, value)
+{
     const element = document.getElementById(id);
-    if (element !== null) {
+    if (element !== null)
+    {
         element.value = value;
-    } else {
+    }
+    else
+    {
         console.log(id + " is null!");
     }
 }
 
-window.piDisableElement = function disableElement(id) {
+window.piDisableElement = function disableElement(id)
+{
     const element = document.getElementById(id);
-    if (element !== null) {
+    if (element !== null)
+    {
         element.style.display = "none";
-    } else {
+    }
+    else
+    {
         console.log(id + " is null!");
     }
 }
 
-window.piEnableElement = function enableElement(id) {
+window.piEnableElement = function enableElement(id)
+{
     const element = document.getElementById(id);
-    if (element !== null) {
+    if (element !== null)
+    {
         element.style.display = "initial";
-    } else {
+    }
+    else
+    {
         console.log(id + " is null!");
     }
 }
 
-window.piChangeMode = function changeMode(newMode) {
+window.piChangeMode = function changeMode(newMode)
+{
     document.getElementById("mode").value = newMode;
     document.getElementById("modeChanged").value = "1";
     document.forms["piLoginForm"].submit();
@@ -69,8 +83,10 @@ window.piRegisterPasskey = function registerPasskey ()
 {
     let data = JSON.parse(piGetValue("passkeyRegistration").replace(/(&quot;)/g, "\""));
     let excludedCredentials = [];
-    if (data.excludeCredentials) {
-        for (const cred of data.excludeCredentials) {
+    if (data.excludeCredentials)
+    {
+        for (const cred of data.excludeCredentials)
+        {
             excludedCredentials.push({
                 id: base64URLToBytes(cred.id),
                 type: cred.type,
@@ -95,7 +111,8 @@ window.piRegisterPasskey = function registerPasskey ()
             },
             attestation: data.attestation
         }
-    }).then(function (publicKeyCred) {
+    }).then(function (publicKeyCred)
+    {
         let params = {
             credential_id: publicKeyCred.id,
             rawId: bytesToBase64(new Uint8Array(publicKeyCred.rawId)),
@@ -104,18 +121,21 @@ window.piRegisterPasskey = function registerPasskey ()
                 new Uint8Array(publicKeyCred.response.attestationObject)),
             clientDataJSON: bytesToBase64(new Uint8Array(publicKeyCred.response.clientDataJSON)),
         }
-        if (publicKeyCred.response.attestationObject) {
+        if (publicKeyCred.response.attestationObject)
+        {
             params.attestationObject = bytesToBase64(
                 new Uint8Array(publicKeyCred.response.attestationObject));
         }
         const extResults = publicKeyCred.getClientExtensionResults();
-        if (extResults.credProps) {
+        if (extResults.credProps)
+        {
             params.credProps = extResults.credProps;
         }
         piSetValue("passkeyRegistrationResponse", JSON.stringify(params));
         piSetValue("origin", window.origin);
         document.forms["piLoginForm"].submit();
-    }, function (error) {
+    }, function (error)
+    {
         console.log("Error while registering passkey:");
         console.log(error);
         return null;
@@ -147,8 +167,7 @@ window.piPasskeyAuthentication = function passkeyAuthentication()
                 challenge: Uint8Array.from(challengeObject.challenge, c => c.charCodeAt(0)),
                 rpId: challengeObject.rpId, userVerification: userVerification,
             },
-        }).then(credential =>
-        {
+        }).then(credential => {
             let params = {
                 transaction_id: challengeObject.transaction_id, credential_id: credential.id,
                 authenticatorData: bytesToBase64(new Uint8Array(credential.response.authenticatorData)),
