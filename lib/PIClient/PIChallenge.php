@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright 2024 NetKnights GmbH - lukas.matusiewicz@netknights.it
  * <p>
@@ -25,8 +26,8 @@ class PIChallenge
 	/* @var string Image data extracted from this challenge. */
 	public string $image = '';
 
-    /* @var string Enrollment link if available. */
-    public string $enrollmentLink = '';
+	/* @var string Enrollment link if available. */
+	public string $enrollmentLink = '';
 
 	/* @var string TransactionId to reference this challenge in later requests. */
 	public string $transactionID = '';
@@ -40,6 +41,6 @@ class PIChallenge
 	/* @var array Arbitrary attributes that can be appended to the challenge by the server. */
 	public array $attributes = [];
 
-	/* @var string WebAuthn sign request in JSON format */
+	/* @var string WebAuthn sign request in JSON format. */
 	public string $webAuthnSignRequest = '';
 }

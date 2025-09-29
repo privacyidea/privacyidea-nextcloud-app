@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 require_once './vendor-bin/cs-fixer/vendor/autoload.php';
-require_once './src/CodingStandard/Config.php';
+require_once './lib/CodingStandard/Config.php';
 
 use OCA\PrivacyIDEA\CodingStandard\Config;
 

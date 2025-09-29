@@ -25,11 +25,7 @@ class SettingsController extends Controller
 	 * @param IConfig $config
 	 * @param IAppConfig $appConfig
 	 */
-	public function __construct(string   $appName,
-		IRequest $request,
-		IL10N    $trans,
-		IConfig  $config,
-		IAppConfig $appConfig)
+	public function __construct(string $appName, IRequest $request, IL10N $trans, IConfig $config, IAppConfig $appConfig)
 	{
 		parent::__construct($appName, $request);
 		$this->trans = $trans;
