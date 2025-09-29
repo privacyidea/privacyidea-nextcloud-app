@@ -161,6 +161,12 @@ class PrivacyIDEAProvider implements IProvider
 			}
 		}
 
+		// Add configuration options to the template
+		$template->assign('activateAutoSubmitOtpLength', $this->getAppValue('piActivateAutoSubmitOtpLength', '0'));
+		$template->assign('autoSubmitOtpLength', $this->getAppValue('piAutoSubmitOtpLength', '6'));
+		$template->assign('pollInBrowser', $this->getAppValue('piPollInBrowser', '0'));
+		$template->assign('pollInBrowserUrl', $this->getAppValue('piPollInBrowserURL', ''));
+
 		// Load counter for PUSH polling
 		$loads = 1;
 		if ($this->session->get('piLoadCounter') !== null) {
