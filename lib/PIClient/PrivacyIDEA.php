@@ -15,52 +15,11 @@
 
 namespace OCA\PrivacyIDEA\PIClient;
 
+require_once __DIR__ . '/PIConstants.php';
+
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 use function OCP\Log\logger;
-
-const AUTHENTICATORDATA = 'authenticatordata';
-const CLIENTDATA = 'clientdata';
-const SIGNATUREDATA = 'signaturedata';
-const CREDENTIALID = 'credentialid';
-const USERHANDLE = 'userHandle';
-const ASSERTIONCLIENTEXTENSIONS = 'assertionclientextensions';
-const CLIENTDATAJSON = 'clientDataJSON';
-const CREDENTIAL_ID = 'credential_id';
-const ATTESTATIONOBJECT = 'attestationObject';
-const AUTHENTICATORATTACHMENT = 'authenticatorAttachment';
-const RAWID = 'rawId';
-const SIGNATURE = 'signature';
-const AUTHENTICATOR_DATA = 'authenticatorData';
-const USER = 'user';
-const PASS = 'pass';
-const REALM = 'realm';
-const TRANSACTION_ID = 'transaction_id';
-const POST = 'POST';
-const GET = 'GET';
-const PUT = 'PUT';
-const DELETE = 'DELETE';
-const ENDPOINT_VALIDATE_CHECK = '/validate/check';
-const ENDPOINT_VALIDATE_TRIGGERCHALLENGE = '/validate/triggerchallenge';
-const ENDPOINT_VALIDATE_POLLTRANSACTION = '/validate/polltransaction';
-const ENDPOINT_AUTH = '/auth';
-const AUTHORIZATION = 'authorization:';
-const CLIENT = 'client';
-const PROXY = 'proxy';
-const HTTPS = 'https';
-const HTTP = 'http';
-const TIMEOUT = 'timeout';
-const RESULT = 'result';
-const VALUE = 'value';
-const TOKEN = 'token';
-const ROLE = 'role';
-const ADMIN = 'admin';
-const CANCEL_ENROLLMENT = 'cancel_enrollment';
-const PASSKEY = 'passkey';
-const SERIAL = 'serial';
-const TYPE = 'type';
-const USERNAME = 'username';
-const PASSWORD = 'password';
 
 /**
  * PHP client to aid develop plugins for the privacyIDEA authentication server.
@@ -128,32 +87,24 @@ class PrivacyIDEA
 	{
 		assert(gettype($username) === 'string');
 		assert(gettype($pass) === 'string');
-
-		if (!empty($username)) {
-			$params[USER] = $username;
-			$params[PASS] = $pass;
-			if (!empty($transactionID)) {
-				// Add transaction ID in case of challenge response
-				$params[TRANSACTION_ID] = $transactionID;
-			}
-			if (empty($headers)) {
-				$headers = [''];
-			}
-			if (!empty($this->realm)) {
-				$params[REALM] = $this->realm;
-			}
-
-			$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
-
-			$ret = PIResponse::fromJSON($response, $this);
-			if ($ret == null) {
-				$this->log('debug', 'Server did not respond.');
-			}
-			return $ret;
-		} else {
-			$this->log('debug', 'Missing username for /validate/check.');
+		if (empty($username)) {
+			$this->log(DEBUG, 'Missing username for /validate/check.');
+			return null;
 		}
-		return null;
+		$params = [USER => $username, PASS => $pass];
+		if (!empty($transactionID)) {
+			$params[TRANSACTION_ID] = $transactionID;
+		}
+		if (!empty($this->realm)) {
+			$params[REALM] = $this->realm;
+		}
+		$headers = $headers ?? [''];
+		$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
+		$ret = PIResponse::fromJSON($response, $this);
+		if ($ret == null) {
+			$this->log(DEBUG, 'Server did not respond.');
+		}
+		return $ret;
 	}
 
 	/**
@@ -168,30 +119,19 @@ class PrivacyIDEA
 	public function triggerChallenge(string $username, ?array $headers = null): ?PIResponse
 	{
 		assert(gettype($username) === 'string');
-
-		if ($username) {
-			$authToken = $this->getAuthToken();
-			$authTokenHeader = [AUTHORIZATION . $authToken];
-
-			$params = [USER => $username];
-
-			if (!empty($this->realm)) {
-				$params[REALM] = $this->realm;
-			}
-
-			if (!empty($headers)) {
-				$headers = array_merge($headers, $authTokenHeader);
-			} else {
-				$headers = $authTokenHeader;
-			}
-
-			$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_TRIGGERCHALLENGE);
-
-			return PIResponse::fromJSON($response, $this);
-		} else {
-			$this->log('debug', 'Username missing!');
+		if (empty($username)) {
+			$this->log(DEBUG, 'Username missing!');
+			return null;
 		}
-		return null;
+		$authToken = $this->getAuthToken();
+		$authTokenHeader = [AUTHORIZATION . $authToken];
+		$params = [USER => $username];
+		if (!empty($this->realm)) {
+			$params[REALM] = $this->realm;
+		}
+		$headers = !empty($headers) ? array_merge($headers, $authTokenHeader) : $authTokenHeader;
+		$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_TRIGGERCHALLENGE);
+		return PIResponse::fromJSON($response, $this);
 	}
 
 	/**
@@ -205,20 +145,15 @@ class PrivacyIDEA
 	public function pollTransaction(string $transactionID, ?array $headers = null): bool
 	{
 		assert(gettype($transactionID) === 'string');
-
-		if (!empty($transactionID)) {
-			$params = [TRANSACTION_ID => $transactionID];
-			if (empty($headers)) {
-				$headers = [''];
-			}
-
-			$responseJSON = $this->sendRequest($params, $headers, GET, ENDPOINT_VALIDATE_POLLTRANSACTION);
-			$response = json_decode($responseJSON, true);
-			return $response[RESULT][VALUE];
-		} else {
-			$this->log('debug', 'TransactionID missing!');
+		if (empty($transactionID)) {
+			$this->log(DEBUG, 'TransactionID missing!');
+			return false;
 		}
-		return false;
+		$params = [TRANSACTION_ID => $transactionID];
+		$headers = $headers ?? [''];
+		$responseJSON = $this->sendRequest($params, $headers, GET, ENDPOINT_VALIDATE_POLLTRANSACTION);
+		$response = json_decode($responseJSON, true);
+		return $response[RESULT][VALUE] ?? false;
 	}
 
 	/**
@@ -238,42 +173,28 @@ class PrivacyIDEA
 		assert(gettype($transactionID) === 'string');
 		assert(gettype($webAuthnSignResponse) === 'string');
 		assert(gettype($origin) === 'string');
-
-		if (!empty($username) && !empty($transactionID) && !empty($webAuthnSignResponse) && !empty($origin)) {
-			// Compose standard validate/check params
-			$params[USER] = $username;
-			$params[PASS] = '';
-			$params[TRANSACTION_ID] = $transactionID;
-
-			if (!empty($this->realm)) {
-				$params[REALM] = $this->realm;
-			}
-
-			// Additional WebAuthn params
-			$tmp = json_decode($webAuthnSignResponse, true);
-
-			$params[CREDENTIALID] = $tmp[CREDENTIALID];
-			$params[CLIENTDATA] = $tmp[CLIENTDATA];
-			$params[SIGNATUREDATA] = $tmp[SIGNATUREDATA];
-			$params[AUTHENTICATORDATA] = $tmp[AUTHENTICATORDATA];
-
-			if (!empty($tmp[USERHANDLE])) {
-				$params[USERHANDLE] = $tmp[USERHANDLE];
-			}
-			if (!empty($tmp[ASSERTIONCLIENTEXTENSIONS])) {
-				$params[ASSERTIONCLIENTEXTENSIONS] = $tmp[ASSERTIONCLIENTEXTENSIONS];
-			}
-
-			$headers = $this->mergeHeaders($origin, $headers);
-
-			$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
-
-			return PIResponse::fromJSON($response, $this);
-		} else {
-			// Handle debug message if $username is empty
-			$this->log('debug', 'validateCheckWebAuthn: parameters are incomplete!');
+		if (empty($username) || empty($transactionID) || empty($webAuthnSignResponse) || empty($origin)) {
+			$this->log(DEBUG, 'validateCheckWebAuthn: parameters are incomplete!');
+			return null;
 		}
-		return null;
+		$params = [USER => $username, PASS => '', TRANSACTION_ID => $transactionID];
+		if (!empty($this->realm)) {
+			$params[REALM] = $this->realm;
+		}
+		$tmp = json_decode($webAuthnSignResponse, true);
+		$params[CREDENTIALID] = $tmp[CREDENTIALID];
+		$params[CLIENTDATA] = $tmp[CLIENTDATA];
+		$params[SIGNATUREDATA] = $tmp[SIGNATUREDATA];
+		$params[AUTHENTICATORDATA] = $tmp[AUTHENTICATORDATA];
+		if (!empty($tmp[USERHANDLE])) {
+			$params[USERHANDLE] = $tmp[USERHANDLE];
+		}
+		if (!empty($tmp[ASSERTIONCLIENTEXTENSIONS])) {
+			$params[ASSERTIONCLIENTEXTENSIONS] = $tmp[ASSERTIONCLIENTEXTENSIONS];
+		}
+		$headers = $this->mergeHeaders($origin, $headers);
+		$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
+		return PIResponse::fromJSON($response, $this);
 	}
 
 	/**
@@ -291,44 +212,34 @@ class PrivacyIDEA
 		assert(gettype($transactionID) === 'string');
 		assert(gettype($passkeyResponse) === 'string');
 		assert(gettype($origin) === 'string');
-
-		if (!empty($transactionID) && !empty($passkeyResponse) && !empty($origin)) {
-			$passkeyResponseParams = json_decode($passkeyResponse, true);
-
-			if (!is_array($passkeyResponseParams)) {
-				$this->log('debug', 'Invalid passkey response for validateCheckPasskey. Expected an array.');
-				return null;
-			}
-
-			$params = [
-				TRANSACTION_ID => $transactionID,
-				CREDENTIAL_ID => $passkeyResponseParams[CREDENTIAL_ID],
-				CLIENTDATAJSON => $passkeyResponseParams[CLIENTDATAJSON],
-				SIGNATURE => $passkeyResponseParams[SIGNATURE],
-				AUTHENTICATOR_DATA => $passkeyResponseParams[AUTHENTICATOR_DATA]
-			];
-
-			// The userhandle and assertionclientextension fields are optional
-			if (!empty($passkeyResponseParams[USERHANDLE])) {
-				$params[USERHANDLE] = $passkeyResponseParams[USERHANDLE];
-			}
-			if (!empty($passkeyResponseParams[ASSERTIONCLIENTEXTENSIONS])) {
-				$params[ASSERTIONCLIENTEXTENSIONS] = $passkeyResponseParams[ASSERTIONCLIENTEXTENSIONS];
-			}
-
-			if (!empty($this->realm)) {
-				$params[REALM] = $this->realm;
-			}
-
-			$headers = $this->mergeHeaders($origin, $headers);
-			$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
-
-			return PIResponse::fromJSON($response, $this);
-		} else {
-			// Handle debug message if parameters are incomplete
-			$this->log('debug', 'validateCheckPasskey: parameters are invalid or incomplete!');
+		if (empty($transactionID) || empty($passkeyResponse) || empty($origin)) {
+			$this->log(DEBUG, 'validateCheckPasskey: parameters are invalid or incomplete!');
+			return null;
 		}
-		return null;
+		$passkeyResponseParams = json_decode($passkeyResponse, true);
+		if (!is_array($passkeyResponseParams)) {
+			$this->log(DEBUG, 'Invalid passkey response for validateCheckPasskey. Expected an array.');
+			return null;
+		}
+		$params = [
+			TRANSACTION_ID => $transactionID,
+			CREDENTIAL_ID => $passkeyResponseParams[CREDENTIAL_ID],
+			CLIENTDATAJSON => $passkeyResponseParams[CLIENTDATAJSON],
+			SIGNATURE => $passkeyResponseParams[SIGNATURE],
+			AUTHENTICATOR_DATA => $passkeyResponseParams[AUTHENTICATOR_DATA]
+		];
+		if (!empty($passkeyResponseParams[USERHANDLE])) {
+			$params[USERHANDLE] = $passkeyResponseParams[USERHANDLE];
+		}
+		if (!empty($passkeyResponseParams[ASSERTIONCLIENTEXTENSIONS])) {
+			$params[ASSERTIONCLIENTEXTENSIONS] = $passkeyResponseParams[ASSERTIONCLIENTEXTENSIONS];
+		}
+		if (!empty($this->realm)) {
+			$params[REALM] = $this->realm;
+		}
+		$headers = $this->mergeHeaders($origin, $headers);
+		$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
+		return PIResponse::fromJSON($response, $this);
 	}
 
 	/**
@@ -351,40 +262,33 @@ class PrivacyIDEA
 		assert(gettype($username) === 'string');
 		assert(gettype($registrationResponse) === 'string');
 		assert(gettype($origin) === 'string');
-
-		if (!empty($transactionID) && !empty($serial) && !empty($username) && !empty($registrationResponse) && !empty($origin)) {
-			try {
-				$registrationResponseParams = json_decode($registrationResponse, true);
-			} catch (\Exception $e) {
-				$this->log('debug', 'Invalid registration response for validateCheckCompletePasskeyRegistration: ' . $e->getMessage());
-				return null;
-			}
-			$params = [
-				TRANSACTION_ID => $transactionID,
-				SERIAL => $serial,
-				USER => $username,
-				TYPE => PASSKEY,
-				CREDENTIAL_ID => $registrationResponseParams[CREDENTIAL_ID],
-				CLIENTDATAJSON => $registrationResponseParams[CLIENTDATAJSON],
-				ATTESTATIONOBJECT => $registrationResponseParams[ATTESTATIONOBJECT],
-				AUTHENTICATORATTACHMENT => $registrationResponseParams[AUTHENTICATORATTACHMENT],
-				RAWID => $registrationResponseParams[RAWID]
-			];
-
-			if (!empty($this->realm)) {
-				$params[REALM] = $this->realm;
-			}
-
-			$headers = $this->mergeHeaders($origin, $headers);
-
-			$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
-
-			return PIResponse::fromJSON($response, $this);
-		} else {
-			// Handle debug message if parameters are incomplete
-			$this->log('debug', 'validateCheckCompletePasskeyRegistration: parameters are incomplete!');
+		if (empty($transactionID) || empty($serial) || empty($username) || empty($registrationResponse) || empty($origin)) {
+			$this->log(DEBUG, 'validateCheckCompletePasskeyRegistration: parameters are incomplete!');
+			return null;
 		}
-		return null;
+		try {
+			$registrationResponseParams = json_decode($registrationResponse, true);
+		} catch (\Exception $e) {
+			$this->log(DEBUG, 'Invalid registration response for validateCheckCompletePasskeyRegistration: ' . $e->getMessage());
+			return null;
+		}
+		$params = [
+			TRANSACTION_ID => $transactionID,
+			SERIAL => $serial,
+			USER => $username,
+			TYPE => PASSKEY,
+			CREDENTIAL_ID => $registrationResponseParams[CREDENTIAL_ID],
+			CLIENTDATAJSON => $registrationResponseParams[CLIENTDATAJSON],
+			ATTESTATIONOBJECT => $registrationResponseParams[ATTESTATIONOBJECT],
+			AUTHENTICATORATTACHMENT => $registrationResponseParams[AUTHENTICATORATTACHMENT],
+			RAWID => $registrationResponseParams[RAWID]
+		];
+		if (!empty($this->realm)) {
+			$params[REALM] = $this->realm;
+		}
+		$headers = $this->mergeHeaders($origin, $headers);
+		$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
+		return PIResponse::fromJSON($response, $this);
 	}
 
 	/**
@@ -397,28 +301,17 @@ class PrivacyIDEA
 	public function validateCheckCancelEnrollment(string $transactionID, ?array $headers = null): ?PIResponse
 	{
 		assert(gettype($transactionID) === 'string');
-		if (!empty($transactionID)) {
-			$params = [
-				TRANSACTION_ID => $transactionID,
-				CANCEL_ENROLLMENT => 'true'
-			];
-
-			if (!empty($this->realm)) {
-				$params[REALM] = $this->realm;
-			}
-
-			if (empty($headers)) {
-				$headers = [''];
-			}
-
-			$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
-
-			return PIResponse::fromJSON($response, $this);
-		} else {
-			// Handle debug message if parameters are incomplete
-			$this->log('debug', 'validateCheckCancelEnrollment: transactionID is missing!');
+		if (empty($transactionID)) {
+			$this->log(DEBUG, 'validateCheckCancelEnrollment: transactionID is missing!');
+			return null;
 		}
-		return null;
+		$params = [TRANSACTION_ID => $transactionID, CANCEL_ENROLLMENT => 'true'];
+		if (!empty($this->realm)) {
+			$params[REALM] = $this->realm;
+		}
+		$headers = $headers ?? [''];
+		$response = $this->sendRequest($params, $headers, POST, ENDPOINT_VALIDATE_CHECK);
+		return PIResponse::fromJSON($response, $this);
 	}
 
 	/**
@@ -439,31 +332,22 @@ class PrivacyIDEA
 	public function getAuthToken(): string
 	{
 		if (!$this->serviceAccountAvailable()) {
-			$this->log('error', 'Cannot retrieve auth token without service account!');
+			$this->log(ERROR, 'Cannot retrieve auth token without service account!');
 			return '';
 		}
-
-		$params = [
-			USERNAME => $this->serviceAccountName,
-			PASSWORD => $this->serviceAccountPass
-		];
-		if ($this->serviceAccountRealm != null && $this->serviceAccountRealm != '') {
+		$params = [USERNAME => $this->serviceAccountName, PASSWORD => $this->serviceAccountPass];
+		if (!empty($this->serviceAccountRealm)) {
 			$params[REALM] = $this->serviceAccountRealm;
 		}
-
 		$response = json_decode($this->sendRequest($params, [''], POST, ENDPOINT_AUTH), true);
-
-		if (!empty($response[RESULT][VALUE])) {
-			// Ensure an admin account
-			if (!empty($response[RESULT][VALUE][TOKEN])) {
-				if ($this->findRecursive($response, ROLE) != ADMIN) {
-					$this->log('debug', 'Auth token was of a user without admin role.');
-					return '';
-				}
-				return $response[RESULT][VALUE][TOKEN];
+		if (!empty($response[RESULT][VALUE][TOKEN])) {
+			if ($this->findRecursive($response, ROLE) != ADMIN) {
+				$this->log(DEBUG, 'Auth token was of a user without admin role.');
+				return '';
 			}
+			return $response[RESULT][VALUE][TOKEN];
 		}
-		$this->log('debug', '/auth response did not contain the auth token.');
+		$this->log(DEBUG, '/auth response did not contain the auth token.');
 		return '';
 	}
 
@@ -478,10 +362,8 @@ class PrivacyIDEA
 	{
 		assert(is_array($haystack));
 		assert(is_string($needle));
-
 		$iterator = new RecursiveArrayIterator($haystack);
 		$recursive = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST);
-
 		foreach ($recursive as $key => $value) {
 			if ($key === $needle) {
 				return $value;
@@ -506,26 +388,17 @@ class PrivacyIDEA
 		assert(gettype($headers) === 'array');
 		assert(gettype($httpMethod) === 'string');
 		assert(gettype($endpoint) === 'string');
-
-		// Add the client parameter if forwarded.
 		if (!empty($this->forwardClientIP)) {
 			$params[CLIENT] = $this->forwardClientIP;
-			$this->log('debug', 'Forwarding Client IP: ' . $this->forwardClientIP);
+			$this->log(DEBUG, 'Forwarding Client IP: ' . $this->forwardClientIP);
 		}
-
-		// Ignore proxy settings if wished.
 		if ($this->noProxy === true) {
-			$this->log('debug', 'Ignoring proxy settings.');
+			$this->log(DEBUG, 'Ignoring proxy settings.');
 			$params[PROXY] = [HTTPS => '', HTTP => ''];
 		}
-
-		// Set request's timeout
 		$params[TIMEOUT] = $this->timeout;
-
-		$this->log('debug', 'Sending ' . http_build_query($params, '', ', ') . ' to ' . $endpoint);
-
+		$this->log(DEBUG, 'Sending ' . http_build_query($params, '', ', ') . ' to ' . $endpoint);
 		$completeUrl = $this->serverURL . $endpoint;
-
 		$curlInstance = curl_init();
 		curl_setopt($curlInstance, CURLOPT_URL, $completeUrl);
 		curl_setopt($curlInstance, CURLOPT_HEADER, true);
@@ -537,55 +410,28 @@ class PrivacyIDEA
 		if ($httpMethod === POST) {
 			curl_setopt($curlInstance, CURLOPT_POST, true);
 			curl_setopt($curlInstance, CURLOPT_POSTFIELDS, $params);
-		} elseif ($httpMethod === PUT) {
-			curl_setopt($curlInstance, CURLOPT_CUSTOMREQUEST, PUT);
-			curl_setopt($curlInstance, CURLOPT_POSTFIELDS, $params);
-		} elseif ($httpMethod === DELETE) {
-			curl_setopt($curlInstance, CURLOPT_CUSTOMREQUEST, DELETE);
+		} elseif ($httpMethod === PUT || $httpMethod === DELETE) {
+			curl_setopt($curlInstance, CURLOPT_CUSTOMREQUEST, $httpMethod);
 			curl_setopt($curlInstance, CURLOPT_POSTFIELDS, $params);
 		} elseif ($httpMethod === GET) {
-			$paramsStr = '?';
-			if (!empty($params)) {
-				foreach ($params as $key => $value) {
-					$paramsStr .= $key . '=' . $value . '&';
-				}
-			}
+			$paramsStr = !empty($params) ? '?' . http_build_query($params) : '';
 			curl_setopt($curlInstance, CURLOPT_URL, $completeUrl . $paramsStr);
 		}
-
-		// Disable host and/or peer verification for SSL if configured.
-		if ($this->sslVerifyHost === true) {
-			curl_setopt($curlInstance, CURLOPT_SSL_VERIFYHOST, 2);
-		} else {
-			curl_setopt($curlInstance, CURLOPT_SSL_VERIFYHOST, 0);
-		}
-
-		if ($this->sslVerifyPeer === true) {
-			curl_setopt($curlInstance, CURLOPT_SSL_VERIFYPEER, 2);
-		} else {
-			curl_setopt($curlInstance, CURLOPT_SSL_VERIFYPEER, 0);
-		}
-
+		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYHOST, $this->sslVerifyHost ? 2 : 0);
+		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYPEER, $this->sslVerifyPeer ? 2 : 0);
 		$response = curl_exec($curlInstance);
-
 		if (!$response) {
-			// Handle the error
 			$curlErrno = curl_errno($curlInstance);
-			$this->log('error', 'Bad request: ' . curl_error($curlInstance) . ' errno: ' . $curlErrno);
+			$this->log(ERROR, 'Bad request: ' . curl_error($curlInstance) . ' errno: ' . $curlErrno);
 			throw new PIBadRequestException('Unable to reach the authentication server (' . $curlErrno . ')');
 		}
-
 		$headerSize = curl_getinfo($curlInstance, CURLINFO_HEADER_SIZE);
 		$ret = substr($response, $headerSize);
 		curl_close($curlInstance);
-
-		// Log the response
 		if ($endpoint != ENDPOINT_AUTH) {
 			$retJson = json_decode($ret, true);
-			$this->log('debug', $endpoint . ' returned ' . json_encode($retJson, JSON_PRETTY_PRINT));
+			$this->log(DEBUG, $endpoint . ' returned ' . json_encode($retJson, JSON_PRETTY_PRINT));
 		}
-
-		// Return decoded response
 		return $ret;
 	}
 
@@ -598,8 +444,8 @@ class PrivacyIDEA
 	 */
 	public function mergeHeaders(string $origin, ?array $headers): array
 	{
-		$originHeader = ['Origin:' . $origin];
-        return array_merge((array) $headers, $originHeader);
+		$originHeader = [ORIGIN . $origin];
+		return array_merge((array)$headers, $originHeader);
 	}
 
 	/**
@@ -610,14 +456,14 @@ class PrivacyIDEA
 	 */
 	public function log($level, $message): void
 	{
-		if ($level === 'debug') {
-			logger('privacyIDEA')->debug($message);
+		if ($level === DEBUG) {
+			logger(APP_ID_PRIVACYIDEA)->debug($message);
 		}
-		if ($level === 'info') {
-			logger('privacyIDEA')->info($message);
+		if ($level === INFO) {
+			logger(APP_ID_PRIVACYIDEA)->info($message);
 		}
-		if ($level === 'error') {
-			logger('privacyIDEA')->error($message);
+		if ($level === ERROR) {
+			logger(APP_ID_PRIVACYIDEA)->error($message);
 		}
 	}
 
@@ -692,6 +538,6 @@ class PrivacyIDEA
 	 */
 	public function setNoProxy(bool $noProxy): void
 	{
-		$this->$noProxy = $noProxy;
+		$this->noProxy = $noProxy;
 	}
 }
