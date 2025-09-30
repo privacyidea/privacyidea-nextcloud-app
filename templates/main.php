@@ -18,34 +18,41 @@ Util::addStyle('privacyidea', 'main');
     <br>
 <?php endif; ?>
 
-<!-- IMAGES -->
-<?php if (!empty($_['imgWebauthn']) && $_['mode'] === "webauthn") : ?>
-    <img class="tokenImages" src="<?php p($_['imgWebauthn']); ?>" alt="WebAuthn image"><br><br>
+<!-- IMAGES & ENROLLMENT LINK -->
+<?php if (!empty($_['imgWebauthn']) && $_['mode'] === 'webauthn') : ?>
+    <img class="tokenImages" src="<?php p($_['imgWebauthn']); ?>" alt="WebAuthn Image">
 <?php endif;
-if (!empty($_['imgPush']) && $_['mode'] === "push") : ?>
-    <img class="tokenImages" src="<?php p($_['imgPush']); ?>" alt="Push image"><br><br>
+if (!empty($_['imgPush']) && $_['mode'] === 'push') : ?>
+    <img class="tokenImages" src="<?php p($_['imgPush']); ?>" alt="Push Image">
 <?php endif;
-if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
-    <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOTP']); ?>" alt="OTP image"><br><br>
+if (!empty($_['imgSmartphone']) && $_['mode'] === 'push') : ?>
+    <img class="tokenImages" src="<?php p($_['imgSmartphone']); ?>" alt="Smartphone Container Image">
+<?php endif;
+if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
+    <img class="tokenImages" id="imgOtp" src="<?php p($_['imgOtp']); ?>" alt="OTP Image">
 <?php endif;?>
+<?php if (!empty($_['link'])) : ?>
+    <a id="enrollmentLink" href="<?php p($_['link']); ?>" target="_blank" rel="noopener noreferrer"><?php if (isset($_['enrollmentLink'])) : p($_['enrollmentLink']); endif; ?></a>
+    <br>
+<?php endif;?>
+<label>
+    <input id="cancelEnrollmentButton" type="button" class="button" value="<?php if (isset($_['cancelEnrollment'])) : p($_['cancelEnrollment']); endif; ?>">
+</label>
 
 <!-- FORM -->
 <form method="POST" id="piLoginForm" name="piLoginForm">
-    <?php if (!isset($_['hideOTPField']) || !$_['hideOTPField']) : ?>
-    <?php if (isset($_['separateOTP']) && $_['separateOTP']) : ?>
-        <label>
-            <input id="passField" type="password" name="passField" placeholder="Password" autocomplete="off" required
-                   autofocus>
-        </label>
+    <div id="otpSection">
+        <?php if (isset($_['separateOTP']) && $_['separateOTP']) : ?>
+            <label>
+                <input id="passField" type="text" name="passField" placeholder="Password" autocomplete="off" required autofocus>
+            </label>
         <?php endif; ?>
         <label>
-            <input id="otp" type="password" name="challenge" placeholder="OTP" autocomplete="off" required
-                   autofocus>
+            <input id="otp" type="text" name="challenge" placeholder="One-Time-Password" autocomplete="off" autofocus>
         </label>
         <br>
-        <input id="submitButton" type="submit" class="button"
-               value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
-    <?php endif; ?>
+        <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
+    </div>
 
     <!-- Hidden input that saves the changes -->
     <input id="modeChanged" type="hidden" name="modeChanged" value="0"/>
@@ -57,8 +64,20 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
            value="<?php if (isset($_['webAuthnSignRequest'])) : p($_['webAuthnSignRequest']); endif; ?>"/>
     <input id="webAuthnSignResponse" type="hidden" name="webAuthnSignResponse" value=""/>
     <input id="origin" type="hidden" name="origin" value=""/>
-    <input id="pushAvailable" type="hidden" name="pushAvailable"
-           value="<?php if (isset($_['pushAvailable'])) : p($_['pushAvailable']); endif; ?>"/>
+    <input id="passkeyChallenge" type="hidden" name="passkeyChallenge"
+           value="<?php if (isset($_['passkeyChallenge'])) : p($_['passkeyChallenge']); endif; ?>"/>
+    <input id="passkeyRegistration" type="hidden" name="passkeyRegistration"
+           value="<?php if (isset($_['passkeyRegistration'])) : p($_['passkeyRegistration']); endif; ?>"/>
+    <input id="passkeyRegistrationResponse" type="hidden" name="passkeyRegistrationResponse" value=""/>
+    <input id="passkeySignResponse" type="hidden" name="passkeySignResponse" value=""/>
+    <input id="passkeyLoginCancelled" type="hidden" name="passkeyLoginCancelled" value="0"/>
+    <input id="isEnrollViaMultichallenge" type="hidden" name="isEnrollViaMultichallenge"
+           value="<?php if (isset($_['isEnrollViaMultichallenge'])) : p($_['isEnrollViaMultichallenge']); endif; ?>"/>
+    <input id="isEnrollViaMultichallengeOptional" type="hidden" name="isEnrollViaMultichallengeOptional"
+           value="<?php if (isset($_['isEnrollViaMultichallengeOptional'])) : p($_['isEnrollViaMultichallengeOptional']); endif; ?>"/>
+    <input id="enrollmentCancelled" type="hidden" name="enrollmentCancelled" value=""/>
+    <input id="isPushAvailable" type="hidden" name="isPushAvailable"
+           value="<?php if (isset($_['isPushAvailable'])) : p($_['isPushAvailable']); endif; ?>"/>
     <input id="otpAvailable" type="hidden" name="otpAvailable"
            value="<?php if (isset($_['otpAvailable'])) : p($_['otpAvailable']); endif; ?>"/>
     <input id="loadCounter" type="hidden" name="loadCounter"
@@ -75,14 +94,17 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
     <input id="autoSubmit" type="hidden" name="autoSubmit"
            value="<?php if (isset($_['autoSubmit'])) : p($_['autoSubmit']); endif; ?>"/>
     <input id="mode" type="hidden" name="mode"
-           value="<?php if (isset($_['mode']))
-           {
-               p($_['mode']);
-           }
-           else
-           {
-               p("otp");
+           value="<?php if (isset($_['mode'])) {
+           	p($_['mode']);
+           } else {
+           	p('otp');
            } ?>"/>
+
+    <!-- PASSKEY REGISTRATION (enroll_via_multichallenge) with retry button -->
+    <?php if (!empty($_['passkeyRegistration'])) : ?>
+        <input id="retryPasskeyRegistration" type="button" name="retryPasskeyRegistration"
+               value="<?php if (isset($_['retryPasskeyRegistration'])) : p($_['retryPasskeyRegistration']);endif; ?>"/>
+    <?php endif; ?>
 
     <!-- ALTERNATE LOGIN OPTIONS -->
     <div id="alternateLoginOptions">
@@ -92,9 +114,11 @@ if (!empty($_['imgOTP']) && $_['mode'] === "otp") : ?>
             </strong>
         </label>
         <br>
-        <input class="alternateTokenButtons" id="webAuthnButton" name="webAuthnButton"
-               type="button" value="WebAuthn"/>
+        <?php if (!empty($_['passkeyChallenge'])) : ?>
+        <input class="alternateTokenButtons" id="passkeyButton" type="button" name="passkeyButton" value="Passkey"/>
+        <?php endif; ?>
+        <input class="alternateTokenButtons" id="webAuthnButton" name="webAuthnButton" type="button" value="WebAuthn"/>
         <input class="alternateTokenButtons" id="pushButton" name="pushButton" type="button" value="Push"/>
-        <input id="otpButton" name="otpButton" type="button" value="OTP"/>
+        <input class="alternateTokenButtons" id="otpButton" name="otpButton" type="button" value="OTP"/>
     </div>
 </form>

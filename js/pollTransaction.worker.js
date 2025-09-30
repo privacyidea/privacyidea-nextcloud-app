@@ -18,20 +18,15 @@ self.addEventListener('message', function (e)
             {
                 setInterval(function ()
                 {
-                    const request = new XMLHttpRequest();
-
-                    request.open("GET", url + "?" + params, false);
-
-                    request.onload = (e) =>
-                    {
-                        try
+                    fetch(url + "?" + params, {method: 'GET'})
+                        .then(r =>
                         {
-                            if (request.readyState === 4)
+                            if (r.ok)
                             {
-                                if (request.status === 200)
+                                r.text().then(result =>
                                 {
-                                    const response = JSON.parse(request.response);
-                                    if (response['result']['authentication'] === "ACCEPT")
+                                    const resultJson = JSON.parse(result);
+                                    if (resultJson['result']['authentication'] === "ACCEPT")
                                     {
                                         self.postMessage({
                                             'message': 'Polling in browser: Push message confirmed!',
@@ -39,28 +34,20 @@ self.addEventListener('message', function (e)
                                         });
                                         self.close();
                                     }
-                                }
-                                else
-                                {
-                                    self.postMessage({'message': request.statusText, 'status': 'error'});
-                                    self.close();
-                                }
+                                });
                             }
-                        }
-                        catch (e)
-                        {
-                            self.postMessage({'message': e, 'status': 'error'});
-                            self.close();
-                        }
-                    };
-
-                    request.onerror = (e) =>
-                    {
-                        self.postMessage({'message': request.statusText, 'status': 'error'});
-                        self.close();
-                    };
-
-                    request.send();
+                            else
+                            {
+                                self.postMessage({'message': r.statusText, 'status': 'error'});
+                                self.close();
+                            }
+                        })
+                        .catch(e =>
+                            {
+                                self.postMessage({'message': e, 'status': 'error'});
+                                self.close();
+                            }
+                        );
                 }, 300);
             }
             break;

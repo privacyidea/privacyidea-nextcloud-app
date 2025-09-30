@@ -1,39 +1,63 @@
 function piFormTemplate()
 {
-    if (piGetValue("webAuthnSignRequest") === "")
+    // Cache values to avoid repeated DOM lookups
+    const webAuthnSignRequest = piGetValue("webAuthnSignRequest");
+    const isPushAvailable = piGetValue("isPushAvailable");
+    const otpAvailable = piGetValue("otpAvailable");
+    const mode = piGetValue("mode");
+    const passkeyRegistration = piGetValue("passkeyRegistration");
+    const passkeyChallenge = piGetValue("passkeyChallenge");
+    const isEnrollViaMultichallenge = piGetValue("isEnrollViaMultichallenge");
+    const isEnrollViaMultichallengeOptional = piGetValue("isEnrollViaMultichallengeOptional");
+
+    if (webAuthnSignRequest === "") piDisableElement("webAuthnButton");
+    if (isPushAvailable !== "1") piDisableElement("pushButton");
+    if (otpAvailable !== "1") piDisableElement("otpButton");
+    if (mode === "otp" || mode.length < 1) piDisableElement("otpButton");
+
+    if (mode === "push")
     {
-        piDisableElement("webAuthnButton");
-    }
-    if (piGetValue("pushAvailable") !== "1")
-    {
-        piDisableElement("pushButton");
-    }
-    if (piGetValue("otpAvailable") !== "1")
-    {
-        piDisableElement("otpButton");
-    }
-    if (piGetValue("mode") === "otp" || piGetValue("mode").length < 1)
-    {
-        piDisableElement("otpButton");
-    }
-    if (piGetValue("mode") === "push")
-    {
-        piDisableElement("otp");
-        piDisableElement("submitButton");
+        piDisableElement("otpSection");
         piDisableElement("pushButton");
         piEnableElement("otpButton");
     }
-    if (piGetValue("pushAvailable") !== "1" && piGetValue("webAuthnSignRequest").length < 1)
+
+    if (passkeyRegistration.length > 0)
     {
-        console.log("Disabling alternate login options");
+        piDisableElement("alternateLoginOptions");
+        piDisableElement("otpSection");
+    }
+
+    if (isPushAvailable !== "1" &&
+        webAuthnSignRequest.length < 1 &&
+        passkeyChallenge.length < 1 ||
+        isEnrollViaMultichallenge === "1")
+    {
         piDisableElement("alternateLoginOptions");
     }
-    if (piGetValue("mode") === "webauthn")
+
+    if (mode === "webauthn")
     {
-        piDisableElement("otp");
-        piDisableElement("submitButton");
+        piDisableElement("otpSection");
         piEnableElement("otpButton");
         processWebauthn();
+    }
+
+    if (isEnrollViaMultichallengeOptional !== "1") piDisableElement("cancelEnrollmentButton");
+
+    // Passkey authentication
+    if (mode === "passkey")
+    {
+        piPasskeyAuthentication();
+    }
+
+    // Passkey registration
+    if (passkeyRegistration.length > 0)
+    {
+        piRegisterPasskey().catch(function (error)
+        {
+            piSetValue("errorMessage", "Error during passkey registration: " + error.message);
+        });
     }
 }
 
@@ -80,14 +104,12 @@ function processWebauthn()
             + window.location.hostname
             + (window.location.port ? ':' + window.location.port : '');
     }
-    piSetValue("origin", window.origin); // todo check if this is correct (window.location.origin)
+    piSetValue("origin", window.origin);
 
     try
     {
         const requestJson = JSON.parse(piGetValue("webAuthnSignRequest"));
-        console.log("WebAuthn sign request in json: " + requestJson);
         const webAuthnSignResponse = piWebauthn.sign(requestJson);
-        console.log("WebAuthn sign response: " + webAuthnSignResponse);
         webAuthnSignResponse.then(function (credentials)
         {
             const response = JSON.stringify(credentials);
@@ -97,13 +119,13 @@ function processWebauthn()
         }).catch(function (error)
         {
             console.log("Error while signing WebAuthnSignRequest: ", error);
-            window.alert("Error while signing WebAuthnSignRequest: " + error);
+            piChangeMode("otp");
         });
     }
     catch (error)
     {
         console.log("Error while signing WebAuthnSignRequest: " + error);
-        window.alert("Error while signing WebAuthnSignRequest: " + error);
+        piChangeMode("otp");
     }
 }
 

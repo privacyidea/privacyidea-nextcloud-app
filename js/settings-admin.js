@@ -274,7 +274,8 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     document.getElementById("piActivateAutoSubmitOtpLength").addEventListener("change", function ()
     {
-        setValue("piActivateAutoSubmitOtpLength", $(this).is(":checked") ? "1" : "0");
+        let checked = $(this).is(":checked");
+        setValue("piActivateAutoSubmitOtpLength", checked ? "1" : "0");
     });
     getValue("piAutoSubmitOtpLength", function (piAutoSubmitOtpLength)
     {

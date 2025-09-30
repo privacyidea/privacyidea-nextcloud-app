@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright 2024 NetKnights GmbH - lukas.matusiewicz@netknights.it
  * <p>
@@ -16,8 +17,8 @@ namespace OCA\PrivacyIDEA\PIClient;
 
 abstract class AuthenticationStatus
 {
-    const CHALLENGE = "CHALLENGE";
-    const ACCEPT = "ACCEPT";
-    const REJECT = "REJECT";
-    const NONE = "NONE";
+	public const CHALLENGE = 'CHALLENGE';
+	public const ACCEPT = 'ACCEPT';
+	public const REJECT = 'REJECT';
+	public const NONE = 'NONE';
 }

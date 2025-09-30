@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright 2024 NetKnights GmbH - lukas.matusiewicz@netknights.it
  * <p>
@@ -14,346 +15,426 @@
 
 namespace OCA\PrivacyIDEA\PIClient;
 
+require_once __DIR__ . '/PIConstants.php';
+
 class PIResponse
 {
-    /* @var string Combined messages of all triggered token. */
-    private string $messages = "";
+	/* @var string Combined messages of all triggered token. */
+	private string $messages = '';
 
-    /* @var string Message from the response. Should be shown to the user. */
-    private string $message = "";
+	/* @var string Message from the response. Should be shown to the user. */
+	private string $message = '';
 
-    /* @var string Transaction ID is used to reference the challenges contained in this response in later requests. */
-    private string $transactionID = "";
+	/* @var string Token's serial. */
+	private string $serial = '';
 
-    /* @var string Preferred mode in which client should work after triggering challenges. */
-    private string $preferredClientMode = "";
+	/* @var string Transaction ID is used to reference the challenges contained in this response in later requests. */
+	private string $transactionID = '';
 
-    /* @var string Raw response in JSON format. */
-    private string $raw = "";
+	/* @var string Preferred mode in which client should work after triggering challenges. */
+	private string $preferredClientMode = '';
 
-    /* @var array Array of PIChallenge objects representing the triggered token challenges. */
-    private array $multiChallenge = array();
+	/* @var string Raw response in JSON format. */
+	private string $raw = '';
 
-    /* @var bool Status indicates if the request was processed successfully by the server. */
-    private bool $status = false;
+	/* @var array Array of PIChallenge objects representing the triggered token challenges. */
+	private array $multiChallenge = [];
 
-    /* @var bool Value is true if the authentication was successful. */
-    private bool $value = false;
+	/* @var bool Status indicates if the request was processed successfully by the server. */
+	private bool $status = false;
 
-    /* @var string Authentication Status. */
-    private string $authenticationStatus = "";
+	/* @var bool Value is true if the authentication was successful. */
+	private bool $value = false;
 
-    /* @var string If an error occurred, the error code will be set here. */
-    private string $errorCode = "";
+	/* @var string Authentication Status. */
+	private string $authenticationStatus = '';
 
-    /* @var string If an error occurred, the error message will be set here. */
-    private string $errorMessage = "";
+	/* @var string Passkey challenge in JSON string. */
+	private string $passkeyChallenge = '';
 
-    /**
-     * Create a PIResponse object from the JSON response of the server.
-     *
-     * @param string $json Server response in JSON format.
-     * @param PrivacyIDEA $privacyIDEA PrivacyIDEA object.
-     * @return PIResponse|null Returns the PIResponse object or null if the response of the server is empty or malformed.
-     */
-    public static function fromJSON(string $json, PrivacyIDEA $privacyIDEA): ?PIResponse
-    {
-        assert('string' === gettype($json));
+	/* @var string Passkey registration. */
+	private string $passkeyRegistration = '';
 
-        if ($json == null || $json == "")
-        {
-            $privacyIDEA->log("error", "Response from the server is empty.");
-            return null;
-        }
+	/* @var string Passkey registration serial. */
+	private string $passkeyRegistrationSerial = '';
 
-        $ret = new PIResponse();
-        $map = json_decode($json, true);
-        if ($map == null)
-        {
-            $privacyIDEA->log("error", "Response from the server is malformed:\n" . $json);
-            return null;
-        }
-        $ret->raw = $json;
+	/* @var bool Whether any of the challenges is part of an enrollment via multichallenge. */
+	private bool $isEnrollViaMultichallenge = false;
 
-        // If value is not present, an error occurred
-        if (!isset($map['result']['value']))
-        {
-            $ret->errorCode = $map['result']['error']['code'];
-            $ret->errorMessage = $map['result']['error']['message'];
-            return $ret;
-        }
+	/* @var bool Whether an enrollment via multichallenge is optional. */
+	private bool $isEnrollViaMultichallengeOptional = false;
 
-        if (isset($map['detail']['messages']))
-        {
-            $ret->messages = implode(", ", array_unique($map['detail']['messages'])) ?: "";
-        }
-        if (isset($map['detail']['message']))
-        {
-            $ret->message = $map['detail']['message'];
-        }
-        if (isset($map['detail']['transaction_id']))
-        {
-            $ret->transactionID = $map['detail']['transaction_id'];
-        }
-        if (isset($map['detail']['preferred_client_mode']))
-        {
-            $pref = $map['detail']['preferred_client_mode'];
-            if ($pref === "poll")
-            {
-                $ret->preferredClientMode = "push";
-            }
-            elseif ($pref === "interactive")
-            {
-                $ret->preferredClientMode = "otp";
-            }
-            else
-            {
-                $ret->preferredClientMode = $map['detail']['preferred_client_mode'];
-            }
-        }
+	/* @var string If an error occurred, the error code will be set here. */
+	private string $errorCode = '';
 
-        // Check if the authentication status is legit
-        $r = null;
-        if (!empty($map['result']['authentication']))
-        {
-            $r = $map['result']['authentication'];
-        }
-        if ($r === AuthenticationStatus::CHALLENGE)
-        {
-            $ret->authenticationStatus = AuthenticationStatus::CHALLENGE;
-        }
-        elseif ($r === AuthenticationStatus::ACCEPT)
-        {
-            $ret->authenticationStatus = AuthenticationStatus::ACCEPT;
-        }
-        elseif ($r === AuthenticationStatus::REJECT)
-        {
-            $ret->authenticationStatus = AuthenticationStatus::REJECT;
-        }
-        else
-        {
-            $privacyIDEA->log("debug", "Unknown authentication status.");
-            $ret->authenticationStatus = AuthenticationStatus::NONE;
-        }
-        $ret->status = $map['result']['status'] ?: false;
-        $ret->value = $map['result']['value'] ?: false;
+	/* @var string If an error occurred, the error message will be set here. */
+	private string $errorMessage = '';
 
-        // Add any challenges to multiChallenge
-        if (isset($map['detail']['multi_challenge']))
-        {
-            $mc = $map['detail']['multi_challenge'];
-            foreach ($mc as $challenge)
-            {
-                $tmp = new PIChallenge();
-                $tmp->transactionID = $challenge['transaction_id'];
-                $tmp->message = $challenge['message'];
-                $tmp->serial = $challenge['serial'];
-                $tmp->type = $challenge['type'];
-                if (isset($challenge['image']))
-                {
-                    $tmp->image = $challenge['image'];
-                }
-                if (isset($challenge['attributes']))
-                {
-                    $tmp->attributes = $challenge['attributes'];
-                }
-                if (isset($challenge['client_mode']))
-                {
-                    $tmp->clientMode = $challenge['client_mode'];
-                }
+	/**
+	 * Create a PIResponse object from the JSON response of the server.
+	 *
+	 * @param string $json Server response in JSON format.
+	 * @param PrivacyIDEA $privacyIDEA PrivacyIDEA object.
+	 * @return PIResponse|null Returns the PIResponse object or null if the response of the server is empty or malformed.
+	 */
+	public static function fromJSON(string $json, PrivacyIDEA $privacyIDEA): ?PIResponse
+	{
+		assert(gettype($json) === 'string');
 
-                if ($tmp->type === "webauthn")
-                {
-                    $t = $challenge['attributes']['webAuthnSignRequest'];
-                    $tmp->webAuthnSignRequest = json_encode($t);
-                }
+		if (empty($json)) {
+			$privacyIDEA->log(ERROR, 'Response from the server is empty.');
+			return null;
+		}
 
-                $ret->multiChallenge[] = $tmp;
-            }
-        }
-        return $ret;
-    }
+		$ret = new self();
+		$map = json_decode($json, true);
+		if (!$map) {
+			$privacyIDEA->log(ERROR, "Response from the server is malformed:\n" . $json);
+			return null;
+		}
+		$ret->raw = $json;
 
-    // Getters
+		// If value is not present, an error occurred
+		if (!isset($map[RESULT][VALUE])) {
+			$ret->errorCode = $map[RESULT][ERROR][CODE] ?? '';
+			$ret->errorMessage = $map[RESULT][ERROR][MESSAGE] ?? '';
+			return $ret;
+		}
 
-    /**
-     * Get an array with all triggered token types.
-     * @return array
-     */
-    public function getTriggeredTokenTypes(): array
-    {
-        $ret = array();
-        foreach ($this->multiChallenge as $challenge)
-        {
-            $ret[] = $challenge->type;
-        }
-        return array_unique($ret);
-    }
+		$detail = $map[DETAIL] ?? [];
+		$ret->messages = isset($detail[MESSAGES]) ? implode(', ', array_unique($detail[MESSAGES])) : '';
+		$ret->message = $detail[MESSAGE] ?? '';
+		$ret->serial = $detail[SERIAL] ?? '';
+		$ret->transactionID = $detail[TRANSACTION_ID] ?? '';
+		$ret->preferredClientMode = match ($detail[PREFERRED_CLIENT_MODE] ?? '') {
+			POLL => PUSH,
+			INTERACTIVE => OTP,
+			default => $detail[PREFERRED_CLIENT_MODE] ?? ''
+		};
+		$ret->isEnrollViaMultichallenge = !empty($detail[ENROLL_VIA_MULTICHALLENGE]);
+		$ret->isEnrollViaMultichallengeOptional = !empty($detail[ENROLL_VIA_MULTICHALLENGE_OPTIONAL]);
 
-    /**
-     * Get the message of any token that is not Push or WebAuthn. Those are OTP tokens requiring an input field.
-     * @return string
-     */
-    public function getOtpMessage(): string
-    {
-        foreach ($this->multiChallenge as $challenge)
-        {
-            if ($challenge->type !== "push" && $challenge->type !== "webauthn")
-            {
-                return $challenge->message;
-            }
-        }
-        return "";
-    }
+		if (!empty($detail[PASSKEY])) {
+			$ret->passkeyChallenge = json_encode($detail[PASSKEY]);
+			if (empty($ret->transactionID)) {
+				$ret->transactionID = $detail[PASSKEY][TRANSACTION_ID] ?? '';
+			}
+		}
 
-    /**
-     * Get the Push token message if any were triggered.
-     * @return string
-     */
-    public function getPushMessage(): string
-    {
-        foreach ($this->multiChallenge as $challenge)
-        {
-            if ($challenge->type === "push")
-            {
-                return $challenge->message;
-            }
-        }
-        return "";
-    }
+		$result = $map[RESULT] ?? [];
+		$r = $result[AUTHENTICATION] ?? null;
+		if ($r === AuthenticationStatus::CHALLENGE) {
+			$ret->authenticationStatus = AuthenticationStatus::CHALLENGE;
+		} elseif ($r === AuthenticationStatus::ACCEPT) {
+			$ret->authenticationStatus = AuthenticationStatus::ACCEPT;
+		} elseif ($r === AuthenticationStatus::REJECT) {
+			$ret->authenticationStatus = AuthenticationStatus::REJECT;
+		} else {
+			$privacyIDEA->log(DEBUG, 'Unknown authentication status.');
+			$ret->authenticationStatus = AuthenticationStatus::NONE;
+		}
+		$ret->status = $result[STATUS] ?? false;
+		$ret->value = $result[VALUE] ?? false;
 
-    /**
-     * @return string Combined messages of all triggered token.
-     */
-    public function getMessages(): string
-    {
-        return $this->messages;
-    }
+		// Add any challenges to multiChallenge
+		foreach (($detail[MULTI_CHALLENGE] ?? []) as $challenge) {
+			$tmp = new PIChallenge();
+			$tmp->transactionID = $challenge[TRANSACTION_ID] ?? '';
+			$tmp->message = $challenge[MESSAGE] ?? '';
+			$tmp->serial = $challenge[SERIAL] ?? '';
+			$tmp->type = $challenge[TYPE] ?? '';
+			$tmp->image = $challenge[IMAGE] ?? '';
+			$tmp->enrollmentLink = $challenge[LINK] ?? '';
+			$tmp->attributes = $challenge[ATTRIBUTES] ?? [];
+			$tmp->clientMode = $challenge[CLIENT_MODE] ?? '';
+			if ($tmp->type === WEBAUTHN) {
+				$tmp->webAuthnSignRequest = json_encode($challenge[ATTRIBUTES][WEBAUTHN_SIGN_REQUEST] ?? []);
+			}
+			if ($tmp->type === PASSKEY) {
+				$ret->passkeyChallenge = json_encode($challenge);
+			}
+			if (!empty($challenge[PASSKEY_REGISTRATION])) {
+				$ret->passkeyRegistration = json_encode($challenge[PASSKEY_REGISTRATION]);
+				$ret->passkeyRegistrationSerial = $challenge[SERIAL] ?? '';
+			}
+			$ret->multiChallenge[] = $tmp;
+		}
+		return $ret;
+	}
 
-    /**
-     * @return string Message from the response. Should be shown to the user.
-     */
-    public function getMessage(): string
-    {
-        return $this->message;
-    }
+	/**
+	 * Check if the authentication was successful.
+	 * This is true if the authentication status is ACCEPT or if there are no multi-challenges.
+	 * If there are multi-challenges, the value must be true and no multi-challenge must be present.
+	 *
+	 * @return bool True if the authentication was successful, false otherwise.
+	 */
+	public function isAuthenticationSuccessful(): bool
+	{
+		return ($this->authenticationStatus == AuthenticationStatus::ACCEPT && empty($this->multiChallenge))
+			|| ($this->value && empty($this->multiChallenge));
+	}
 
-    /**
-     * @return string Transaction ID is used to reference the challenges contained in this response in later requests.
-     */
-    public function getTransactionID(): string
-    {
-        return $this->transactionID;
-    }
+	/**
+	 * Get an array with all triggered token types.
+	 * @return array
+	 */
+	public function getTriggeredTokenTypes(): array
+	{
+		return array_unique(array_map(fn ($c) => $c->type, $this->multiChallenge));
+	}
 
-    /**
-     * @return string Preferred mode in which client should work after triggering challenges.
-     */
-    public function getPreferredClientMode(): string
-    {
-        return $this->preferredClientMode;
-    }
+	/**
+	 * Get the message of any token that is not Push or WebAuthn. Those are OTP tokens requiring an input field.
+	 * @return string
+	 */
+	public function getOtpMessage(): string
+	{
+		foreach ($this->multiChallenge as $c) {
+			if ($c->type !== PUSH && $c->type !== WEBAUTHN) {
+				return $c->message;
+			}
+		}
+		return '';
+	}
 
-    /**
-     * @return string Raw response in JSON format.
-     */
-    public function getRawResponse(): string
-    {
-        return $this->raw;
-    }
+	/**
+	 * Check if any Push or Smartphone container challenge is available.
+	 *
+	 * @return bool True if a Push or Smartphone container challenge is available, false otherwise.
+	 */
+	public function isPushOrSmartphoneContainerAvailable(): bool
+	{
+		foreach ($this->multiChallenge as $c) {
+			if ($this->isPushOrSmartphoneContainer($c->type)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    /**
-     * Get the WebAuthnSignRequest for any triggered WebAuthn token.
-     * @return string WebAuthnSignRequest or empty string if no WebAuthn token was triggered.
-     */
-    public function getWebauthnSignRequest(): string
-    {
-        $arr = [];
-        $webauthn = "";
-        foreach ($this->multiChallenge as $challenge)
-        {
-            if ($challenge->type === "webauthn")
-            {
-                $t = json_decode($challenge->webAuthnSignRequest);
-                if (empty($webauthn))
-                {
-                    $webauthn = $t;
-                }
-                $arr[] = $challenge->attributes['webAuthnSignRequest']['allowCredentials'][0];
-            }
-        }
-        if (empty($webauthn))
-        {
-            return "";
-        }
-        else
-        {
-            $webauthn->allowCredentials = $arr;
-            return json_encode($webauthn);
-        }
-    }
+	/**
+	 * Get the Push token message if any were triggered.
+	 * @return string
+	 */
+	public function getPushOrSmartphoneContainerMessage(): string
+	{
+		foreach ($this->multiChallenge as $c) {
+			if ($this->isPushOrSmartphoneContainer($c->type)) {
+				return $c->message;
+			}
+		}
+		return '';
+	}
 
-    /**
-     * Get the WebAuthn token message if any were triggered.
-     * @return string
-     */
-    public function getWebauthnMessage(): string
-    {
-        foreach ($this->multiChallenge as $challenge)
-        {
-            if ($challenge->type === "webauthn")
-            {
-                return $challenge->message;
-            }
-        }
-        return "";
-    }
+	/**
+	 * Get the Passkey message if any were triggered..
+	 * @return string
+	 */
+	public function getPasskeyMessage(): string
+	{
+		foreach ($this->multiChallenge as $c) {
+			if ($c->type === PASSKEY) {
+				return $c->message;
+			}
+		}
+		return '';
+	}
 
-    /**
-     * @return array Array of PIChallenge objects representing the triggered token challenges.
-     */
-    public function getMultiChallenge(): array
-    {
-        return $this->multiChallenge;
-    }
+	/**
+	 * Get the Passkey challenge in JSON format.
+	 * This is used to create a passkey request.
+	 *
+	 * @return string Passkey challenge.
+	 */
+	public function getPasskeyChallenge(): string
+	{
+		return $this->passkeyChallenge;
+	}
 
-    /**
-     * @return bool Status indicates if the request was processed successfully by the server.
-     */
-    public function getStatus(): bool
-    {
-        return $this->status;
-    }
+	/**
+	 * Get the Passkey registration in JSON format.
+	 * This is used to create a passkey registration request.
+	 *
+	 * @return string Passkey registration.
+	 */
+	public function getPasskeyRegistration(): string
+	{
+		return $this->passkeyRegistration;
+	}
 
-    /**
-     * @return bool Value is true if the authentication was successful.
-     */
-    public function getValue(): bool
-    {
-        return $this->value;
-    }
+	/**
+	 * Get the Passkey registration serial.
+	 * This is used to identify the passkey registration.
+	 *
+	 * @return string Passkey registration serial.
+	 */
+	public function getPasskeyRegistrationSerial(): string
+	{
+		return $this->passkeyRegistrationSerial;
+	}
 
-    /**
-     * @return string Authentication Status.
-     */
-    public function getAuthenticationStatus(): string
-    {
-        return $this->authenticationStatus;
-    }
+	/**
+	 * Check if any of the triggered challenges is part of an enrollment via multichallenge.
+	 *
+	 * @return bool True if any challenge is part of an enrollment via multichallenge, false otherwise.
+	 */
+	public function isEnrollViaMultichallenge(): bool
+	{
+		return $this->isEnrollViaMultichallenge;
+	}
 
-    /**
-     * @return string If an error occurred, the error code will be set here.
-     */
-    public function getErrorCode(): string
-    {
-        return $this->errorCode;
-    }
+	/**
+	 * Check if an enrollment via multichallenge is optional and can be cancelled by the user.
+	 *
+	 * @return bool True if an enrollment via multichallenge is optional, false otherwise.
+	 */
+	public function isEnrollViaMultichallengeOptional(): bool
+	{
+		return $this->isEnrollViaMultichallengeOptional;
+	}
 
-    /**
-     * @return string If an error occurred, the error message will be set here.
-     */
-    public function getErrorMessage(): string
-    {
-        return $this->errorMessage;
-    }
+	/**
+	 * @return string Combined messages of all triggered token.
+	 */
+	public function getMessages(): string
+	{
+		return $this->messages;
+	}
+
+	/**
+	 * @return string Token's serial.
+	 */
+	public function getSerial(): string
+	{
+		return $this->serial;
+	}
+
+	/**
+	 * @return string Message from the response. Should be shown to the user.
+	 */
+	public function getMessage(): string
+	{
+		return $this->message;
+	}
+
+	/**
+	 * @return string Transaction ID is used to reference the challenges contained in this response in later requests.
+	 */
+	public function getTransactionID(): string
+	{
+		return $this->transactionID;
+	}
+
+	/**
+	 * @return string Preferred mode in which client should work after triggering challenges.
+	 */
+	public function getPreferredClientMode(): string
+	{
+		return $this->preferredClientMode;
+	}
+
+	/**
+	 * @return string Raw response in JSON format.
+	 */
+	public function getRawResponse(): string
+	{
+		return $this->raw;
+	}
+
+	/**
+	 * Get the WebAuthnSignRequest for any triggered WebAuthn token.
+	 * @return string WebAuthnSignRequest or empty string if no WebAuthn token was triggered.
+	 */
+	public function getWebauthnSignRequest(): string
+	{
+		$arr = [];
+		$webauthn = '';
+		foreach ($this->multiChallenge as $c) {
+			if ($c->type === WEBAUTHN) {
+				$t = json_decode($c->webAuthnSignRequest);
+				if (empty($webauthn)) {
+					$webauthn = $t;
+				}
+				$arr[] = $c->attributes[WEBAUTHN_SIGN_REQUEST][ALLOW_CREDENTIALS][0] ?? null;
+			}
+		}
+		if (empty($webauthn)) {
+			return '';
+		}
+		$webauthn->allowCredentials = $arr;
+		return json_encode($webauthn);
+	}
+
+	/**
+	 * Get the WebAuthn token message if any were triggered.
+	 * @return string
+	 */
+	public function getWebauthnMessage(): string
+	{
+		foreach ($this->multiChallenge as $c) {
+			if ($c->type === WEBAUTHN) {
+				return $c->message;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * @return array Array of PIChallenge objects representing the triggered token challenges.
+	 */
+	public function getMultiChallenge(): array
+	{
+		return $this->multiChallenge;
+	}
+
+	/**
+	 * @return bool Status indicates if the request was processed successfully by the server.
+	 */
+	public function getStatus(): bool
+	{
+		return $this->status;
+	}
+
+	/**
+	 * @return bool Value is true if the authentication was successful.
+	 */
+	public function getValue(): bool
+	{
+		return $this->value;
+	}
+
+	/**
+	 * @return string Authentication Status.
+	 */
+	public function getAuthenticationStatus(): string
+	{
+		return $this->authenticationStatus;
+	}
+
+	/**
+	 * @return string If an error occurred, the error code will be set here.
+	 */
+	public function getErrorCode(): string
+	{
+		return $this->errorCode;
+	}
+
+	/**
+	 * @return string If an error occurred, the error message will be set here.
+	 */
+	public function getErrorMessage(): string
+	{
+		return $this->errorMessage;
+	}
+
+	/**
+	 * Check if any of the triggered challenges is a Push or Smartphone container.
+	 *
+	 * @return bool True if any challenge is of type 'push' or 'smartphone', false otherwise.
+	 */
+	private function isPushOrSmartphoneContainer(string $type): bool
+	{
+		return $type === PUSH || $type === SMARTPHONE;
+	}
 }

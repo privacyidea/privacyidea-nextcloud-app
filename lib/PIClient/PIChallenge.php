@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright 2024 NetKnights GmbH - lukas.matusiewicz@netknights.it
  * <p>
@@ -16,27 +17,30 @@ namespace OCA\PrivacyIDEA\PIClient;
 
 class PIChallenge
 {
-    /* @var string Type of token this challenge is for. */
-    public string $type = "";
+	/* @var string Type of token this challenge is for. */
+	public string $type = '';
 
-    /* @var string Message extracted from this challenge. */
-    public string $message = "";
+	/* @var string Message extracted from this challenge. */
+	public string $message = '';
 
-    /* @var string Image data extracted from this challenge. */
-    public string $image = "";
+	/* @var string Image data extracted from this challenge. */
+	public string $image = '';
 
-    /* @var string TransactionId to reference this challenge in later requests. */
-    public string $transactionID = "";
+	/* @var string Enrollment link if available. */
+	public string $enrollmentLink = '';
 
-    /* @var string Client mode in which the challenge should be processed. */
-    public string $clientMode = "";
+	/* @var string TransactionId to reference this challenge in later requests. */
+	public string $transactionID = '';
 
-    /* @var string Serial of token this challenge is for. */
-    public string $serial = "";
+	/* @var string Client mode in which the challenge should be processed. */
+	public string $clientMode = '';
 
-    /* @var array Arbitrary attributes that can be appended to the challenge by the server. */
-    public array $attributes = array();
+	/* @var string Serial of token this challenge is for. */
+	public string $serial = '';
 
-    /* @var string WebAuthn sign request in JSON format */
-    public string $webAuthnSignRequest = "";
+	/* @var array Arbitrary attributes that can be appended to the challenge by the server. */
+	public array $attributes = [];
+
+	/* @var string WebAuthn sign request in JSON format. */
+	public string $webAuthnSignRequest = '';
 }
