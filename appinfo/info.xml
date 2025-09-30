@@ -9,7 +9,7 @@
         Users can authenticate with classic OTP tokens, and Challenge-Response tokens like E-Mail,
         SMS, PUSH, or WebAuthn devices.
     </description>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <licence>agpl</licence>
     <author mail="lukas.matusiewicz@netknights.it">Lukas Matusiewicz</author>
     <namespace>PrivacyIDEA</namespace>
