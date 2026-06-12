@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.1.1 - 06/2026
+
+### Maintenance
+
+- Updated build dependencies (`@nextcloud/webpack-vue-config`).
+
 ## v1.1.0 - 09/2025
 
 ### Features
