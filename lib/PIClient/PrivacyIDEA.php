@@ -399,6 +399,31 @@ class PrivacyIDEA
 		$params[TIMEOUT] = $this->timeout;
 		$this->log(DEBUG, 'Sending ' . http_build_query($params, '', ', ') . ' to ' . $endpoint);
 		$completeUrl = $this->serverURL . $endpoint;
+		$ret = $this->curlRequest($completeUrl, $params, $headers, $httpMethod);
+		if ($endpoint != ENDPOINT_AUTH) {
+			$retJson = json_decode($ret, true);
+			$this->log(DEBUG, $endpoint . ' returned ' . json_encode($retJson, JSON_PRETTY_PRINT));
+		}
+		return $ret;
+	}
+
+	/**
+	 * Perform the actual HTTP request via cURL and return the response body.
+	 *
+	 * This is the single seam through which all network traffic flows. It is
+	 * declared protected (rather than folded into sendRequest) so that tests
+	 * can subclass PrivacyIDEA and override it to return canned responses
+	 * without hitting the network.
+	 *
+	 * @param string $completeUrl Fully qualified endpoint URL.
+	 * @param array $params Request parameters.
+	 * @param array $headers Headers to forward.
+	 * @param string $httpMethod GET, POST, PUT or DELETE.
+	 * @return string Response body with the HTTP headers stripped off.
+	 * @throws PIBadRequestException If the server cannot be reached.
+	 */
+	protected function curlRequest(string $completeUrl, array $params, array $headers, string $httpMethod): string
+	{
 		$curlInstance = curl_init();
 		curl_setopt($curlInstance, CURLOPT_URL, $completeUrl);
 		curl_setopt($curlInstance, CURLOPT_HEADER, true);
@@ -428,10 +453,6 @@ class PrivacyIDEA
 		$headerSize = curl_getinfo($curlInstance, CURLINFO_HEADER_SIZE);
 		$ret = substr($response, $headerSize);
 		curl_close($curlInstance);
-		if ($endpoint != ENDPOINT_AUTH) {
-			$retJson = json_decode($ret, true);
-			$this->log(DEBUG, $endpoint . ' returned ' . json_encode($retJson, JSON_PRETTY_PRINT));
-		}
 		return $ret;
 	}
 
@@ -524,10 +545,10 @@ class PrivacyIDEA
 	}
 
 	/**
-	 * @param bool $clientIP Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.
+	 * @param string $clientIP Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.
 	 * @return void
 	 */
-	public function setForwardClientIP(bool $clientIP): void
+	public function setForwardClientIP(string $clientIP): void
 	{
 		$this->forwardClientIP = $clientIP;
 	}

@@ -1,0 +1,56 @@
+name: PHP tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: php-tests-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  php-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.3', '8.4']
+
+    name: php${{ matrix.php-version }} (lint, psalm, phpunit)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up php${{ matrix.php-version }}
+        uses: shivammathur/setup-php@ec406be512d7077f68eed36e63f4d91bc006edc4 # v2.35.4
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: curl, json, mbstring
+          coverage: none
+          ini-file: development
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Lint (php -l)
+        run: composer run lint
+
+      - name: Static analysis (psalm)
+        # Psalm 5.x is only reliable up to PHP 8.3; run it on that version.
+        if: matrix.php-version == '8.3'
+        run: composer run psalm
+
+      - name: Unit tests (phpunit)
+        run: composer run test:unit

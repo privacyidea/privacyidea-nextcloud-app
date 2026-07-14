@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.26.1@d747f6500b38ac4f7dfc5edbcae6e4b637d7add0">
+  <file src="lib/AppInfo/Application.php">
+    <MissingClassConstType>
+      <code><![CDATA[APP_ID = 'privacyidea']]></code>
+    </MissingClassConstType>
+    <UnusedClass>
+      <code><![CDATA[Application]]></code>
+    </UnusedClass>
+  </file>
+  <file src="lib/CodingStandard/Config.php">
+    <DeprecatedClass>
+      <code><![CDATA[PhpCsFixerCustomFixers\Fixer\MultilinePromotedPropertiesFixer::name()]]></code>
+    </DeprecatedClass>
+    <MissingParamType>
+      <code><![CDATA[$name]]></code>
+    </MissingParamType>
+    <MixedArgument>
+      <code><![CDATA[$name]]></code>
+    </MixedArgument>
+    <UnusedClass>
+      <code><![CDATA[Config]]></code>
+    </UnusedClass>
+  </file>
+  <file src="lib/Controller/SettingsController.php">
+    <UnusedClass>
+      <code><![CDATA[SettingsController]]></code>
+    </UnusedClass>
+  </file>
+  <file src="lib/PIClient/AuthenticationStatus.php">
+    <MissingClassConstType>
+      <code><![CDATA[ACCEPT = 'ACCEPT']]></code>
+      <code><![CDATA[CHALLENGE = 'CHALLENGE']]></code>
+      <code><![CDATA[NONE = 'NONE']]></code>
+      <code><![CDATA[REJECT = 'REJECT']]></code>
+    </MissingClassConstType>
+  </file>
+  <file src="lib/PIClient/PIChallenge.php">
+    <PossiblyUnusedProperty>
+      <code><![CDATA[$attributes]]></code>
+      <code><![CDATA[$clientMode]]></code>
+      <code><![CDATA[$enrollmentLink]]></code>
+      <code><![CDATA[$image]]></code>
+      <code><![CDATA[$message]]></code>
+      <code><![CDATA[$serial]]></code>
+      <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$webAuthnSignRequest]]></code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="lib/PIClient/PIResponse.php">
+    <MissingClosureReturnType>
+      <code><![CDATA[fn ($c) => $c->type]]></code>
+    </MissingClosureReturnType>
+    <MixedArgument>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->webAuthnSignRequest]]></code>
+      <code><![CDATA[$detail[MESSAGES]]]></code>
+    </MixedArgument>
+    <MixedArgumentTypeCoercion>
+      <code><![CDATA[array_unique($detail[MESSAGES])]]></code>
+    </MixedArgumentTypeCoercion>
+    <MixedArrayAccess>
+      <code><![CDATA[$c->attributes[WEBAUTHN_SIGN_REQUEST]]]></code>
+      <code><![CDATA[$c->attributes[WEBAUTHN_SIGN_REQUEST][ALLOW_CREDENTIALS]]]></code>
+      <code><![CDATA[$c->attributes[WEBAUTHN_SIGN_REQUEST][ALLOW_CREDENTIALS][0]]]></code>
+      <code><![CDATA[$challenge[ATTRIBUTES]]]></code>
+      <code><![CDATA[$challenge[ATTRIBUTES]]]></code>
+      <code><![CDATA[$challenge[ATTRIBUTES][WEBAUTHN_SIGN_REQUEST]]]></code>
+      <code><![CDATA[$challenge[CLIENT_MODE]]]></code>
+      <code><![CDATA[$challenge[IMAGE]]]></code>
+      <code><![CDATA[$challenge[LINK]]]></code>
+      <code><![CDATA[$challenge[MESSAGE]]]></code>
+      <code><![CDATA[$challenge[PASSKEY_REGISTRATION]]]></code>
+      <code><![CDATA[$challenge[SERIAL]]]></code>
+      <code><![CDATA[$challenge[SERIAL]]]></code>
+      <code><![CDATA[$challenge[TRANSACTION_ID]]]></code>
+      <code><![CDATA[$challenge[TYPE]]]></code>
+      <code><![CDATA[$detail[MESSAGES]]]></code>
+      <code><![CDATA[$detail[MESSAGE]]]></code>
+      <code><![CDATA[$detail[MULTI_CHALLENGE]]]></code>
+      <code><![CDATA[$detail[PASSKEY][TRANSACTION_ID]]]></code>
+      <code><![CDATA[$detail[PREFERRED_CLIENT_MODE]]]></code>
+      <code><![CDATA[$detail[PREFERRED_CLIENT_MODE]]]></code>
+      <code><![CDATA[$detail[SERIAL]]]></code>
+      <code><![CDATA[$detail[TRANSACTION_ID]]]></code>
+      <code><![CDATA[$map[DETAIL]]]></code>
+      <code><![CDATA[$map[RESULT]]]></code>
+      <code><![CDATA[$map[RESULT]]]></code>
+      <code><![CDATA[$map[RESULT]]]></code>
+      <code><![CDATA[$map[RESULT][ERROR]]]></code>
+      <code><![CDATA[$map[RESULT][ERROR]]]></code>
+      <code><![CDATA[$map[RESULT][ERROR][CODE]]]></code>
+      <code><![CDATA[$map[RESULT][ERROR][MESSAGE]]]></code>
+      <code><![CDATA[$result[AUTHENTICATION]]]></code>
+      <code><![CDATA[$result[STATUS]]]></code>
+      <code><![CDATA[$result[VALUE]]]></code>
+    </MixedArrayAccess>
+    <MixedAssignment>
+      <code><![CDATA[$arr[]]]></code>
+      <code><![CDATA[$c]]></code>
+      <code><![CDATA[$c]]></code>
+      <code><![CDATA[$c]]></code>
+      <code><![CDATA[$c]]></code>
+      <code><![CDATA[$c]]></code>
+      <code><![CDATA[$c]]></code>
+      <code><![CDATA[$challenge]]></code>
+      <code><![CDATA[$detail]]></code>
+      <code><![CDATA[$map]]></code>
+      <code><![CDATA[$r]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$ret->errorCode]]></code>
+      <code><![CDATA[$ret->errorMessage]]></code>
+      <code><![CDATA[$ret->message]]></code>
+      <code><![CDATA[$ret->passkeyRegistrationSerial]]></code>
+      <code><![CDATA[$ret->preferredClientMode]]></code>
+      <code><![CDATA[$ret->serial]]></code>
+      <code><![CDATA[$ret->status]]></code>
+      <code><![CDATA[$ret->transactionID]]></code>
+      <code><![CDATA[$ret->transactionID]]></code>
+      <code><![CDATA[$ret->value]]></code>
+      <code><![CDATA[$t]]></code>
+      <code><![CDATA[$tmp->attributes]]></code>
+      <code><![CDATA[$tmp->clientMode]]></code>
+      <code><![CDATA[$tmp->enrollmentLink]]></code>
+      <code><![CDATA[$tmp->image]]></code>
+      <code><![CDATA[$tmp->message]]></code>
+      <code><![CDATA[$tmp->serial]]></code>
+      <code><![CDATA[$tmp->transactionID]]></code>
+      <code><![CDATA[$tmp->type]]></code>
+      <code><![CDATA[$webauthn]]></code>
+    </MixedAssignment>
+    <MixedInferredReturnType>
+      <code><![CDATA[string]]></code>
+      <code><![CDATA[string]]></code>
+      <code><![CDATA[string]]></code>
+      <code><![CDATA[string]]></code>
+    </MixedInferredReturnType>
+    <MixedPropertyAssignment>
+      <code><![CDATA[$webauthn]]></code>
+    </MixedPropertyAssignment>
+    <MixedPropertyFetch>
+      <code><![CDATA[$c->attributes]]></code>
+      <code><![CDATA[$c->message]]></code>
+      <code><![CDATA[$c->message]]></code>
+      <code><![CDATA[$c->message]]></code>
+      <code><![CDATA[$c->message]]></code>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->type]]></code>
+      <code><![CDATA[$c->webAuthnSignRequest]]></code>
+    </MixedPropertyFetch>
+    <MixedReturnStatement>
+      <code><![CDATA[$c->message]]></code>
+      <code><![CDATA[$c->message]]></code>
+      <code><![CDATA[$c->message]]></code>
+      <code><![CDATA[$c->message]]></code>
+    </MixedReturnStatement>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[getOtpMessage]]></code>
+      <code><![CDATA[getPasskeyMessage]]></code>
+      <code><![CDATA[getPushOrSmartphoneContainerMessage]]></code>
+      <code><![CDATA[getRawResponse]]></code>
+      <code><![CDATA[getValue]]></code>
+      <code><![CDATA[getWebauthnMessage]]></code>
+    </PossiblyUnusedMethod>
+    <RedundantCondition>
+      <code><![CDATA[assert(gettype($json) === 'string')]]></code>
+    </RedundantCondition>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[empty($ret->transactionID)]]></code>
+      <code><![CDATA[empty($webauthn)]]></code>
+      <code><![CDATA[empty($webauthn)]]></code>
+    </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="lib/PIClient/PrivacyIDEA.php">
+    <InvalidScalarArgument>
+      <code><![CDATA[$response]]></code>
+    </InvalidScalarArgument>
+    <MissingParamType>
+      <code><![CDATA[$level]]></code>
+      <code><![CDATA[$message]]></code>
+    </MissingParamType>
+    <MixedArgument>
+      <code><![CDATA[$headerSize]]></code>
+      <code><![CDATA[$response]]></code>
+    </MixedArgument>
+    <MixedArrayAccess>
+      <code><![CDATA[$registrationResponseParams[ATTESTATIONOBJECT]]]></code>
+      <code><![CDATA[$registrationResponseParams[AUTHENTICATORATTACHMENT]]]></code>
+      <code><![CDATA[$registrationResponseParams[CLIENTDATAJSON]]]></code>
+      <code><![CDATA[$registrationResponseParams[CREDENTIAL_ID]]]></code>
+      <code><![CDATA[$registrationResponseParams[RAWID]]]></code>
+      <code><![CDATA[$response[RESULT]]]></code>
+      <code><![CDATA[$response[RESULT]]]></code>
+      <code><![CDATA[$response[RESULT][VALUE]]]></code>
+      <code><![CDATA[$response[RESULT][VALUE]]]></code>
+      <code><![CDATA[$response[RESULT][VALUE][TOKEN]]]></code>
+      <code><![CDATA[$tmp[ASSERTIONCLIENTEXTENSIONS]]]></code>
+      <code><![CDATA[$tmp[AUTHENTICATORDATA]]]></code>
+      <code><![CDATA[$tmp[CLIENTDATA]]]></code>
+      <code><![CDATA[$tmp[CREDENTIALID]]]></code>
+      <code><![CDATA[$tmp[SIGNATUREDATA]]]></code>
+      <code><![CDATA[$tmp[USERHANDLE]]]></code>
+    </MixedArrayAccess>
+    <MixedAssignment>
+      <code><![CDATA[$headerSize]]></code>
+      <code><![CDATA[$key]]></code>
+      <code><![CDATA[$params[ASSERTIONCLIENTEXTENSIONS]]]></code>
+      <code><![CDATA[$params[ASSERTIONCLIENTEXTENSIONS]]]></code>
+      <code><![CDATA[$params[AUTHENTICATORDATA]]]></code>
+      <code><![CDATA[$params[CLIENTDATA]]]></code>
+      <code><![CDATA[$params[CREDENTIALID]]]></code>
+      <code><![CDATA[$params[SIGNATUREDATA]]]></code>
+      <code><![CDATA[$params[USERHANDLE]]]></code>
+      <code><![CDATA[$params[USERHANDLE]]]></code>
+      <code><![CDATA[$registrationResponseParams]]></code>
+      <code><![CDATA[$response]]></code>
+      <code><![CDATA[$response]]></code>
+      <code><![CDATA[$retJson]]></code>
+      <code><![CDATA[$tmp]]></code>
+      <code><![CDATA[$value]]></code>
+    </MixedAssignment>
+    <MixedInferredReturnType>
+      <code><![CDATA[bool]]></code>
+      <code><![CDATA[string]]></code>
+    </MixedInferredReturnType>
+    <MixedMethodCall>
+      <code><![CDATA[debug]]></code>
+      <code><![CDATA[error]]></code>
+      <code><![CDATA[info]]></code>
+    </MixedMethodCall>
+    <MixedReturnStatement>
+      <code><![CDATA[$response[RESULT][VALUE] ?? false]]></code>
+      <code><![CDATA[$response[RESULT][VALUE] ?? false]]></code>
+      <code><![CDATA[$response[RESULT][VALUE][TOKEN]]]></code>
+    </MixedReturnStatement>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[triggerChallenge]]></code>
+    </PossiblyUnusedMethod>
+    <RedundantCondition>
+      <code><![CDATA[assert(gettype($endpoint) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($headers) === 'array')]]></code>
+      <code><![CDATA[assert(gettype($httpMethod) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($origin) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($origin) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($origin) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($params) === 'array')]]></code>
+      <code><![CDATA[assert(gettype($pass) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($passkeyResponse) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($registrationResponse) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($serial) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($transactionID) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($transactionID) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($transactionID) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($transactionID) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($transactionID) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($username) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($username) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($username) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($username) === 'string')]]></code>
+      <code><![CDATA[assert(gettype($webAuthnSignResponse) === 'string')]]></code>
+      <code><![CDATA[assert(is_array($haystack))]]></code>
+      <code><![CDATA[assert(is_string($needle))]]></code>
+      <code><![CDATA[is_array($haystack)]]></code>
+      <code><![CDATA[is_string($needle)]]></code>
+    </RedundantCondition>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[!$response]]></code>
+      <code><![CDATA[empty($headers)]]></code>
+      <code><![CDATA[empty($transactionID)]]></code>
+    </RiskyTruthyFalsyComparison>
+    <UndefinedFunction>
+      <code><![CDATA[logger(APP_ID_PRIVACYIDEA)]]></code>
+      <code><![CDATA[logger(APP_ID_PRIVACYIDEA)]]></code>
+      <code><![CDATA[logger(APP_ID_PRIVACYIDEA)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="lib/Provider/PrivacyIDEAFactory.php">
+    <InvalidScalarArgument>
+      <code><![CDATA[$this->getAppValue('piNoProxy', false)]]></code>
+      <code><![CDATA[$this->getAppValue('piSSLVerify', true)]]></code>
+      <code><![CDATA[$this->getAppValue('piSSLVerify', true)]]></code>
+    </InvalidScalarArgument>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[__construct]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="lib/Provider/PrivacyIDEAProvider.php">
+    <InvalidArgument>
+      <code><![CDATA[$response->isEnrollViaMultichallenge()]]></code>
+      <code><![CDATA[$response->isEnrollViaMultichallengeOptional()]]></code>
+    </InvalidArgument>
+    <MissingDependency>
+      <code><![CDATA[Template]]></code>
+    </MissingDependency>
+    <MissingParamType>
+      <code><![CDATA[$default]]></code>
+      <code><![CDATA[$level]]></code>
+      <code><![CDATA[$message]]></code>
+    </MissingParamType>
+    <MixedArgument>
+      <code><![CDATA[$default]]></code>
+      <code><![CDATA[$message]]></code>
+      <code><![CDATA[$message]]></code>
+      <code><![CDATA[$message]]></code>
+      <code><![CDATA[$origin]]></code>
+      <code><![CDATA[$origin]]></code>
+      <code><![CDATA[$origin]]></code>
+      <code><![CDATA[$passkeyRegistrationResponse]]></code>
+      <code><![CDATA[$passkeyRegistrationSerial]]></code>
+      <code><![CDATA[$passkeySignResponse]]></code>
+      <code><![CDATA[$passkeyTransactionID]]></code>
+      <code><![CDATA[$this->request->getParam('webAuthnSignResponse')]]></code>
+      <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$transactionID]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$challenge]]></code>
+      <code><![CDATA[$counter]]></code>
+      <code><![CDATA[$mode]]></code>
+      <code><![CDATA[$origin]]></code>
+      <code><![CDATA[$origin]]></code>
+      <code><![CDATA[$origin]]></code>
+      <code><![CDATA[$passkeyRegistrationResponse]]></code>
+      <code><![CDATA[$passkeyRegistrationSerial]]></code>
+      <code><![CDATA[$passkeySignResponse]]></code>
+      <code><![CDATA[$passkeyTransactionID]]></code>
+      <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$webAuthnSignResponse]]></code>
+    </MixedAssignment>
+    <MixedInferredReturnType>
+      <code><![CDATA[Template]]></code>
+    </MixedInferredReturnType>
+    <MixedOperand>
+      <code><![CDATA[$counter]]></code>
+      <code><![CDATA[$this->request->getParam('passField')]]></code>
+      <code><![CDATA[$this->session->get('piMode')]]></code>
+      <code><![CDATA[$transactionID]]></code>
+    </MixedOperand>
+    <MixedPropertyFetch>
+      <code><![CDATA[$challenge->clientMode]]></code>
+      <code><![CDATA[$challenge->enrollmentLink]]></code>
+      <code><![CDATA[$challenge->image]]></code>
+      <code><![CDATA[$challenge->type]]></code>
+    </MixedPropertyFetch>
+    <PossiblyNullPropertyAssignmentValue>
+      <code><![CDATA[$this->piFactory->create()]]></code>
+    </PossiblyNullPropertyAssignmentValue>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$pi]]></code>
+    </PropertyNotSetInConstructor>
+    <UnusedClass>
+      <code><![CDATA[PrivacyIDEAProvider]]></code>
+    </UnusedClass>
+  </file>
+  <file src="lib/Sections/PrivacyIDEAAdmin.php">
+    <UnusedClass>
+      <code><![CDATA[PrivacyIDEAAdmin]]></code>
+    </UnusedClass>
+  </file>
+  <file src="lib/Settings/Admin.php">
+    <UnusedClass>
+      <code><![CDATA[Admin]]></code>
+    </UnusedClass>
+  </file>
+</files>

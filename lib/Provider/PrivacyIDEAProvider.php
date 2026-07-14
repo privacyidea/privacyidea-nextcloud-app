@@ -32,6 +32,8 @@ class PrivacyIDEAProvider implements IProvider
 	private IL10N $trans;
 	/** @var ISession */
 	private ISession $session;
+	/** @var PrivacyIDEAFactory */
+	private PrivacyIDEAFactory $piFactory;
 	/** @var PrivacyIDEA */
 	private PrivacyIDEA $pi;
 
@@ -44,8 +46,9 @@ class PrivacyIDEAProvider implements IProvider
 	 * @param IGroupManager $groupManager
 	 * @param IL10N $trans
 	 * @param ISession $session
+	 * @param PrivacyIDEAFactory $piFactory
 	 */
-	public function __construct(IAppConfig $appConfig, LoggerInterface $logger, IRequest $request, IGroupManager $groupManager, IL10N $trans, ISession $session)
+	public function __construct(IAppConfig $appConfig, LoggerInterface $logger, IRequest $request, IGroupManager $groupManager, IL10N $trans, ISession $session, PrivacyIDEAFactory $piFactory)
 	{
 		$this->appConfig = $appConfig;
 		$this->logger = $logger;
@@ -53,8 +56,9 @@ class PrivacyIDEAProvider implements IProvider
 		$this->groupManager = $groupManager;
 		$this->trans = $trans;
 		$this->session = $session;
+		$this->piFactory = $piFactory;
 		if ($this->session->get('piAllowCreatingPIInstance') === true) {
-			$this->pi = $this->createPrivacyIDEAInstance();
+			$this->pi = $this->piFactory->create();
 		}
 	}
 
@@ -73,7 +77,7 @@ class PrivacyIDEAProvider implements IProvider
 			$this->verifyChallenge($user, '');
 		} else {
 			$this->session->set('piAllowCreatingPIInstance', true);
-			$this->pi = $this->createPrivacyIDEAInstance();
+			$this->pi = $this->piFactory->create();
 
 			$authenticationFlow = $this->getAppValue('piSelectedAuthFlow', 'piAuthFlowDefault');
 			$this->log('debug', 'Selected authentication flow: ' . $authenticationFlow);
@@ -105,7 +109,7 @@ class PrivacyIDEAProvider implements IProvider
 				if ($this->session->get('piStaticPassDone') !== true) {
 					$response = $this->pi->validateCheck($username, $this->getAppValue('piStaticPass', ''), '', $headers);
 					$this->session->set('piStaticPassDone', true);
-					if ($response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT) {
+					if ($response !== null && $response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT) {
 						// Complete the authentication
 						$this->session->set('piSuccess', true);
 						$this->verifyChallenge($user, '');
@@ -355,40 +359,18 @@ class PrivacyIDEAProvider implements IProvider
 	}
 
 	/**
-	 * Create a new privacyIDEA object with the given configuration.
-	 *
-	 * @return PrivacyIDEA|null privacyIDEA object or null on error.
-	 */
-	private function createPrivacyIDEAInstance(): ?PrivacyIDEA
-	{
-		$piUrl = $this->getAppValue('piURL', '');
-		if (!empty($piUrl)) {
-			$pi = new PrivacyIDEA('privacyidea-nextcloud/1.1.0', $piUrl);
-			$pi->setSSLVerifyHost($this->getAppValue('piSSLVerify', true));
-			$pi->setSSLVerifyPeer($this->getAppValue('piSSLVerify', true));
-			$pi->setServiceAccountName($this->getAppValue('piServiceName', ''));
-			$pi->setServiceAccountPass($this->getAppValue('piServicePass', ''));
-			$pi->setServiceAccountRealm($this->getAppValue('piServiceRealm', ''));
-			$pi->setRealm($this->getAppValue('piRealm', ''));
-			$pi->setNoProxy($this->getAppValue('piNoProxy', false));
-			if ($this->getAppValue('piForwardClientIP', false) && !empty($this->getClientIP())) {
-				$pi->setForwardClientIP($this->getClientIP());
-			}
-			return $pi;
-		} else {
-			$this->log('error', 'Cannot create privacyIDEA instance: Server URL missing in configuration!');
-		}
-		return null;
-	}
-
-	/**
 	 *  Process the response from privacyIDEA and write information to session.
 	 *
-	 * @param PIResponse $response
+	 * @param PIResponse|null $response
 	 * @return void
 	 */
-	private function processPIResponse(PIResponse $response): void
+	private function processPIResponse(?PIResponse $response): void
 	{
+		if ($response === null) {
+			$this->log('error', 'Cannot process response: the server response was empty or malformed.');
+			$this->session->set('piErrorMessage', $this->trans->t('The privacyIDEA server returned an empty or malformed response.'));
+			return;
+		}
 		$this->session->set('piMode', 'otp');
 		if (!empty($response->getMultiChallenge())) {
 			$triggeredTokens = $response->getTriggeredTokenTypes();
@@ -491,8 +473,7 @@ class PrivacyIDEAProvider implements IProvider
 				if (is_array($_SERVER[$header])) {
 					$value = implode(',', $_SERVER[$header]);
 				}
-				$header = [$header => $value];
-				$headersToForward = array_push($headersToForward, $header);
+				$headersToForward[] = $header . ': ' . $value;
 			} else {
 				$this->log('debug', 'No values for header: ' . $header . ' found.');
 			}

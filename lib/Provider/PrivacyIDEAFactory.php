@@ -1,0 +1,98 @@
+<?php
+
+/*
+ * Copyright 2024 NetKnights GmbH - lukas.matusiewicz@netknights.it
+ * <p>
+ * Licensed under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3;
+ * you may not use this file except in compliance with the License.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+namespace OCA\PrivacyIDEA\Provider;
+
+use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
+use OCP\IAppConfig;
+use OCP\IRequest;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Builds a configured {@see PrivacyIDEA} client from the app configuration.
+ *
+ * Extracted from PrivacyIDEAProvider so that the provider no longer news up
+ * the client itself. This is the seam that lets tests inject a fake client:
+ * a test can pass a stub factory whose create() returns a mock PrivacyIDEA.
+ */
+class PrivacyIDEAFactory
+{
+	/** @var IAppConfig */
+	private IAppConfig $appConfig;
+	/** @var IRequest */
+	private IRequest $request;
+	/** @var LoggerInterface */
+	private LoggerInterface $logger;
+
+	public function __construct(IAppConfig $appConfig, IRequest $request, LoggerInterface $logger)
+	{
+		$this->appConfig = $appConfig;
+		$this->request = $request;
+		$this->logger = $logger;
+	}
+
+	/**
+	 * Create a new privacyIDEA client with the configured settings.
+	 *
+	 * @return PrivacyIDEA|null Configured client or null when no server URL is set.
+	 */
+	public function create(): ?PrivacyIDEA
+	{
+		$piUrl = $this->getAppValue('piURL', '');
+		if (empty($piUrl)) {
+			$this->logger->error('Cannot create privacyIDEA instance: Server URL missing in configuration!', ['app' => 'privacyIDEA']);
+			return null;
+		}
+		$pi = new PrivacyIDEA('privacyidea-nextcloud/1.1.0', $piUrl);
+		$pi->setSSLVerifyHost($this->getAppValue('piSSLVerify', true));
+		$pi->setSSLVerifyPeer($this->getAppValue('piSSLVerify', true));
+		$pi->setServiceAccountName($this->getAppValue('piServiceName', ''));
+		$pi->setServiceAccountPass($this->getAppValue('piServicePass', ''));
+		$pi->setServiceAccountRealm($this->getAppValue('piServiceRealm', ''));
+		$pi->setRealm($this->getAppValue('piRealm', ''));
+		$pi->setNoProxy($this->getAppValue('piNoProxy', false));
+		if ($this->getAppValue('piForwardClientIP', false) && !empty($this->getClientIP())) {
+			$pi->setForwardClientIP($this->getClientIP());
+		}
+		return $pi;
+	}
+
+	/**
+	 * Retrieve a value from the privacyIDEA app configuration store.
+	 *
+	 * @param string $key application config key
+	 * @param string|bool $default default value
+	 * @return string
+	 */
+	private function getAppValue(string $key, $default): string
+	{
+		return $this->appConfig->getValueString('privacyidea', $key, (string)$default);
+	}
+
+	/**
+	 * Get the client IP address.
+	 *
+	 * @return string Client IP address or an empty string.
+	 */
+	private function getClientIP(): string
+	{
+		$clientIP = $this->request->getRemoteAddress();
+		if (!empty($clientIP)) {
+			return $clientIP;
+		}
+		$this->logger->error('Cannot get client IP address.', ['app' => 'privacyIDEA']);
+		return '';
+	}
+}
