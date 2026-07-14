@@ -37,33 +37,20 @@
   </file>
   <file src="lib/PIClient/PIChallenge.php">
     <PossiblyUnusedProperty>
-      <code><![CDATA[$attributes]]></code>
-      <code><![CDATA[$clientMode]]></code>
       <code><![CDATA[$enrollmentLink]]></code>
       <code><![CDATA[$image]]></code>
-      <code><![CDATA[$message]]></code>
       <code><![CDATA[$serial]]></code>
       <code><![CDATA[$transactionID]]></code>
-      <code><![CDATA[$webAuthnSignRequest]]></code>
     </PossiblyUnusedProperty>
   </file>
   <file src="lib/PIClient/PIResponse.php">
-    <MissingClosureReturnType>
-      <code><![CDATA[fn ($c) => $c->type]]></code>
-    </MissingClosureReturnType>
     <MixedArgument>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->webAuthnSignRequest]]></code>
       <code><![CDATA[$detail[MESSAGES]]]></code>
     </MixedArgument>
     <MixedArgumentTypeCoercion>
       <code><![CDATA[array_unique($detail[MESSAGES])]]></code>
     </MixedArgumentTypeCoercion>
     <MixedArrayAccess>
-      <code><![CDATA[$c->attributes[WEBAUTHN_SIGN_REQUEST]]]></code>
-      <code><![CDATA[$c->attributes[WEBAUTHN_SIGN_REQUEST][ALLOW_CREDENTIALS]]]></code>
-      <code><![CDATA[$c->attributes[WEBAUTHN_SIGN_REQUEST][ALLOW_CREDENTIALS][0]]]></code>
       <code><![CDATA[$challenge[ATTRIBUTES]]]></code>
       <code><![CDATA[$challenge[ATTRIBUTES]]]></code>
       <code><![CDATA[$challenge[ATTRIBUTES][WEBAUTHN_SIGN_REQUEST]]]></code>
@@ -98,12 +85,6 @@
     </MixedArrayAccess>
     <MixedAssignment>
       <code><![CDATA[$arr[]]]></code>
-      <code><![CDATA[$c]]></code>
-      <code><![CDATA[$c]]></code>
-      <code><![CDATA[$c]]></code>
-      <code><![CDATA[$c]]></code>
-      <code><![CDATA[$c]]></code>
-      <code><![CDATA[$c]]></code>
       <code><![CDATA[$challenge]]></code>
       <code><![CDATA[$detail]]></code>
       <code><![CDATA[$map]]></code>
@@ -130,36 +111,9 @@
       <code><![CDATA[$tmp->type]]></code>
       <code><![CDATA[$webauthn]]></code>
     </MixedAssignment>
-    <MixedInferredReturnType>
-      <code><![CDATA[string]]></code>
-      <code><![CDATA[string]]></code>
-      <code><![CDATA[string]]></code>
-      <code><![CDATA[string]]></code>
-    </MixedInferredReturnType>
     <MixedPropertyAssignment>
       <code><![CDATA[$webauthn]]></code>
     </MixedPropertyAssignment>
-    <MixedPropertyFetch>
-      <code><![CDATA[$c->attributes]]></code>
-      <code><![CDATA[$c->message]]></code>
-      <code><![CDATA[$c->message]]></code>
-      <code><![CDATA[$c->message]]></code>
-      <code><![CDATA[$c->message]]></code>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->type]]></code>
-      <code><![CDATA[$c->webAuthnSignRequest]]></code>
-    </MixedPropertyFetch>
-    <MixedReturnStatement>
-      <code><![CDATA[$c->message]]></code>
-      <code><![CDATA[$c->message]]></code>
-      <code><![CDATA[$c->message]]></code>
-      <code><![CDATA[$c->message]]></code>
-    </MixedReturnStatement>
     <PossiblyUnusedMethod>
       <code><![CDATA[getOtpMessage]]></code>
       <code><![CDATA[getPasskeyMessage]]></code>

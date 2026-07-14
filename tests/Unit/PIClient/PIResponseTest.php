@@ -168,6 +168,47 @@ class PIResponseTest extends TestCase
 		self::assertSame('', $r->getOtpMessage());
 	}
 
+	public function testInteractivePushCodeToPhoneIsNotOfferedAsPollablePush(): void
+	{
+		// Real capture: push.md test_17 (push_code_to_phone). The push
+		// challenge is client_mode "interactive" -> answered via the OTP field,
+		// so the poll-based Push button must NOT be offered for it.
+		$json = <<<'JSON'
+		{
+		  "detail": {
+		    "attributes": {"hideResponseInput": false},
+		    "client_mode": "interactive",
+		    "message": "Please enter the code displayed on your smartphone.",
+		    "messages": ["Please enter the code displayed on your smartphone."],
+		    "multi_challenge": [
+		      {
+		        "attributes": {"hideResponseInput": false},
+		        "client_mode": "interactive",
+		        "message": "Please enter the code displayed on your smartphone.",
+		        "serial": "PIPU001",
+		        "transaction_id": "00110530786071310297",
+		        "type": "push"
+		      }
+		    ],
+		    "preferred_client_mode": "interactive",
+		    "serial": "PIPU001",
+		    "transaction_id": "00110530786071310297",
+		    "type": "push"
+		  },
+		  "result": {"authentication": "CHALLENGE", "status": true, "value": false}
+		}
+		JSON;
+		$r = $this->parse($json);
+
+		self::assertNotNull($r);
+		self::assertSame(['push'], $r->getTriggeredTokenTypes());
+		// interactive -> normalized to "otp", not "push".
+		self::assertSame('otp', $r->getPreferredClientMode());
+		// The fix: an interactive push is not a pollable push offering.
+		self::assertFalse($r->isPushOrSmartphoneContainerAvailable());
+		self::assertSame('00110530786071310297', $r->getTransactionID());
+	}
+
 	public function testWebauthnSignRequestAssembled(): void
 	{
 		$json = <<<'JSON'
