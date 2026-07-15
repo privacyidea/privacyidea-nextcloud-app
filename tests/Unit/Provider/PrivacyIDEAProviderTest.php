@@ -10,8 +10,11 @@ declare(strict_types=1);
 
 namespace OCA\PrivacyIDEA\Tests\Unit\Provider;
 
+use OCA\PrivacyIDEA\PIClient\PIResponse;
+use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
 use OCA\PrivacyIDEA\Provider\PrivacyIDEAFactory;
 use OCA\PrivacyIDEA\Provider\PrivacyIDEAProvider;
+use OCP\Authentication\TwoFactorAuth\TwoFactorException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
@@ -32,8 +35,10 @@ class PrivacyIDEAProviderTest extends TestCase
 	 *
 	 * @param array<string, string> $config
 	 * @param callable|null $isInGroup fn(string $uid, string $group): bool
+	 * @param array<string, string> $requestParams values returned by IRequest::getParam
+	 * @param PrivacyIDEA|null $pi client returned by the factory when piAllowCreatingPIInstance is set
 	 */
-	private function makeProvider(array $config = [], ?callable $isInGroup = null, string $remoteAddr = '10.0.0.5'): PrivacyIDEAProvider
+	private function makeProvider(array $config = [], ?callable $isInGroup = null, string $remoteAddr = '10.0.0.5', array $requestParams = [], ?PrivacyIDEA $pi = null): PrivacyIDEAProvider
 	{
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -42,6 +47,9 @@ class PrivacyIDEAProviderTest extends TestCase
 
 		$request = $this->createMock(IRequest::class);
 		$request->method('getRemoteAddress')->willReturn($remoteAddr);
+		$request->method('getParam')->willReturnCallback(
+			fn (string $key, $default = null) => $requestParams[$key] ?? $default
+		);
 
 		$groupManager = $this->createMock(IGroupManager::class);
 		if ($isInGroup !== null) {
@@ -60,6 +68,7 @@ class PrivacyIDEAProviderTest extends TestCase
 		});
 
 		$factory = $this->createMock(PrivacyIDEAFactory::class);
+		$factory->method('create')->willReturn($pi);
 
 		return new PrivacyIDEAProvider(
 			$appConfig,
@@ -78,8 +87,6 @@ class PrivacyIDEAProviderTest extends TestCase
 		$user->method('getUID')->willReturn($uid);
 		return $user;
 	}
-
-	// ---- getHeadersToForward: regression test for the array_push bug ----
 
 	public function testHeadersToForwardBuildsFlatHeaderStrings(): void
 	{
@@ -114,8 +121,6 @@ class PrivacyIDEAProviderTest extends TestCase
 		self::assertSame([], $method->invoke($provider, 'HTTP_NOT_PRESENT'));
 	}
 
-	// ---- processPIResponse: regression test for the null-deref fix ----
-
 	public function testProcessNullResponseDoesNotThrowAndSetsErrorMessage(): void
 	{
 		$this->sessionStore = [];
@@ -129,7 +134,29 @@ class PrivacyIDEAProviderTest extends TestCase
 		self::assertNotEmpty($this->sessionStore['piErrorMessage']);
 	}
 
-	// ---- isTwoFactorAuthEnabledForUser ----
+	public function testCancelOptionalEnrollmentCompletesAuthentication(): void
+	{
+		// Cancelling an optional enroll_via_multichallenge returns ACCEPT, which
+		// must complete the 2FA step.
+		$pi = $this->createMock(PrivacyIDEA::class);
+		$cancelResponse = PIResponse::fromJSON(
+			'{"detail": {"message": "Cancelled enrollment via multichallenge"}, "result": {"authentication": "ACCEPT", "status": true, "value": true}}',
+			$pi
+		);
+		$pi->expects(self::once())
+			->method('validateCheckCancelEnrollment')
+			->with('08062584491116057815', self::anything())
+			->willReturn($cancelResponse);
+
+		// Constructor only builds the client when this flag is set.
+		$this->sessionStore = [
+			'piAllowCreatingPIInstance' => true,
+			'piTransactionID' => '08062584491116057815',
+		];
+		$provider = $this->makeProvider([], null, '10.0.0.5', ['enrollmentCancelled' => '1'], $pi);
+
+		self::assertTrue($provider->verifyChallenge($this->user(), ''));
+	}
 
 	public function testDisabledWhenPiNotActivated(): void
 	{
@@ -187,6 +214,64 @@ class PrivacyIDEAProviderTest extends TestCase
 			'10.0.0.5'
 		);
 		self::assertFalse($provider->isTwoFactorAuthEnabledForUser($this->user()));
+	}
+
+	public function testIpv6ClientIsNotBypassedByExcludeRule(): void
+	{
+		// ip2long() returns false for an IPv6 client address; that false must not
+		// compare equal to the false of an unparseable exclude entry and skip
+		// MFA, so an IPv6 client still gets two-factor authentication.
+		$provider = $this->makeProvider(
+			['piActivatePI' => '1', 'piExcludeIPs' => '10.0.0.5,2001:db8::1'],
+			null,
+			'2001:db8::99'
+		);
+		self::assertTrue($provider->isTwoFactorAuthEnabledForUser($this->user()));
+	}
+
+	public function testMalformedExcludeEntryDoesNotBypassMfa(): void
+	{
+		// A non-parseable exclude entry (hostname / trailing comma) must be
+		// skipped, not treated as a match for an IPv4 client.
+		$provider = $this->makeProvider(
+			['piActivatePI' => '1', 'piExcludeIPs' => 'not-an-ip,'],
+			null,
+			'10.0.0.5'
+		);
+		self::assertTrue($provider->isTwoFactorAuthEnabledForUser($this->user()));
+	}
+
+	public function testVerifyChallengeWithoutClientThrowsCleanly(): void
+	{
+		// When the client was never created (server URL missing or the session
+		// flag lost) verifyChallenge must raise a handled TwoFactorException,
+		// not a fatal "typed property not initialized" Error.
+		$provider = $this->makeProvider(); // no piAllowCreatingPIInstance -> $pi is null
+		$this->expectException(TwoFactorException::class);
+		$provider->verifyChallenge($this->user(), '123456');
+	}
+
+	public function testPushLoadCounterIsCastAndDoesNotTypeError(): void
+	{
+		// A tampered non-numeric loadCounter must not raise a TypeError on
+		// `$counter + 1`; the push flow ends in a benign TwoFactorException.
+		$pi = $this->createMock(PrivacyIDEA::class);
+		$pi->method('pollTransaction')->willReturn(false);
+
+		$this->sessionStore = [
+			'piAllowCreatingPIInstance' => true,
+			'piTransactionID' => 'tx-push',
+		];
+		$provider = $this->makeProvider(
+			[],
+			null,
+			'10.0.0.5',
+			['mode' => 'push', 'loadCounter' => 'abc'],
+			$pi
+		);
+
+		$this->expectException(TwoFactorException::class);
+		$provider->verifyChallenge($this->user(), '');
 	}
 
 	public function testStaticMetadataAccessors(): void

@@ -185,6 +185,67 @@ class PrivacyIDEATest extends TestCase
 		self::assertCount(0, $pi->captured);
 	}
 
+	public function testValidateCheckCancelEnrollmentSendsCancelParam(): void
+	{
+		$pi = $this->client();
+		$pi->responses['/validate/check'] =
+			'{"detail": {"message": "Cancelled enrollment via multichallenge"}, "result": {"authentication": "ACCEPT", "status": true, "value": true}}';
+
+		$response = $pi->validateCheckCancelEnrollment('08062584491116057815');
+
+		$req = $pi->lastRequest();
+		self::assertSame('POST', $req['method']);
+		self::assertStringEndsWith('/validate/check', $req['url']);
+		self::assertSame('08062584491116057815', $req['params']['transaction_id']);
+		self::assertSame('true', $req['params']['cancel_enrollment']);
+		self::assertArrayNotHasKey('user', $req['params']);
+
+		self::assertNotNull($response);
+		self::assertTrue($response->isAuthenticationSuccessful());
+		self::assertSame('Cancelled enrollment via multichallenge', $response->getMessage());
+	}
+
+	public function testValidateCheckCancelEnrollmentRefusedIsNotSuccessful(): void
+	{
+		$pi = $this->client();
+		$pi->responses['/validate/check'] =
+			'{"detail": {"message": "Failed to cancel enrollment via multichallenge"}, "result": {"authentication": "REJECT", "status": true, "value": false}}';
+
+		$response = $pi->validateCheckCancelEnrollment('13880467565432322008');
+
+		self::assertNotNull($response);
+		self::assertFalse($response->isAuthenticationSuccessful());
+		self::assertSame('', $response->getErrorMessage());
+		self::assertSame('Failed to cancel enrollment via multichallenge', $response->getMessage());
+	}
+
+	public function testValidateCheckCancelEnrollmentReturnsNullOnEmptyTransactionId(): void
+	{
+		$pi = $this->client();
+		self::assertNull($pi->validateCheckCancelEnrollment(''));
+		self::assertCount(0, $pi->captured);
+	}
+
+	public function testSetTimeoutIsAppliedToRequests(): void
+	{
+		$pi = $this->client();
+		$pi->setTimeout('9');
+		$pi->validateCheck('alice', 'pw');
+
+		self::assertSame('9', $pi->lastRequest()['params']['timeout']);
+	}
+
+	public function testSetTimeoutIgnoresNonPositiveValues(): void
+	{
+		$pi = $this->client();
+		$pi->setTimeout('abc');
+		$pi->setTimeout('0');
+		$pi->validateCheck('alice', 'pw');
+
+		// Falls back to the default timeout of 5.
+		self::assertSame('5', $pi->lastRequest()['params']['timeout']);
+	}
+
 	public function testTriggerChallengeSendsAuthorizationHeader(): void
 	{
 		$pi = $this->client();

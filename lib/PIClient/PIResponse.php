@@ -102,7 +102,7 @@ class PIResponse
 		}
 
 		$detail = $map[DETAIL] ?? [];
-		$ret->messages = isset($detail[MESSAGES]) ? implode(', ', array_unique($detail[MESSAGES])) : '';
+		$ret->messages = isset($detail[MESSAGES]) && is_array($detail[MESSAGES]) ? implode(', ', array_unique($detail[MESSAGES])) : '';
 		$ret->message = $detail[MESSAGE] ?? '';
 		$ret->serial = $detail[SERIAL] ?? '';
 		$ret->transactionID = $detail[TRANSACTION_ID] ?? '';

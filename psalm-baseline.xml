@@ -4,9 +4,6 @@
     <MissingClassConstType>
       <code><![CDATA[APP_ID = 'privacyidea']]></code>
     </MissingClassConstType>
-    <UnusedClass>
-      <code><![CDATA[Application]]></code>
-    </UnusedClass>
   </file>
   <file src="lib/CodingStandard/Config.php">
     <DeprecatedClass>
@@ -63,7 +60,6 @@
       <code><![CDATA[$challenge[SERIAL]]]></code>
       <code><![CDATA[$challenge[TRANSACTION_ID]]]></code>
       <code><![CDATA[$challenge[TYPE]]]></code>
-      <code><![CDATA[$detail[MESSAGES]]]></code>
       <code><![CDATA[$detail[MESSAGE]]]></code>
       <code><![CDATA[$detail[MULTI_CHALLENGE]]]></code>
       <code><![CDATA[$detail[PASSKEY][TRANSACTION_ID]]]></code>
@@ -278,7 +274,6 @@
     </MixedArgument>
     <MixedAssignment>
       <code><![CDATA[$challenge]]></code>
-      <code><![CDATA[$counter]]></code>
       <code><![CDATA[$mode]]></code>
       <code><![CDATA[$origin]]></code>
       <code><![CDATA[$origin]]></code>
@@ -295,7 +290,6 @@
       <code><![CDATA[Template]]></code>
     </MixedInferredReturnType>
     <MixedOperand>
-      <code><![CDATA[$counter]]></code>
       <code><![CDATA[$this->request->getParam('passField')]]></code>
       <code><![CDATA[$this->session->get('piMode')]]></code>
       <code><![CDATA[$transactionID]]></code>
@@ -306,12 +300,6 @@
       <code><![CDATA[$challenge->image]]></code>
       <code><![CDATA[$challenge->type]]></code>
     </MixedPropertyFetch>
-    <PossiblyNullPropertyAssignmentValue>
-      <code><![CDATA[$this->piFactory->create()]]></code>
-    </PossiblyNullPropertyAssignmentValue>
-    <PropertyNotSetInConstructor>
-      <code><![CDATA[$pi]]></code>
-    </PropertyNotSetInConstructor>
     <UnusedClass>
       <code><![CDATA[PrivacyIDEAProvider]]></code>
     </UnusedClass>

@@ -49,7 +49,6 @@ class PIResponseTest extends TestCase
 
 	public function testHotpChallengeResponse(): void
 	{
-		// Real capture: challenge-response.md, Call 1.
 		$json = <<<'JSON'
 		{
 		  "detail": {
@@ -93,7 +92,6 @@ class PIResponseTest extends TestCase
 
 	public function testAcceptResponseIsSuccessful(): void
 	{
-		// Real capture: challenge-response.md, Call 2.
 		$json = <<<'JSON'
 		{
 		  "detail": {"message": "Found matching challenge", "serial": "hotp1"},
@@ -170,9 +168,8 @@ class PIResponseTest extends TestCase
 
 	public function testInteractivePushCodeToPhoneIsNotOfferedAsPollablePush(): void
 	{
-		// Real capture: push.md test_17 (push_code_to_phone). The push
-		// challenge is client_mode "interactive" -> answered via the OTP field,
-		// so the poll-based Push button must NOT be offered for it.
+		// A push_code_to_phone challenge is client_mode "interactive" -> answered
+		// via the OTP field, so the poll-based Push button must not be offered.
 		$json = <<<'JSON'
 		{
 		  "detail": {
@@ -204,7 +201,8 @@ class PIResponseTest extends TestCase
 		self::assertSame(['push'], $r->getTriggeredTokenTypes());
 		// interactive -> normalized to "otp", not "push".
 		self::assertSame('otp', $r->getPreferredClientMode());
-		// The fix: an interactive push is not a pollable push offering.
+		// An interactive push (code_to_phone) is answered via the OTP field, not
+		// by polling, so it must not be reported as a pollable push offering.
 		self::assertFalse($r->isPushOrSmartphoneContainerAvailable());
 		self::assertSame('00110530786071310297', $r->getTransactionID());
 	}
@@ -281,6 +279,25 @@ class PIResponseTest extends TestCase
 		self::assertIsArray($challenge);
 		self::assertSame('cool.nils', $challenge['rpId']);
 		self::assertSame('cGtjaGFsbGVuZ2U', $challenge['challenge']);
+	}
+
+	public function testMalformedMessagesFieldDoesNotThrow(): void
+	{
+		// A non-array detail.messages must not blow up array_unique; fromJSON is
+		// contracted to parse any server response gracefully and here yields an
+		// empty messages string while still reading the other fields.
+		$json = <<<'JSON'
+		{
+		  "detail": {"messages": "not an array", "message": "please enter otp", "transaction_id": "tx-1"},
+		  "result": {"authentication": "CHALLENGE", "status": true, "value": false}
+		}
+		JSON;
+		$r = $this->parse($json);
+
+		self::assertNotNull($r);
+		self::assertSame('', $r->getMessages());
+		self::assertSame('please enter otp', $r->getMessage());
+		self::assertSame('tx-1', $r->getTransactionID());
 	}
 
 	public function testEnrollViaMultichallengeFlags(): void

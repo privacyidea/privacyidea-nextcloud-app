@@ -34,8 +34,8 @@ class PrivacyIDEAProvider implements IProvider
 	private ISession $session;
 	/** @var PrivacyIDEAFactory */
 	private PrivacyIDEAFactory $piFactory;
-	/** @var PrivacyIDEA */
-	private PrivacyIDEA $pi;
+	/** @var PrivacyIDEA|null */
+	private ?PrivacyIDEA $pi = null;
 
 	/**
 	 * PrivacyIDEAProvider constructor.
@@ -227,6 +227,15 @@ class PrivacyIDEAProvider implements IProvider
 			throw new TwoFactorException(' ');
 		}
 
+		// The client is only created when piAllowCreatingPIInstance is set and a
+		// server URL is configured. If it is missing here (e.g. the session flag
+		// was lost, or the URL is unset), fail with a clean error instead of a
+		// fatal "typed property must not be accessed before initialization".
+		if ($this->pi === null) {
+			$this->log('error', 'Cannot verify challenge: no privacyIDEA client available (check the server URL configuration).');
+			throw new TwoFactorException($this->trans->t('Failed to authenticate.'));
+		}
+
 		if (!empty($this->request->getParam('passkeySignResponse'))) {
 			if (empty($this->request->getParam('origin'))) {
 				$this->log('debug', 'Origin is missing for Passkey authentication!');
@@ -303,9 +312,11 @@ class PrivacyIDEAProvider implements IProvider
 				$this->log('debug', 'PUSH not confirmed yet...');
 			}
 
-			// Increase load counter
+			// Increase load counter. loadCounter is a user-controllable form
+			// field, so cast it before arithmetic (a non-numeric value would
+			// otherwise raise a TypeError on PHP 8).
 			if ($this->request->getParam('loadCounter')) {
-				$counter = $this->request->getParam('loadCounter');
+				$counter = (int)$this->request->getParam('loadCounter');
 				$this->session->set('piLoadCounter', $counter + 1);
 			}
 		} elseif ($mode === 'webauthn') {
@@ -510,19 +521,30 @@ class PrivacyIDEAProvider implements IProvider
 
 		if ($piActive === '1') {
 			if ($piExcludeIPs) {
-				$ipAddresses = explode(',', $piExcludeIPs);
+				// ip2long() only understands IPv4 and returns false otherwise.
+				// Bail out for non-IPv4 clients (e.g. IPv6) so that a false
+				// client address can never compare equal to a false (i.e.
+				// unparseable) exclude entry and silently skip MFA.
 				$clientIP = ip2long($this->getClientIP());
-				foreach ($ipAddresses as $address) {
-					if (str_contains($address, '-')) {
-						$range = explode('-', $address);
-						$startIP = ip2long($range[0]);
-						$endIP = ip2long($range[1]);
-						if ($clientIP >= $startIP && $clientIP <= $endIP) {
-							return false;
+				if ($clientIP !== false) {
+					foreach (explode(',', $piExcludeIPs) as $address) {
+						$address = trim($address);
+						if ($address === '') {
+							continue;
 						}
-					} else {
-						if ($clientIP === ip2long($address)) {
-							return false;
+						if (str_contains($address, '-')) {
+							$range = explode('-', $address);
+							$startIP = ip2long(trim($range[0]));
+							$endIP = ip2long(trim($range[1] ?? ''));
+							// Only match when both range bounds parse as IPv4.
+							if ($startIP !== false && $endIP !== false && $clientIP >= $startIP && $clientIP <= $endIP) {
+								return false;
+							}
+						} else {
+							$excludeIP = ip2long($address);
+							if ($excludeIP !== false && $clientIP === $excludeIP) {
+								return false;
+							}
 						}
 					}
 				}

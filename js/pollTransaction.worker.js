@@ -23,10 +23,24 @@ self.addEventListener('message', function (e)
                         {
                             if (r.ok)
                             {
-                                r.text().then(result =>
+                                // Return the promise so any rejection reaches the
+                                // outer .catch, and guard parsing/access so a
+                                // non-JSON or unexpected body surfaces an error
+                                // instead of hanging the poll silently.
+                                return r.text().then(result =>
                                 {
-                                    const resultJson = JSON.parse(result);
-                                    if (resultJson['result']['authentication'] === "ACCEPT")
+                                    let resultJson;
+                                    try
+                                    {
+                                        resultJson = JSON.parse(result);
+                                    }
+                                    catch (parseError)
+                                    {
+                                        self.postMessage({'message': 'Poll in browser error: invalid server response', 'status': 'error'});
+                                        self.close();
+                                        return;
+                                    }
+                                    if (resultJson && resultJson.result && resultJson.result.authentication === "ACCEPT")
                                     {
                                         self.postMessage({
                                             'message': 'Polling in browser: Push message confirmed!',

@@ -15,7 +15,9 @@
 
 namespace OCA\PrivacyIDEA\Provider;
 
+use OCA\PrivacyIDEA\AppInfo\Application;
 use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
+use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -35,12 +37,15 @@ class PrivacyIDEAFactory
 	private IRequest $request;
 	/** @var LoggerInterface */
 	private LoggerInterface $logger;
+	/** @var IAppManager */
+	private IAppManager $appManager;
 
-	public function __construct(IAppConfig $appConfig, IRequest $request, LoggerInterface $logger)
+	public function __construct(IAppConfig $appConfig, IRequest $request, LoggerInterface $logger, IAppManager $appManager)
 	{
 		$this->appConfig = $appConfig;
 		$this->request = $request;
 		$this->logger = $logger;
+		$this->appManager = $appManager;
 	}
 
 	/**
@@ -55,13 +60,17 @@ class PrivacyIDEAFactory
 			$this->logger->error('Cannot create privacyIDEA instance: Server URL missing in configuration!', ['app' => 'privacyIDEA']);
 			return null;
 		}
-		$pi = new PrivacyIDEA('privacyidea-nextcloud/1.1.0', $piUrl);
+		// Single source of truth for the version: the app manifest (info.xml),
+		// read at runtime so the user agent never drifts from the release.
+		$userAgent = 'privacyidea-nextcloud/' . $this->appManager->getAppVersion(Application::APP_ID);
+		$pi = new PrivacyIDEA($userAgent, $piUrl);
 		$pi->setSSLVerifyHost($this->getAppValue('piSSLVerify', true));
 		$pi->setSSLVerifyPeer($this->getAppValue('piSSLVerify', true));
 		$pi->setServiceAccountName($this->getAppValue('piServiceName', ''));
 		$pi->setServiceAccountPass($this->getAppValue('piServicePass', ''));
 		$pi->setServiceAccountRealm($this->getAppValue('piServiceRealm', ''));
 		$pi->setRealm($this->getAppValue('piRealm', ''));
+		$pi->setTimeout($this->getAppValue('piTimeout', '5'));
 		$pi->setNoProxy($this->getAppValue('piNoProxy', false));
 		if ($this->getAppValue('piForwardClientIP', false) && !empty($this->getClientIP())) {
 			$pi->setForwardClientIP($this->getClientIP());

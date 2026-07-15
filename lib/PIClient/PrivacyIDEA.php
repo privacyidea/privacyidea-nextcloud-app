@@ -444,6 +444,11 @@ class PrivacyIDEA
 		}
 		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYHOST, $this->sslVerifyHost ? 2 : 0);
 		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYPEER, $this->sslVerifyPeer ? 2 : 0);
+		// Apply a client-side timeout so an unresponsive server cannot hang the
+		// Nextcloud login page indefinitely.
+		$timeoutSeconds = (int)$this->timeout > 0 ? (int)$this->timeout : 5;
+		curl_setopt($curlInstance, CURLOPT_CONNECTTIMEOUT, $timeoutSeconds);
+		curl_setopt($curlInstance, CURLOPT_TIMEOUT, $timeoutSeconds);
 		$response = curl_exec($curlInstance);
 		if (!$response) {
 			$curlErrno = curl_errno($curlInstance);
@@ -560,5 +565,16 @@ class PrivacyIDEA
 	public function setNoProxy(bool $noProxy): void
 	{
 		$this->noProxy = $noProxy;
+	}
+
+	/**
+	 * @param string $timeout Request timeout in seconds. Empty or non-positive values are ignored.
+	 * @return void
+	 */
+	public function setTimeout(string $timeout): void
+	{
+		if ((int)$timeout > 0) {
+			$this->timeout = $timeout;
+		}
 	}
 }
