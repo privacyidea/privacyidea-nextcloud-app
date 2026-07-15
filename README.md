@@ -23,6 +23,51 @@ For more information see the Nextcloud documentation: https://docs.nextcloud.com
 3. Build webpack in privacyIDEA app directory: ``npm run build``.
 4. In the Nextcloud WebUI go to settings(admin) -> apps -> disabled page with "Not enabled" apps and click "Enable" for the privacyIDEA application.
 
+## Configuration
+
+All settings live in Nextcloud under **Settings → Administration → privacyIDEA**
+(or scriptable via `occ config:app:set privacyidea <key> --value=<value>`). At a
+minimum, set the server URL and tick **Activate privacyIDEA**.
+
+### Server connection
+
+| Setting | Key | Description |
+| --- | --- | --- |
+| Activate privacyIDEA | `piActivatePI` | Master switch for MFA via privacyIDEA. Configure the server connection before enabling. |
+| URL of the privacyIDEA server | `piURL` | Base URL of your privacyIDEA instance, e.g. `https://pi.example.com`. |
+| SSL certificate verification | `piSSLVerify` | Verify the server's TLS certificate (host and peer). **Keep enabled in production.** |
+| Realm | `piRealm` | privacyIDEA realm to authenticate against, if not the default. |
+| Timeout | `piTimeout` | Connection timeout in seconds (default `5`). Prevents an unresponsive server from hanging the login page. |
+| No proxy | `piNoProxy` | Ignore the system-wide proxy and talk to privacyIDEA directly. |
+| Forward client IP | `piForwardClientIP` | Send the user's IP as the `client` parameter so privacyIDEA policies can match on the original address. |
+
+### Who has to use MFA
+
+| Setting | Key | Description |
+| --- | --- | --- |
+| Exclude IP addresses | `piExcludeIPs` | Skip MFA for these IPv4 addresses/ranges, e.g. `10.0.1.12,10.0.1.20-10.0.1.40`. (IPv4 only; non-IPv4 or unparseable entries are ignored and never skip MFA.) |
+| Group names + Include/Exclude | `piInExGroupsField`, `piInOrExSelected` | Restrict MFA to (Include) or skip it for (Exclude) members of the listed Nextcloud groups (comma-separated). |
+
+### Authentication flow
+
+Chosen with the **Authentication flow** radios (`piSelectedAuthFlow`). This
+controls what the login page does and what is sent to privacyIDEA:
+
+| Flow (setting value) | What happens | Login form | Extra settings |
+| --- | --- | --- | --- |
+| **Send Password** — default (`piAuthFlowDefault`) | Nothing is sent until the user submits; the entered value goes to `/validate/check` as the pass (PIN, OTP, or PIN+OTP). Any challenges the server returns are then shown. | One username + password/OTP field. | — |
+| **Trigger Challenge** (`piAuthFlowTriggerChallenge`) | On page load the app uses a **service account** to call `/validate/triggerchallenge` for the user, so all of the user's challenges (push, SMS, email, …) are triggered up front; the user then answers. | OTP field, plus buttons for any triggered token types. | Service name + Service password (Service realm optional). |
+| **Separate OTP** (`piAuthFlowSeparateOTP`) | The form shows a separate password field and an OTP field; on submit they are concatenated (`password` + `OTP`) and sent to `/validate/check`. | Separate Password and OTP fields. | — |
+| **Send Static Pass** (`piAuthFlowSendStaticPass`) | On page load the app calls `/validate/check` with a fixed password. This can complete login directly (e.g. with a `passOnNoToken` policy) or trigger challenges. | OTP field. | Static password. |
+
+### Login experience
+
+| Setting | Key | Description |
+| --- | --- | --- |
+| Auto-submit by OTP length | `piActivateAutoSubmitOtpLength`, `piAutoSubmitOtpLength` | Submit the form automatically once the configured number of characters (default `6`) is entered in the OTP field. |
+| Poll in browser | `piPollInBrowser`, `piPollInBrowserURL` | For PUSH tokens, poll privacyIDEA directly from the browser so the page advances the moment the user confirms, instead of periodic page reloads. Requires a privacyIDEA URL reachable from the browser. |
+| Forward headers to privacyIDEA | `piForwardHeaders` | Comma-separated list of request header names to forward to privacyIDEA (useful for header-based policies). |
+
 ## Protips
 ### Enable or disable privacyIDEA app using command line
 Go to your Nextcloud installation directory and run one of the following commands:
@@ -34,3 +79,33 @@ Go to your Nextcloud installation directory and run one of the following command
 2. Restart your terminal.
 3. Install node: ``nvm install node``
 4. To update node to a new version: ``nvm install node --reinstall-packeges-from=current``
+
+## Development and testing
+
+A throwaway Nextcloud for testing the app is provided via Docker Compose. It
+runs on SQLite (no separate database), auto-installs on first boot, and
+bind-mounts this repository as the `privacyidea` app (auto-enabled), so your
+changes are live without a rebuild. You still need your own reachable
+privacyIDEA server; set its URL in the admin settings after logging in.
+
+```bash
+docker compose -f docker-compose.dev.yml up -d          # start (Nextcloud "stable")
+NC_VERSION=latest docker compose -f docker-compose.dev.yml up -d   # test the newest release
+docker compose -f docker-compose.dev.yml down -v        # stop and wipe
+```
+
+Then open http://localhost:8080 and log in as `admin` / `admin`. The Nextcloud
+version is just the `NC_VERSION` image tag. See [`dev/README.md`](dev/README.md)
+for details (version switching, running `occ`, logs).
+
+### Running the checks
+
+The PHP test suite and static analysis run via Composer:
+
+```bash
+composer install
+composer run lint         # php -l
+composer run cs:check     # coding standard (composer run cs:fix to apply)
+composer run psalm        # static analysis
+composer run test:unit    # PHPUnit
+```
