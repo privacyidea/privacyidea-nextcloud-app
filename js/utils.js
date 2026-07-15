@@ -121,11 +121,6 @@ window.piRegisterPasskey = function registerPasskey ()
                 new Uint8Array(publicKeyCred.response.attestationObject)),
             clientDataJSON: bytesToBase64(new Uint8Array(publicKeyCred.response.clientDataJSON)),
         }
-        if (publicKeyCred.response.attestationObject)
-        {
-            params.attestationObject = bytesToBase64(
-                new Uint8Array(publicKeyCred.response.attestationObject));
-        }
         const extResults = publicKeyCred.getClientExtensionResults();
         if (extResults.credProps)
         {

@@ -320,13 +320,16 @@ class PrivacyIDEAProvider implements IProvider
 				$this->session->set('piLoadCounter', $counter + 1);
 			}
 		} elseif ($mode === 'webauthn') {
-			$webAuthnSignResponse = json_decode($this->request->getParam('webAuthnSignResponse'), true);
+			// The sign response is already a JSON string from the browser;
+			// validateCheckWebAuthn parses it, so forward it as-is instead of
+			// decoding and re-encoding here.
+			$webAuthnSignResponse = (string)$this->request->getParam('webAuthnSignResponse');
 			$origin = $this->request->getParam('origin');
 
 			if (empty($webAuthnSignResponse)) {
 				$this->log('error', 'Incomplete data for WebAuthn authentication: WebAuthn sign response is missing!');
 			} else {
-				$piResponse = $this->pi->validateCheckWebAuthn($username, $transactionID, json_encode($webAuthnSignResponse), $origin, $headers);
+				$piResponse = $this->pi->validateCheckWebAuthn($username, $transactionID, $webAuthnSignResponse, $origin, $headers);
 				$this->processPIResponse($piResponse);
 			}
 		} else {
@@ -435,7 +438,7 @@ class PrivacyIDEAProvider implements IProvider
 							}
 						}
 					} elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'webauthn') {
-						$this->session->set('piImgWebAuthn', $challenge->image);
+						$this->session->set('piImgWebauthn', $challenge->image);
 						if ($response->isEnrollViaMultichallenge()) {
 							$this->session->set('piMode', 'webauthn');
 						}

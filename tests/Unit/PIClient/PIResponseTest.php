@@ -253,6 +253,41 @@ class PIResponseTest extends TestCase
 		self::assertSame('cred-id-1', $signRequest['allowCredentials'][0]['id']);
 	}
 
+	public function testWebauthnSignRequestOmitsMissingAllowCredentials(): void
+	{
+		// A WebAuthn challenge without allowCredentials[0] must not put a null
+		// into the assembled allowCredentials list; the browser would otherwise
+		// throw on credential.id and drop back to OTP.
+		$json = <<<'JSON'
+		{
+		  "detail": {
+		    "multi_challenge": [
+		      {
+		        "type": "webauthn",
+		        "serial": "WAN0001",
+		        "transaction_id": "tx",
+		        "message": "confirm",
+		        "client_mode": "webauthn",
+		        "attributes": {
+		          "webAuthnSignRequest": {"challenge": "chal", "rpId": "rp", "timeout": 60000}
+		        }
+		      }
+		    ],
+		    "transaction_id": "tx",
+		    "type": "webauthn"
+		  },
+		  "result": {"authentication": "CHALLENGE", "status": true, "value": false}
+		}
+		JSON;
+		$r = $this->parse($json);
+
+		self::assertNotNull($r);
+		$signRequest = json_decode($r->getWebauthnSignRequest(), true);
+		self::assertIsArray($signRequest);
+		self::assertSame([], $signRequest['allowCredentials']);
+		self::assertNotContains(null, $signRequest['allowCredentials']);
+	}
+
 	public function testPasskeyChallengeExtractedFromDetail(): void
 	{
 		// /validate/initialize-style body: detail.passkey carries the challenge,

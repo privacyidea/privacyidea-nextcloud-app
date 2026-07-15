@@ -140,22 +140,11 @@
       <code><![CDATA[$response]]></code>
     </MixedArgument>
     <MixedArrayAccess>
-      <code><![CDATA[$registrationResponseParams[ATTESTATIONOBJECT]]]></code>
-      <code><![CDATA[$registrationResponseParams[AUTHENTICATORATTACHMENT]]]></code>
-      <code><![CDATA[$registrationResponseParams[CLIENTDATAJSON]]]></code>
-      <code><![CDATA[$registrationResponseParams[CREDENTIAL_ID]]]></code>
-      <code><![CDATA[$registrationResponseParams[RAWID]]]></code>
       <code><![CDATA[$response[RESULT]]]></code>
       <code><![CDATA[$response[RESULT]]]></code>
       <code><![CDATA[$response[RESULT][VALUE]]]></code>
       <code><![CDATA[$response[RESULT][VALUE]]]></code>
       <code><![CDATA[$response[RESULT][VALUE][TOKEN]]]></code>
-      <code><![CDATA[$tmp[ASSERTIONCLIENTEXTENSIONS]]]></code>
-      <code><![CDATA[$tmp[AUTHENTICATORDATA]]]></code>
-      <code><![CDATA[$tmp[CLIENTDATA]]]></code>
-      <code><![CDATA[$tmp[CREDENTIALID]]]></code>
-      <code><![CDATA[$tmp[SIGNATUREDATA]]]></code>
-      <code><![CDATA[$tmp[USERHANDLE]]]></code>
     </MixedArrayAccess>
     <MixedAssignment>
       <code><![CDATA[$headerSize]]></code>
@@ -167,12 +156,9 @@
       <code><![CDATA[$params[CREDENTIALID]]]></code>
       <code><![CDATA[$params[SIGNATUREDATA]]]></code>
       <code><![CDATA[$params[USERHANDLE]]]></code>
-      <code><![CDATA[$params[USERHANDLE]]]></code>
-      <code><![CDATA[$registrationResponseParams]]></code>
       <code><![CDATA[$response]]></code>
       <code><![CDATA[$response]]></code>
       <code><![CDATA[$retJson]]></code>
-      <code><![CDATA[$tmp]]></code>
       <code><![CDATA[$value]]></code>
     </MixedAssignment>
     <MixedInferredReturnType>
@@ -265,7 +251,6 @@
       <code><![CDATA[$passkeyRegistrationSerial]]></code>
       <code><![CDATA[$passkeySignResponse]]></code>
       <code><![CDATA[$passkeyTransactionID]]></code>
-      <code><![CDATA[$this->request->getParam('webAuthnSignResponse')]]></code>
       <code><![CDATA[$transactionID]]></code>
       <code><![CDATA[$transactionID]]></code>
       <code><![CDATA[$transactionID]]></code>
@@ -284,7 +269,6 @@
       <code><![CDATA[$passkeyTransactionID]]></code>
       <code><![CDATA[$transactionID]]></code>
       <code><![CDATA[$transactionID]]></code>
-      <code><![CDATA[$webAuthnSignResponse]]></code>
     </MixedAssignment>
     <MixedInferredReturnType>
       <code><![CDATA[Template]]></code>

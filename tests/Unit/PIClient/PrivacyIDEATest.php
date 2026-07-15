@@ -226,6 +226,83 @@ class PrivacyIDEATest extends TestCase
 		self::assertCount(0, $pi->captured);
 	}
 
+	public function testValidateCheckWebAuthnForwardsLowercaseUserHandle(): void
+	{
+		// The pi-webauthn JS library emits the field as "userhandle"; the client
+		// must still forward it (previously it read only "userHandle" and dropped it).
+		$pi = $this->client();
+		$signResponse = json_encode([
+			'credentialid' => 'cred-1',
+			'clientdata' => 'Y2xpZW50',
+			'signaturedata' => 'c2ln',
+			'authenticatordata' => 'YXV0aA',
+			'userhandle' => 'dXNlcg',
+		]);
+
+		$pi->validateCheckWebAuthn('alice', 'tx-w', $signResponse, 'https://x');
+
+		$req = $pi->lastRequest();
+		self::assertSame('cred-1', $req['params']['credentialid']);
+		self::assertSame('dXNlcg', $req['params']['userHandle']);
+	}
+
+	public function testValidateCheckWebAuthnAcceptsCamelCaseUserHandle(): void
+	{
+		$pi = $this->client();
+		$signResponse = json_encode([
+			'credentialid' => 'cred-1',
+			'clientdata' => 'Y2xpZW50',
+			'signaturedata' => 'c2ln',
+			'authenticatordata' => 'YXV0aA',
+			'userHandle' => 'dXNlcg',
+		]);
+
+		$pi->validateCheckWebAuthn('alice', 'tx-w', $signResponse, 'https://x');
+
+		self::assertSame('dXNlcg', $pi->lastRequest()['params']['userHandle']);
+	}
+
+	public function testValidateCheckWebAuthnReturnsNullOnInvalidJson(): void
+	{
+		$pi = $this->client();
+		$result = $pi->validateCheckWebAuthn('alice', 'tx-w', 'not-json', 'https://x');
+
+		self::assertNull($result);
+		self::assertCount(0, $pi->captured);
+	}
+
+	public function testValidateCheckCompletePasskeyRegistrationBuildsParams(): void
+	{
+		$pi = $this->client();
+		$registration = json_encode([
+			'credential_id' => 'cred',
+			'clientDataJSON' => 'cdj',
+			'attestationObject' => 'att',
+			'authenticatorAttachment' => 'platform',
+			'rawId' => 'raw',
+		]);
+
+		$pi->validateCheckCompletePasskeyRegistration('tx', 'SER1', 'alice', $registration, 'https://x');
+
+		$req = $pi->lastRequest();
+		self::assertSame('tx', $req['params']['transaction_id']);
+		self::assertSame('SER1', $req['params']['serial']);
+		self::assertSame('alice', $req['params']['user']);
+		self::assertSame('passkey', $req['params']['type']);
+		self::assertSame('cred', $req['params']['credential_id']);
+		self::assertSame('att', $req['params']['attestationObject']);
+		self::assertSame('raw', $req['params']['rawId']);
+	}
+
+	public function testValidateCheckCompletePasskeyRegistrationReturnsNullOnInvalidJson(): void
+	{
+		$pi = $this->client();
+		$result = $pi->validateCheckCompletePasskeyRegistration('tx', 'SER1', 'alice', 'not-json', 'https://x');
+
+		self::assertNull($result);
+		self::assertCount(0, $pi->captured);
+	}
+
 	public function testSetTimeoutIsAppliedToRequests(): void
 	{
 		$pi = $this->client();

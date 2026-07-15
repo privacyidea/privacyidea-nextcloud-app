@@ -368,7 +368,9 @@ class PIResponse
 		if (empty($webauthn)) {
 			return '';
 		}
-		$webauthn->allowCredentials = $arr;
+		// Drop challenges that carried no allowCredentials entry so the browser
+		// never receives a null credential (which would throw on credential.id).
+		$webauthn->allowCredentials = array_values(array_filter($arr, static fn ($credential) => $credential !== null));
 		return json_encode($webauthn);
 	}
 

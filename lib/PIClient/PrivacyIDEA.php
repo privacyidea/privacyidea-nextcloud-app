@@ -182,12 +182,20 @@ class PrivacyIDEA
 			$params[REALM] = $this->realm;
 		}
 		$tmp = json_decode($webAuthnSignResponse, true);
+		if (!is_array($tmp)) {
+			$this->log(DEBUG, 'Invalid WebAuthn sign response for validateCheckWebAuthn. Expected an array.');
+			return null;
+		}
 		$params[CREDENTIALID] = $tmp[CREDENTIALID];
 		$params[CLIENTDATA] = $tmp[CLIENTDATA];
 		$params[SIGNATUREDATA] = $tmp[SIGNATUREDATA];
 		$params[AUTHENTICATORDATA] = $tmp[AUTHENTICATORDATA];
-		if (!empty($tmp[USERHANDLE])) {
-			$params[USERHANDLE] = $tmp[USERHANDLE];
+		// The pi-webauthn JS library emits this field lowercase ("userhandle"),
+		// so accept either spelling. The server tolerates any casing as long as
+		// the name is not underscore-separated.
+		$userHandle = (string)($tmp[USERHANDLE] ?? $tmp['userhandle'] ?? '');
+		if ($userHandle !== '') {
+			$params[USERHANDLE] = $userHandle;
 		}
 		if (!empty($tmp[ASSERTIONCLIENTEXTENSIONS])) {
 			$params[ASSERTIONCLIENTEXTENSIONS] = $tmp[ASSERTIONCLIENTEXTENSIONS];
@@ -266,10 +274,9 @@ class PrivacyIDEA
 			$this->log(DEBUG, 'validateCheckCompletePasskeyRegistration: parameters are incomplete!');
 			return null;
 		}
-		try {
-			$registrationResponseParams = json_decode($registrationResponse, true);
-		} catch (\Exception $e) {
-			$this->log(DEBUG, 'Invalid registration response for validateCheckCompletePasskeyRegistration: ' . $e->getMessage());
+		$registrationResponseParams = json_decode($registrationResponse, true);
+		if (!is_array($registrationResponseParams)) {
+			$this->log(DEBUG, 'Invalid registration response for validateCheckCompletePasskeyRegistration. Expected an array.');
 			return null;
 		}
 		$params = [

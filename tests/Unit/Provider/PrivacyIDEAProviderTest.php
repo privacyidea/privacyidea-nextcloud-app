@@ -134,6 +134,53 @@ class PrivacyIDEAProviderTest extends TestCase
 		self::assertNotEmpty($this->sessionStore['piErrorMessage']);
 	}
 
+	public function testWebauthnImageIsStoredUnderTheKeyTheTemplateReads(): void
+	{
+		// processPIResponse stored the image under 'piImgWebAuthn' while
+		// getTemplate reads 'piImgWebauthn'; the two must use the same key or
+		// the WebAuthn image never reaches the template.
+		$response = PIResponse::fromJSON(
+			'{"detail":{"multi_challenge":[{"type":"webauthn","serial":"WAN1","transaction_id":"tx","message":"m","client_mode":"webauthn","image":"data:image/png;base64,ZZ","attributes":{"webAuthnSignRequest":{"allowCredentials":[{"id":"c","type":"public-key"}],"challenge":"ch","rpId":"rp"}}}],"transaction_id":"tx","type":"webauthn"},"result":{"authentication":"CHALLENGE","status":true,"value":false}}',
+			$this->createMock(PrivacyIDEA::class)
+		);
+
+		$this->sessionStore = [];
+		$provider = $this->makeProvider();
+		$method = new \ReflectionMethod($provider, 'processPIResponse');
+		$method->setAccessible(true);
+		$method->invoke($provider, $response);
+
+		self::assertSame('data:image/png;base64,ZZ', $this->sessionStore['piImgWebauthn'] ?? null);
+	}
+
+	public function testWebauthnVerifyForwardsRawSignResponse(): void
+	{
+		// The sign response must be forwarded to the client verbatim, without a
+		// decode/re-encode round-trip that could alter the payload.
+		$signResponse = '{"credentialid":"c","clientdata":"cd","signaturedata":"s","authenticatordata":"a"}';
+		$pi = $this->createMock(PrivacyIDEA::class);
+		$accept = PIResponse::fromJSON(
+			'{"result":{"authentication":"ACCEPT","status":true,"value":true}}',
+			$pi
+		);
+		$pi->expects(self::once())
+			->method('validateCheckWebAuthn')
+			->with('alice', 'tx-w', $signResponse, 'https://x', self::anything())
+			->willReturn($accept);
+
+		$this->sessionStore = [
+			'piAllowCreatingPIInstance' => true,
+			'piTransactionID' => 'tx-w',
+		];
+		$provider = $this->makeProvider([], null, '10.0.0.5', [
+			'mode' => 'webauthn',
+			'webAuthnSignResponse' => $signResponse,
+			'origin' => 'https://x',
+		], $pi);
+
+		self::assertTrue($provider->verifyChallenge($this->user(), ''));
+	}
+
 	public function testCancelOptionalEnrollmentCompletesAuthentication(): void
 	{
 		// Cancelling an optional enroll_via_multichallenge returns ACCEPT, which
