@@ -17,11 +17,10 @@ For more information see the Nextcloud documentation: https://docs.nextcloud.com
 2. Unpack the archive to the Nextcloud apps directory: ``tar -xzf privacyidea.tar.gz -C <nextcloud>/apps/``.
 3. Enable the app in the Nextcloud WebUI: go to settings(admin) -> apps -> disabled page with "Not enabled" apps and click "Enable" for the privacyIDEA application.
 
-### Manual installation from GitHub repository (build from source)
+### Manual installation from the Git repository
+The app ships its `js/` as-is — there is no build step.
 1. Copy the files of this repository to ``<nextcloud>/apps/privacyidea``.
-2. Install npm package in the privacyIDEA app directory: ``npm install``. Note: Remember that you need npm installed on the server first (``apt install npm``). Check your node (``node -v``) and npm (``npm install -g npm@latest``) versions to fulfill the requirements.
-3. Build webpack in privacyIDEA app directory: ``npm run build``.
-4. In the Nextcloud WebUI go to settings(admin) -> apps -> disabled page with "Not enabled" apps and click "Enable" for the privacyIDEA application.
+2. In the Nextcloud WebUI go to settings(admin) -> apps -> disabled page with "Not enabled" apps and click "Enable" for the privacyIDEA application.
 
 ## Configuration
 
@@ -70,6 +69,7 @@ password/PIN field plus OTP) is a separate **Login screen** setting — see belo
 | --- | --- | --- |
 | Input layout | `piInputLayout` | Login-screen layout: a single OTP field (`otp`, default) or a separate password/PIN field plus an OTP field (`separate`), combined and sent to privacyIDEA. |
 | OTP field hint | `piOTPFieldHint` | Placeholder text shown in the OTP input field (default "One-Time-Password"). |
+| Password/PIN field hint | `piPassFieldHint` | Placeholder text shown in the Password/PIN field of the `separate` layout (default "Password/PIN"). |
 | Auto-submit by OTP length | `piActivateAutoSubmitOtpLength`, `piAutoSubmitOtpLength` | Submit the form automatically once the configured number of characters (default `6`) is entered in the OTP field. |
 | Poll in browser | `piPollInBrowser`, `piPollInBrowserURL` | For PUSH tokens, poll privacyIDEA directly from the browser so the page advances the moment the user confirms, instead of periodic page reloads. Requires a privacyIDEA URL reachable from the browser. |
 | Forward headers to privacyIDEA | `piForwardHeaders` | Comma-separated list of request header names to forward to privacyIDEA (useful for header-based policies). |
