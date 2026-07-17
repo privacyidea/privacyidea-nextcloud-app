@@ -54,3 +54,41 @@ jobs:
 
       - name: Unit tests (phpunit)
         run: composer run test:unit
+
+  # Statically verify the app's OCP usage against newer Nextcloud releases than
+  # the pinned stub (dev-stable31), so an API that is removed/changed in a later
+  # NC is caught before bumping info.xml max-version.
+  psalm-ocp-compat:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ocp-branch: ['stable32', 'stable33']
+
+    name: psalm (ocp ${{ matrix.ocp-branch }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up php8.3
+        uses: shivammathur/setup-php@ec406be512d7077f68eed36e63f4d91bc006edc4 # v2.35.4
+        with:
+          php-version: '8.3'
+          extensions: curl, json, mbstring
+          coverage: none
+          ini-file: development
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Switch OCP stubs to ${{ matrix.ocp-branch }}
+        run: composer require --dev --no-interaction --no-progress "nextcloud/ocp:dev-${{ matrix.ocp-branch }}"
+
+      - name: Static analysis (psalm)
+        run: composer run psalm
