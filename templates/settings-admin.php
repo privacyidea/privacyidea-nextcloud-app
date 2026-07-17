@@ -98,7 +98,7 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <input id="piTimeout" type="number" min="1" placeholder="Default is 5">
+                    <input id="piTimeout" type="number" min="1" placeholder="Default is 15">
                     <label for="piTimeout">Timeout</label>
                 </td>
                 <td>

@@ -57,7 +57,7 @@ class PrivacyIDEA
 	private string $forwardClientIP = '';
 
 	/* @var string Timeout for the request. */
-	private string $timeout = '5';
+	private string $timeout = '15';
 
 	/* @var bool Ignore the system-wide proxy settings and send the authentication requests directly to privacyIDEA. */
 	private bool $noProxy = false;
@@ -476,9 +476,11 @@ class PrivacyIDEA
 		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYHOST, $this->sslVerifyHost ? 2 : 0);
 		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYPEER, $this->sslVerifyPeer ? 2 : 0);
 		// Apply a client-side timeout so an unresponsive server cannot hang the
-		// Nextcloud login page indefinitely.
-		$timeoutSeconds = (int)$this->timeout > 0 ? (int)$this->timeout : 5;
-		curl_setopt($curlInstance, CURLOPT_CONNECTTIMEOUT, $timeoutSeconds);
+		// Nextcloud login page indefinitely. Connection setup stays short (so a
+		// dead host fails fast) while the overall timeout is the configured value,
+		// giving a slow-responding token backend room to answer.
+		$timeoutSeconds = (int)$this->timeout > 0 ? (int)$this->timeout : 15;
+		curl_setopt($curlInstance, CURLOPT_CONNECTTIMEOUT, min(5, $timeoutSeconds));
 		curl_setopt($curlInstance, CURLOPT_TIMEOUT, $timeoutSeconds);
 		$response = curl_exec($curlInstance);
 		if (!$response) {

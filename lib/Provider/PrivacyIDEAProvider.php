@@ -82,7 +82,11 @@ class PrivacyIDEAProvider implements IProvider
 			$this->verifyChallenge($user, '');
 		} else {
 			$this->session->set('piAllowCreatingPIInstance', true);
-			$this->pi = $this->piFactory->create();
+			// On a reload the constructor already built the client (the flag was
+			// set on the previous render), so only build it when it is missing.
+			if ($this->pi === null) {
+				$this->pi = $this->piFactory->create();
+			}
 
 			$authenticationFlow = $this->getAppValue('piSelectedAuthFlow', 'piAuthFlowDefault');
 			$inputLayout = $this->getAppValue('piInputLayout', '');
@@ -734,13 +738,7 @@ class PrivacyIDEAProvider implements IProvider
 	 */
 	public function getClientIP(): string
 	{
-		$clientIP = $this->request->getRemoteAddress();
-		if (!empty($clientIP)) {
-			return $clientIP;
-		} else {
-			$this->log('error', 'Cannot get client IP address.');
-			return '';
-		}
+		return ClientIp::resolve($this->request, $this->logger);
 	}
 
 	/**

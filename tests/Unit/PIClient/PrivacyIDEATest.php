@@ -319,8 +319,8 @@ class PrivacyIDEATest extends TestCase
 		$pi->setTimeout('0');
 		$pi->validateCheck('alice', 'pw');
 
-		// Falls back to the default timeout of 5.
-		self::assertSame('5', $pi->lastRequest()['params']['timeout']);
+		// Falls back to the default timeout of 15.
+		self::assertSame('15', $pi->lastRequest()['params']['timeout']);
 	}
 
 	public function testTriggerChallengeSendsAuthorizationHeader(): void

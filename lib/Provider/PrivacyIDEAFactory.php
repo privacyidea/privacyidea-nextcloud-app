@@ -74,7 +74,7 @@ class PrivacyIDEAFactory
 		$pi->setServiceAccountPass($this->getAppValue('piServicePass', ''));
 		$pi->setServiceAccountRealm($this->getAppValue('piServiceRealm', ''));
 		$pi->setRealm($this->getAppValue('piRealm', ''));
-		$pi->setTimeout($this->getAppValue('piTimeout', '5'));
+		$pi->setTimeout($this->getAppValue('piTimeout', '15'));
 		$pi->setNoProxy($this->getAppValue('piNoProxy', false));
 		// Only build the verbose request/response debug logs when the system is
 		// actually recording debug (loglevel 0); otherwise they would be encoded
@@ -105,11 +105,6 @@ class PrivacyIDEAFactory
 	 */
 	private function getClientIP(): string
 	{
-		$clientIP = $this->request->getRemoteAddress();
-		if (!empty($clientIP)) {
-			return $clientIP;
-		}
-		$this->logger->error('Cannot get client IP address.', ['app' => 'privacyidea']);
-		return '';
+		return ClientIp::resolve($this->request, $this->logger);
 	}
 }
