@@ -2,24 +2,5 @@
   "name": "privacyidea",
   "version": "1.2.0",
   "license": "AGPL-3.0-or-later",
-  "author": "Lukas Matusiewicz <lukas.matusiewicz@netknights.it>",
-  "engines": {
-    "node": "^20.0.0",
-    "npm": "^10.0.0"
-  },
-  "scripts": {
-    "build": "NODE_ENV=production webpack --config webpack.js --progress",
-    "dev": "NODE_ENV=development webpack --config webpack.js --progress",
-    "watch": "NODE_ENV=development webpack --config webpack.js --progress --watch"
-  },
-  "browserslist": [
-    "extends @nextcloud/browserslist-config"
-  ],
-  "dependencies": {
-    "@nextcloud/router": "^3.0.1",
-    "@nextcloud/webpack-vue-config": "^7.0.2"
-  },
-  "devDependencies": {
-    "@nextcloud/browserslist-config": "^3.0.1"
-  }
+  "author": "Lukas Matusiewicz <lukas.matusiewicz@netknights.it>"
 }
