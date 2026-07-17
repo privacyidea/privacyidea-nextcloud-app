@@ -35,24 +35,30 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
     <a id="enrollmentLink" href="<?php p($_['link']); ?>" target="_blank" rel="noopener noreferrer"><?php if (isset($_['enrollmentLink'])) : p($_['enrollmentLink']); endif; ?></a>
     <br>
 <?php endif;?>
-<label>
-    <input id="cancelEnrollmentButton" type="button" class="button" value="<?php if (isset($_['cancelEnrollment'])) : p($_['cancelEnrollment']); endif; ?>">
-</label>
 
 <!-- FORM -->
 <form method="POST" id="piLoginForm" name="piLoginForm">
     <div id="otpSection">
-        <?php if (isset($_['separateOTP']) && $_['separateOTP']) : ?>
+        <?php // During an enroll_via_multichallenge enrollment only the OTP for
+		// the freshly enrolled token is entered, so the separate Password/PIN
+		// field is not rendered even in the separate layout.?>
+        <?php if (isset($_['separateOTP']) && $_['separateOTP'] && empty($_['isEnrollViaMultichallenge'])) : ?>
             <label>
-                <input id="passField" type="text" name="passField" placeholder="Password" autocomplete="off" required autofocus>
+                <input id="passField" type="text" name="passField" placeholder="<?php p(!empty($_['passHint']) ? $_['passHint'] : 'Password/PIN'); ?>" aria-label="<?php p(!empty($_['passHint']) ? $_['passHint'] : 'Password/PIN'); ?>" autocomplete="new-password" data-lpignore="true" data-1p-ignore data-form-type="other" required autofocus>
             </label>
         <?php endif; ?>
         <label>
-            <input id="otp" type="text" name="challenge" placeholder="One-Time-Password" autocomplete="off" autofocus>
+            <input id="otp" type="text" name="challenge" placeholder="<?php p(!empty($_['otpHint']) ? $_['otpHint'] : 'One-Time-Password'); ?>" aria-label="<?php p(!empty($_['otpHint']) ? $_['otpHint'] : 'One-Time-Password'); ?>" autocomplete="one-time-code" autofocus>
         </label>
         <br>
         <input id="submitButton" type="submit" class="button" value="<?php if (isset($_['verify'])) : p($_['verify']); endif; ?>">
     </div>
+
+    <?php // Sits below Verify so the enrollment actions read top-to-bottom:
+	// Verify, Cancel enrollment, then Nextcloud's own Cancel login.?>
+    <label>
+        <input id="cancelEnrollmentButton" type="button" class="button" value="<?php if (isset($_['cancelEnrollment'])) : p($_['cancelEnrollment']); endif; ?>">
+    </label>
 
     <!-- Hidden input that saves the changes -->
     <input id="modeChanged" type="hidden" name="modeChanged" value="0"/>

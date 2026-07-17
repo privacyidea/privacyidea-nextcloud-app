@@ -1,40 +1,117 @@
+/* All controls share one column width so inputs and buttons line up. */
+:root {
+    --pi-control-width: 260px;
+}
+
 .tokenImages {
     text-align: center !important;
     margin-bottom: 20px !important;
-    max-width:296px !important;
+    max-width: var(--pi-control-width) !important;
 }
 
 #imgOtp {
     vertical-align: unset !important;
-    max-width: 296px !important;
+    max-width: var(--pi-control-width) !important;
+}
+
+/* Make each input its own full-width row so margin auto can center it. */
+#otpSection label {
+    display: block !important;
 }
 
 #otp, #passField {
-    width: 230px !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: var(--pi-control-width) !important;
+    margin: 6px auto !important;
     text-align: center !important;
-    margin: 5px 0 5px 0 !important;
 }
 
+/* Mask the typed OTP and Password/PIN without making them password fields
+   (Firefox autofills those with a saved login). The fields stay type="text";
+   -webkit-text-security works in Chrome/Safari and Firefox 118+. */
+#otp, #passField {
+    -webkit-text-security: disc;
+}
+
+/* Primary action: a solid, filled button that follows the instance theme. */
 #submitButton {
-    width: 251px !important;
-    display: inline !important;
-    text-align: center !important;
+    display: block;
+    width: 100% !important;
+    max-width: var(--pi-control-width) !important;
+    margin: 12px auto 0 !important;
+    padding: 10px 16px !important;
+    background-color: var(--color-primary-element, #0a7cff) !important;
+    color: var(--color-primary-element-text, #ffffff) !important;
+    border: none !important;
+    border-radius: var(--border-radius-element, 8px) !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+}
+
+#submitButton:hover {
+    background-color: var(--color-primary-element-hover, var(--color-primary-element, #0a7cff)) !important;
 }
 
 #enrollmentLink {
+    display: block;
+    text-align: center;
     margin: 20px 0 30px 0 !important;
 }
 
+/* Separate the alternate options from the primary flow with a divider. */
 #alternateLoginOptions {
-    margin-top: 35px !important;
+    margin-top: 24px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid var(--color-border, rgba(127, 127, 127, 0.3)) !important;
+    text-align: center;
 }
 
+/* Secondary actions: borderless like Nextcloud's own secondary login links,
+   so they don't read as input fields. The display is intentionally not
+   !important so the JS can still hide individual options via inline display. */
 .alternateTokenButtons {
-    width: 140px !important;
-    margin: 15px 10px 7px !important;
+    display: block;
+    width: 100% !important;
+    max-width: var(--pi-control-width) !important;
+    margin: 4px auto !important;
+    padding: 10px 16px !important;
+    background-color: transparent !important;
+    color: var(--color-main-text, #ffffff) !important;
+    border: none !important;
+    border-radius: var(--border-radius-element, 8px) !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
 }
 
-#otpButton {
-    width: 140px !important;
-    margin: 15px 15px 7px !important;
+.alternateTokenButtons:hover {
+    background-color: var(--color-background-hover, rgba(127, 127, 127, 0.15)) !important;
+}
+
+/* "Cancel enrollment" is a secondary action sitting under Verify, styled like
+   the other borderless secondary buttons rather than a second primary. */
+#cancelEnrollmentButton {
+    display: block;
+    width: 100% !important;
+    max-width: var(--pi-control-width) !important;
+    margin: 8px auto 0 !important;
+    padding: 10px 16px !important;
+    background-color: transparent !important;
+    color: var(--color-main-text, #ffffff) !important;
+    border: none !important;
+    border-radius: var(--border-radius-element, 8px) !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+}
+
+#cancelEnrollmentButton:hover {
+    background-color: var(--color-background-hover, rgba(127, 127, 127, 0.15)) !important;
+}
+
+/* Keyboard focus stays clearly visible on every control. */
+#submitButton:focus-visible,
+.alternateTokenButtons:focus-visible,
+#cancelEnrollmentButton:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0a7cff) !important;
+    outline-offset: 2px !important;
 }

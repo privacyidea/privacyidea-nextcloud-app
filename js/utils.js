@@ -39,11 +39,33 @@ window.piEnableElement = function enableElement(id)
     const element = document.getElementById(id);
     if (element !== null)
     {
-        element.style.display = "initial";
+        // Clear the inline "none" so the element falls back to its stylesheet
+        // display (block for our buttons) instead of being forced inline.
+        element.style.display = "";
     }
     else
     {
         console.log(id + " is null!");
+    }
+}
+
+// Run a callback after the browser has painted the current DOM. WebAuthn and
+// passkey trigger a blocking native prompt; calling them synchronously on load
+// freezes the initial (pre-mode) layout behind the dialog until the user
+// cancels. Two chained frames guarantee the mode-adjusted layout is committed
+// to screen first. Falls back to setTimeout where rAF is unavailable.
+window.piAfterPaint = function afterPaint(callback)
+{
+    if (typeof window.requestAnimationFrame === "function")
+    {
+        window.requestAnimationFrame(function ()
+        {
+            window.requestAnimationFrame(callback);
+        });
+    }
+    else
+    {
+        window.setTimeout(callback, 0);
     }
 }
 

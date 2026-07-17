@@ -12,14 +12,11 @@ function piFormTemplate()
 
     if (webAuthnSignRequest === "") piDisableElement("webAuthnButton");
     if (isPushAvailable !== "1") piDisableElement("pushButton");
-    if (otpAvailable !== "1") piDisableElement("otpButton");
-    if (mode === "otp" || mode.length < 1) piDisableElement("otpButton");
 
     if (mode === "push")
     {
         piDisableElement("otpSection");
         piDisableElement("pushButton");
-        piEnableElement("otpButton");
     }
 
     if (passkeyRegistration.length > 0)
@@ -36,11 +33,12 @@ function piFormTemplate()
         piDisableElement("alternateLoginOptions");
     }
 
+    // WebAuthn and passkey only fire navigator.credentials.get in the
+    // background, so the OTP/PIN inputs stay visible as the fallback (no
+    // separate UI needed, unlike push).
     if (mode === "webauthn")
     {
-        piDisableElement("otpSection");
-        piEnableElement("otpButton");
-        processWebauthn();
+        piAfterPaint(processWebauthn);
     }
 
     if (isEnrollViaMultichallengeOptional !== "1") piDisableElement("cancelEnrollmentButton");
@@ -48,7 +46,7 @@ function piFormTemplate()
     // Passkey authentication
     if (mode === "passkey")
     {
-        piPasskeyAuthentication();
+        piAfterPaint(piPasskeyAuthentication);
     }
 
     // Passkey registration
@@ -58,6 +56,22 @@ function piFormTemplate()
         {
             piSetValue("errorMessage", "Error during passkey registration: " + error.message);
         });
+    }
+
+    // The OTP button only reveals the OTP/PIN inputs, so it is meaningful only
+    // when those inputs are hidden (push) and OTP is actually available.
+    // Enforcing this once, after the mode branches have set the input
+    // visibility, keeps the button and the inputs mutually exclusive in every
+    // mode - including the form re-render after a cancelled passkey prompt.
+    const otpSection = document.getElementById("otpSection");
+    const otpInputsHidden = !otpSection || otpSection.style.display === "none";
+    if (otpAvailable === "1" && otpInputsHidden)
+    {
+        piEnableElement("otpButton");
+    }
+    else
+    {
+        piDisableElement("otpButton");
     }
 }
 

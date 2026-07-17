@@ -14,6 +14,8 @@ use OCA\PrivacyIDEA\PIClient\PIResponse;
 use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
 use OCA\PrivacyIDEA\Provider\PrivacyIDEAFactory;
 use OCA\PrivacyIDEA\Provider\PrivacyIDEAProvider;
+use OCP\Authentication\LoginCredentials\ICredentials;
+use OCP\Authentication\LoginCredentials\IStore;
 use OCP\Authentication\TwoFactorAuth\TwoFactorException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -37,8 +39,9 @@ class PrivacyIDEAProviderTest extends TestCase
 	 * @param callable|null $isInGroup fn(string $uid, string $group): bool
 	 * @param array<string, string> $requestParams values returned by IRequest::getParam
 	 * @param PrivacyIDEA|null $pi client returned by the factory when piAllowCreatingPIInstance is set
+	 * @param string|null $loginPassword first-factor password the store returns; null makes it throw (unavailable, as for SSO/passkey logins)
 	 */
-	private function makeProvider(array $config = [], ?callable $isInGroup = null, string $remoteAddr = '10.0.0.5', array $requestParams = [], ?PrivacyIDEA $pi = null): PrivacyIDEAProvider
+	private function makeProvider(array $config = [], ?callable $isInGroup = null, string $remoteAddr = '10.0.0.5', array $requestParams = [], ?PrivacyIDEA $pi = null, ?string $loginPassword = null): PrivacyIDEAProvider
 	{
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -70,6 +73,15 @@ class PrivacyIDEAProviderTest extends TestCase
 		$factory = $this->createMock(PrivacyIDEAFactory::class);
 		$factory->method('create')->willReturn($pi);
 
+		$credentialStore = $this->createMock(IStore::class);
+		if ($loginPassword === null) {
+			$credentialStore->method('getLoginCredentials')->willThrowException(new \RuntimeException('unavailable'));
+		} else {
+			$creds = $this->createMock(ICredentials::class);
+			$creds->method('getPassword')->willReturn($loginPassword);
+			$credentialStore->method('getLoginCredentials')->willReturn($creds);
+		}
+
 		return new PrivacyIDEAProvider(
 			$appConfig,
 			$this->createMock(LoggerInterface::class),
@@ -77,7 +89,8 @@ class PrivacyIDEAProviderTest extends TestCase
 			$groupManager,
 			$trans,
 			$session,
-			$factory
+			$factory,
+			$credentialStore
 		);
 	}
 
@@ -100,14 +113,37 @@ class PrivacyIDEAProviderTest extends TestCase
 			/** @var array $result */
 			$result = $method->invoke($provider, 'HTTP_X_FORWARDED_FOR, HTTP_X_CUSTOM');
 
-			// The old code assigned array_push()'s int return -> broke on the
-			// 2nd header and produced malformed entries. Assert flat strings.
+			// Flat strings (the old code broke on the 2nd header), forwarded
+			// under the real HTTP header name rather than the $_SERVER key.
 			self::assertSame(
-				['HTTP_X_FORWARDED_FOR: 203.0.113.9', 'HTTP_X_CUSTOM: value2'],
+				['X-Forwarded-For: 203.0.113.9', 'X-Custom: value2'],
 				$result
 			);
 		} finally {
 			unset($_SERVER['HTTP_X_FORWARDED_FOR'], $_SERVER['HTTP_X_CUSTOM']);
+		}
+	}
+
+	public function testHeadersToForwardAcceptsNaturalHeaderNames(): void
+	{
+		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.9';
+		$_SERVER['REMOTE_ADDR'] = '198.51.100.4';
+		try {
+			$provider = $this->makeProvider();
+			$method = new \ReflectionMethod($provider, 'getHeadersToForward');
+			$method->setAccessible(true);
+
+			// The natural header name resolves to its HTTP_ server variable, and
+			// a raw non-HTTP server variable is accepted as-is; both are
+			// forwarded under a real HTTP header name.
+			$result = $method->invoke($provider, 'X-Forwarded-For, REMOTE_ADDR');
+
+			self::assertSame(
+				['X-Forwarded-For: 203.0.113.9', 'Remote-Addr: 198.51.100.4'],
+				$result
+			);
+		} finally {
+			unset($_SERVER['HTTP_X_FORWARDED_FOR'], $_SERVER['REMOTE_ADDR']);
 		}
 	}
 
@@ -151,6 +187,72 @@ class PrivacyIDEAProviderTest extends TestCase
 		$method->invoke($provider, $response);
 
 		self::assertSame('data:image/png;base64,ZZ', $this->sessionStore['piImgWebauthn'] ?? null);
+	}
+
+	public function testPreferredClientModeWinsOverACoexistingPasskeyChallenge(): void
+	{
+		// A push+passkey challenge whose preferred_client_mode is "interactive"
+		// must start on the OTP field, not force the page into passkey mode. The
+		// passkey challenge is still stored so the passkey login option works.
+		$response = PIResponse::fromJSON(
+			'{"detail":{"client_mode":"interactive","multi_challenge":['
+			. '{"client_mode":"webauthn","serial":"PIPK0004","transaction_id":"tx","type":"passkey","message":"Touch your authenticator!"},'
+			. '{"client_mode":"interactive","serial":"PIPU0003","transaction_id":"tx","type":"push","message":"Please enter the code displayed on your smartphone."}'
+			. '],"preferred_client_mode":"interactive","transaction_id":"tx","type":"push"},'
+			. '"result":{"authentication":"CHALLENGE","status":true,"value":false}}',
+			$this->createMock(PrivacyIDEA::class)
+		);
+
+		$this->sessionStore = [];
+		$provider = $this->makeProvider();
+		$method = new \ReflectionMethod($provider, 'processPIResponse');
+		$method->setAccessible(true);
+		$method->invoke($provider, $response);
+
+		self::assertSame('otp', $this->sessionStore['piMode'] ?? null);
+		self::assertNotEmpty($this->sessionStore['piPasskeyChallenge'] ?? null);
+	}
+
+	public function testPasskeyOnlyChallengeUsesPasskeyMode(): void
+	{
+		// A passkey challenge reports client_mode "webauthn"; with no competing
+		// token the page must run the dedicated passkey flow, not WebAuthn.
+		$response = PIResponse::fromJSON(
+			'{"detail":{"client_mode":"webauthn","multi_challenge":['
+			. '{"client_mode":"webauthn","serial":"PIPK0004","transaction_id":"tx","type":"passkey","message":"Touch your authenticator!"}'
+			. '],"preferred_client_mode":"webauthn","transaction_id":"tx","type":"passkey"},'
+			. '"result":{"authentication":"CHALLENGE","status":true,"value":false}}',
+			$this->createMock(PrivacyIDEA::class)
+		);
+
+		$this->sessionStore = [];
+		$provider = $this->makeProvider();
+		$method = new \ReflectionMethod($provider, 'processPIResponse');
+		$method->setAccessible(true);
+		$method->invoke($provider, $response);
+
+		self::assertSame('passkey', $this->sessionStore['piMode'] ?? null);
+	}
+
+	public function testPreferredPollModeMapsToPush(): void
+	{
+		// preferred_client_mode "poll" (push + HOTP) starts the page in push mode.
+		$response = PIResponse::fromJSON(
+			'{"detail":{"client_mode":"poll","multi_challenge":['
+			. '{"client_mode":"poll","serial":"PIPU0003","transaction_id":"tx","type":"push","message":"Please confirm on your phone."},'
+			. '{"client_mode":"interactive","serial":"HOTP1","transaction_id":"tx","type":"hotp","message":"Enter OTP."}'
+			. '],"preferred_client_mode":"poll","transaction_id":"tx","type":"push"},'
+			. '"result":{"authentication":"CHALLENGE","status":true,"value":false}}',
+			$this->createMock(PrivacyIDEA::class)
+		);
+
+		$this->sessionStore = [];
+		$provider = $this->makeProvider();
+		$method = new \ReflectionMethod($provider, 'processPIResponse');
+		$method->setAccessible(true);
+		$method->invoke($provider, $response);
+
+		self::assertSame('push', $this->sessionStore['piMode'] ?? null);
 	}
 
 	public function testWebauthnVerifyForwardsRawSignResponse(): void
@@ -319,6 +421,23 @@ class PrivacyIDEAProviderTest extends TestCase
 
 		$this->expectException(TwoFactorException::class);
 		$provider->verifyChallenge($this->user(), '');
+	}
+
+	public function testGetLoginPasswordReturnsTheStoredPassword(): void
+	{
+		$provider = $this->makeProvider([], null, '10.0.0.5', [], null, 's3cret');
+		$method = new \ReflectionMethod($provider, 'getLoginPassword');
+		$method->setAccessible(true);
+		self::assertSame('s3cret', $method->invoke($provider));
+	}
+
+	public function testGetLoginPasswordIsEmptyWhenUnavailable(): void
+	{
+		// SSO / passkey / token logins: the credential store throws -> empty string.
+		$provider = $this->makeProvider([], null, '10.0.0.5', [], null, null);
+		$method = new \ReflectionMethod($provider, 'getLoginPassword');
+		$method->setAccessible(true);
+		self::assertSame('', $method->invoke($provider));
 	}
 
 	public function testStaticMetadataAccessors(): void

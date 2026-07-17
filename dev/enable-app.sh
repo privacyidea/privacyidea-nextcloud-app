@@ -9,3 +9,9 @@ set -eu
 
 echo "post-installation hook: enabling the privacyidea app"
 php /var/www/html/occ app:enable --force privacyidea
+
+# Dev conveniences (dev stack only): verbose logging so the plugin's debug
+# lines show, and no request rate limiter so repeated login/OTP testing doesn't
+# trip "too many requests".
+php /var/www/html/occ config:system:set loglevel --value 0 --type integer
+php /var/www/html/occ config:system:set ratelimit.protection.enabled --value false --type boolean

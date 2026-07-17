@@ -57,7 +57,7 @@ class PrivacyIDEAFactory
 	{
 		$piUrl = $this->getAppValue('piURL', '');
 		if (empty($piUrl)) {
-			$this->logger->error('Cannot create privacyIDEA instance: Server URL missing in configuration!', ['app' => 'privacyIDEA']);
+			$this->logger->error('Cannot create privacyIDEA instance: Server URL missing in configuration!', ['app' => 'privacyidea']);
 			return null;
 		}
 		// Single source of truth for the version: the app manifest (info.xml),
@@ -101,7 +101,7 @@ class PrivacyIDEAFactory
 		if (!empty($clientIP)) {
 			return $clientIP;
 		}
-		$this->logger->error('Cannot get client IP address.', ['app' => 'privacyIDEA']);
+		$this->logger->error('Cannot get client IP address.', ['app' => 'privacyidea']);
 		return '';
 	}
 }

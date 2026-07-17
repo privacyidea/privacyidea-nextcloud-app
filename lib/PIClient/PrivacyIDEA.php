@@ -404,14 +404,33 @@ class PrivacyIDEA
 			$params[PROXY] = [HTTPS => '', HTTP => ''];
 		}
 		$params[TIMEOUT] = $this->timeout;
-		$this->log(DEBUG, 'Sending ' . http_build_query($params, '', ', ') . ' to ' . $endpoint);
+		$prettyFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+		$this->log(DEBUG, 'Request to ' . $endpoint . ":\n" . json_encode($this->redactParams($params), $prettyFlags));
 		$completeUrl = $this->serverURL . $endpoint;
 		$ret = $this->curlRequest($completeUrl, $params, $headers, $httpMethod);
 		if ($endpoint != ENDPOINT_AUTH) {
 			$retJson = json_decode($ret, true);
-			$this->log(DEBUG, $endpoint . ' returned ' . json_encode($retJson, JSON_PRETTY_PRINT));
+			$this->log(DEBUG, 'Response from ' . $endpoint . ":\n" . json_encode($retJson, $prettyFlags));
 		}
 		return $ret;
+	}
+
+	/**
+	 * Return a copy of the request parameters with secret values masked, so the
+	 * outgoing request can be logged without leaking the OTP/PIN/password or the
+	 * service-account password.
+	 *
+	 * @param array $params Request parameters.
+	 * @return array Parameters with secret values replaced by a placeholder.
+	 */
+	private function redactParams(array $params): array
+	{
+		foreach ([PASS, PASSWORD] as $secretKey) {
+			if (isset($params[$secretKey]) && $params[$secretKey] !== '') {
+				$params[$secretKey] = 'REDACTED';
+			}
+		}
+		return $params;
 	}
 
 	/**
@@ -491,9 +510,6 @@ class PrivacyIDEA
 	{
 		if ($level === DEBUG) {
 			logger(APP_ID_PRIVACYIDEA)->debug($message);
-		}
-		if ($level === INFO) {
-			logger(APP_ID_PRIVACYIDEA)->info($message);
 		}
 		if ($level === ERROR) {
 			logger(APP_ID_PRIVACYIDEA)->error($message);

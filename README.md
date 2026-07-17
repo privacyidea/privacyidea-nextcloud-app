@@ -50,20 +50,26 @@ minimum, set the server URL and tick **Activate privacyIDEA**.
 
 ### Authentication flow
 
-Chosen with the **Authentication flow** radios (`piSelectedAuthFlow`). This
-controls what the login page does and what is sent to privacyIDEA:
+The **Authentication flow** radios (`piSelectedAuthFlow`) control what is sent to
+privacyIDEA *before the login screen is shown* — used to trigger the user's token
+challenges (or complete authentication) up front. Mutually exclusive:
 
-| Flow (setting value) | What happens | Login form | Extra settings |
-| --- | --- | --- | --- |
-| **Send Password** — default (`piAuthFlowDefault`) | Nothing is sent until the user submits; the entered value goes to `/validate/check` as the pass (PIN, OTP, or PIN+OTP). Any challenges the server returns are then shown. | One username + password/OTP field. | — |
-| **Trigger Challenge** (`piAuthFlowTriggerChallenge`) | On page load the app uses a **service account** to call `/validate/triggerchallenge` for the user, so all of the user's challenges (push, SMS, email, …) are triggered up front; the user then answers. | OTP field, plus buttons for any triggered token types. | Service name + Service password (Service realm optional). |
-| **Separate OTP** (`piAuthFlowSeparateOTP`) | The form shows a separate password field and an OTP field; on submit they are concatenated (`password` + `OTP`) and sent to `/validate/check`. | Separate Password and OTP fields. | — |
-| **Send Static Pass** (`piAuthFlowSendStaticPass`) | On page load the app calls `/validate/check` with a fixed password. This can complete login directly (e.g. with a `passOnNoToken` policy) or trigger challenges. | OTP field. | Static password. |
+| Flow (setting value) | What happens | Extra settings |
+| --- | --- | --- |
+| **None (prompt only)** — default (`piAuthFlowDefault`) | Nothing is sent up front; the login screen is shown and whatever the user submits goes to `/validate/check`. Any challenges the server returns are then shown. | — |
+| **Trigger Challenge** (`piAuthFlowTriggerChallenge`) | On page load the app uses a **service account** to call `/validate/triggerchallenge` for the user, so all of the user's challenges (push, SMS, email, …) are triggered up front. | Service name + Service password (Service realm optional). |
+| **Send Password** (`piAuthFlowSendPassword`) | On page load the app sends the user's Nextcloud login password to `/validate/check` — completing login (e.g. `passthru`) or triggering challenges. Password logins only; for SSO/passkey/token logins it falls back to prompting. | — |
+| **Send Static Pass** (`piAuthFlowSendStaticPass`) | On page load the app sends a fixed configured password to `/validate/check` — completing login (e.g. `passOnNoToken`) or triggering challenges. | Static password. |
+
+The *input layout* on the login screen (single OTP field, or a separate
+password/PIN field plus OTP) is a separate **Login screen** setting — see below.
 
 ### Login experience
 
 | Setting | Key | Description |
 | --- | --- | --- |
+| Input layout | `piInputLayout` | Login-screen layout: a single OTP field (`otp`, default) or a separate password/PIN field plus an OTP field (`separate`), combined and sent to privacyIDEA. |
+| OTP field hint | `piOTPFieldHint` | Placeholder text shown in the OTP input field (default "One-Time-Password"). |
 | Auto-submit by OTP length | `piActivateAutoSubmitOtpLength`, `piAutoSubmitOtpLength` | Submit the form automatically once the configured number of characters (default `6`) is entered in the OTP field. |
 | Poll in browser | `piPollInBrowser`, `piPollInBrowserURL` | For PUSH tokens, poll privacyIDEA directly from the browser so the page advances the moment the user confirms, instead of periodic page reloads. Requires a privacyIDEA URL reachable from the browser. |
 | Forward headers to privacyIDEA | `piForwardHeaders` | Comma-separated list of request header names to forward to privacyIDEA (useful for header-based policies). |

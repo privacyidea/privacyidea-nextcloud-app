@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <files psalm-version="5.26.1@d747f6500b38ac4f7dfc5edbcae6e4b637d7add0">
-  <file src="lib/AppInfo/Application.php">
-    <MissingClassConstType>
-      <code><![CDATA[APP_ID = 'privacyidea']]></code>
-    </MissingClassConstType>
-  </file>
   <file src="lib/CodingStandard/Config.php">
     <DeprecatedClass>
       <code><![CDATA[PhpCsFixerCustomFixers\Fixer\MultilinePromotedPropertiesFixer::name()]]></code>
@@ -23,14 +18,6 @@
     <UnusedClass>
       <code><![CDATA[SettingsController]]></code>
     </UnusedClass>
-  </file>
-  <file src="lib/PIClient/AuthenticationStatus.php">
-    <MissingClassConstType>
-      <code><![CDATA[ACCEPT = 'ACCEPT']]></code>
-      <code><![CDATA[CHALLENGE = 'CHALLENGE']]></code>
-      <code><![CDATA[NONE = 'NONE']]></code>
-      <code><![CDATA[REJECT = 'REJECT']]></code>
-    </MissingClassConstType>
   </file>
   <file src="lib/PIClient/PIChallenge.php">
     <PossiblyUnusedProperty>
@@ -168,7 +155,6 @@
     <MixedMethodCall>
       <code><![CDATA[debug]]></code>
       <code><![CDATA[error]]></code>
-      <code><![CDATA[info]]></code>
     </MixedMethodCall>
     <MixedReturnStatement>
       <code><![CDATA[$response[RESULT][VALUE] ?? false]]></code>
@@ -213,7 +199,6 @@
     <UndefinedFunction>
       <code><![CDATA[logger(APP_ID_PRIVACYIDEA)]]></code>
       <code><![CDATA[logger(APP_ID_PRIVACYIDEA)]]></code>
-      <code><![CDATA[logger(APP_ID_PRIVACYIDEA)]]></code>
     </UndefinedFunction>
   </file>
   <file src="lib/Provider/PrivacyIDEAFactory.php">
@@ -231,6 +216,9 @@
       <code><![CDATA[$response->isEnrollViaMultichallenge()]]></code>
       <code><![CDATA[$response->isEnrollViaMultichallengeOptional()]]></code>
     </InvalidArgument>
+    <InvalidArrayOffset>
+      <code><![CDATA[$_SERVER[$serverKey]]]></code>
+    </InvalidArrayOffset>
     <MissingDependency>
       <code><![CDATA[Template]]></code>
     </MissingDependency>
@@ -241,7 +229,6 @@
     </MissingParamType>
     <MixedArgument>
       <code><![CDATA[$default]]></code>
-      <code><![CDATA[$message]]></code>
       <code><![CDATA[$message]]></code>
       <code><![CDATA[$message]]></code>
       <code><![CDATA[$origin]]></code>
@@ -257,6 +244,9 @@
       <code><![CDATA[$transactionID]]></code>
       <code><![CDATA[$transactionID]]></code>
     </MixedArgument>
+    <MixedArgumentTypeCoercion>
+      <code><![CDATA[$value]]></code>
+    </MixedArgumentTypeCoercion>
     <MixedAssignment>
       <code><![CDATA[$challenge]]></code>
       <code><![CDATA[$mode]]></code>
@@ -269,14 +259,15 @@
       <code><![CDATA[$passkeyTransactionID]]></code>
       <code><![CDATA[$transactionID]]></code>
       <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$value]]></code>
     </MixedAssignment>
     <MixedInferredReturnType>
       <code><![CDATA[Template]]></code>
     </MixedInferredReturnType>
     <MixedOperand>
       <code><![CDATA[$this->request->getParam('passField')]]></code>
-      <code><![CDATA[$this->session->get('piMode')]]></code>
       <code><![CDATA[$transactionID]]></code>
+      <code><![CDATA[$value]]></code>
     </MixedOperand>
     <MixedPropertyFetch>
       <code><![CDATA[$challenge->clientMode]]></code>
