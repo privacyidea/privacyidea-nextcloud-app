@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\PrivacyIDEA\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -38,20 +39,22 @@ class SettingsController extends Controller
 	 *
 	 * @param string $key configuration key
 	 * @param string $value configuration value
+	 * @return DataResponse
 	 */
-	public function setValue(string $key, string $value): void
+	public function setValue(string $key, string $value): DataResponse
 	{
 		$this->appConfig->setValueString('privacyidea', $key, $value);
+		return new DataResponse([]);
 	}
 
 	/**
 	 * Retrieve a configuration from the privacyIDEA app config.
 	 *
 	 * @param string $key configuration key
-	 * @return string
+	 * @return DataResponse
 	 */
-	public function getValue(string $key): string
+	public function getValue(string $key): DataResponse
 	{
-		return $this->appConfig->getValueString('privacyidea', $key);
+		return new DataResponse($this->appConfig->getValueString('privacyidea', $key));
 	}
 }

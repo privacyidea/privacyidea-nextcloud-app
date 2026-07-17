@@ -40,8 +40,9 @@ function eventListeners()
     {
         passkeyBtn.addEventListener("click", function ()
         {
-            piDisableElement("otpSection");
-            piEnableElement("otpButton");
+            // Passkey just starts navigator.credentials.get; keep the OTP/PIN
+            // inputs as the fallback and hide the redundant OTP switch button.
+            piDisableElement("otpButton");
             piPasskeyAuthentication();
         });
     }
@@ -64,7 +65,13 @@ function eventListeners()
     {
         const pollingIntervals = [8, 5, 4];
         let loadCounter = Number(document.getElementById("loadCounter").value) || 1;
-        let refreshTime = pollingIntervals[Math.min(loadCounter - 1, pollingIntervals.length - 1)] * 1000;
+        // Poll immediately on the first push render (e.g. right after switching
+        // to the push option): the user may already have confirmed on their
+        // phone, so waiting the full interval before the first check is a
+        // needless delay. Later reloads back off on the interval schedule.
+        let refreshTime = loadCounter <= 1
+            ? 0
+            : pollingIntervals[Math.min(loadCounter - 2, pollingIntervals.length - 1)] * 1000;
         window.setTimeout(() => document.forms["piLoginForm"].submit(), refreshTime);
     }
 

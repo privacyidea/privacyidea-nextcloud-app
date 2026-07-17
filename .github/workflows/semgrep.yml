@@ -1,0 +1,61 @@
+name: Semgrep
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: semgrep-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      # Required to upload the SARIF report to the GitHub "Security" tab.
+      security-events: write
+
+    # Run inside the official Semgrep image so the CLI and its dependencies
+    # are pinned and already present.
+    container:
+      # Pinned by digest (semgrep/semgrep:latest at time of writing).
+      image: semgrep/semgrep@sha256:59fbed6127ea7c5dde3ba6a85142733bb20ea9aaa36120c953904f1539aaf66e
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Run Semgrep
+        # No SEMGREP_APP_TOKEN needed: these registry rulesets are fetched
+        # anonymously. --sarif writes a report; findings do NOT fail the job
+        # (they surface as code-scanning alerts). Add --error to make it
+        # blocking once the signal has been triaged.
+        run: |
+          semgrep scan \
+            --config=p/php \
+            --config=p/javascript \
+            --config=p/security-audit \
+            --config=p/secrets \
+            --exclude=build \
+            --exclude=vendor \
+            --exclude=vendor-bin \
+            --exclude=node_modules \
+            --sarif --output=semgrep.sarif
+
+      - name: Upload SARIF to GitHub code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@641a925cfafe92d0fdf8b239ba4053e3f8d99d6d # v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep

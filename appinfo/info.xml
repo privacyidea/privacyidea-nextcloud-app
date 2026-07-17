@@ -9,7 +9,7 @@
         Users can authenticate with classic OTP tokens, and Challenge-Response tokens like E-Mail,
         SMS, PUSH, or WebAuthn devices.
     </description>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
     <licence>agpl</licence>
     <author mail="lukas.matusiewicz@netknights.it">Lukas Matusiewicz</author>
     <namespace>PrivacyIDEA</namespace>
@@ -19,7 +19,7 @@
     <screenshot small-thumbnail="https://raw.githubusercontent.com/privacyidea/privacyidea-nextcloud-app/master/img/app-screenshot.png">https://raw.githubusercontent.com/privacyidea/privacyidea-nextcloud-app/master/img/app-screenshot.png</screenshot>
     <website>https://privacyidea.org</website>
     <dependencies>
-        <nextcloud min-version="29" max-version="31"/>
+        <nextcloud min-version="29" max-version="33"/>
     </dependencies>
     <two-factor-providers>
         <provider>OCA\PrivacyIDEA\Provider\PrivacyIDEAProvider</provider>

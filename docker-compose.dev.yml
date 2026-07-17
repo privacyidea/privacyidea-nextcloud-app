@@ -1,0 +1,41 @@
+# Local development / testing stack for the privacyIDEA Nextcloud app.
+#
+# Brings up a throwaway Nextcloud (SQLite, auto-installed) with this repository
+# bind-mounted as the "privacyidea" app and auto-enabled. Point it at your own
+# privacyIDEA server via the admin settings after logging in.
+#
+#   docker compose -f docker-compose.dev.yml up -d          # start (NC "stable")
+#   NC_VERSION=latest docker compose -f docker-compose.dev.yml up -d
+#   docker compose -f docker-compose.dev.yml down            # stop (keep data)
+#   docker compose -f docker-compose.dev.yml down -v         # stop + wipe data
+#
+# Then open http://localhost:8080  (login: admin / admin).
+
+services:
+  nextcloud:
+    image: nextcloud:${NC_VERSION:-stable}
+    container_name: privacyidea-nc-dev
+    ports:
+      - "${NC_PORT:-8080}:80"
+    environment:
+      SQLITE_DATABASE: nextcloud
+      NEXTCLOUD_ADMIN_USER: admin
+      NEXTCLOUD_ADMIN_PASSWORD: admin
+      NEXTCLOUD_TRUSTED_DOMAINS: localhost
+    # Lets the container reach a privacyIDEA running on the host (e.g. started
+    # from your IDE). Point piURL at http://host.docker.internal:<port> and make
+    # sure privacyIDEA listens on 0.0.0.0, not only 127.0.0.1.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Nextcloud's own files + data (throwaway; `down -v` wipes it).
+      - nc_data:/var/www/html
+      # This repo, mounted read-only as the app so edits are live (no rebuild).
+      - ./:/var/www/html/custom_apps/privacyidea:ro
+      # One-shot hook that enables the app right after the auto-install.
+      - ./dev/enable-app.sh:/docker-entrypoint-hooks.d/post-installation/10-enable-privacyidea.sh:ro
+      # Dev-only: pick up edited PHP immediately (no OPcache staleness).
+      - ./dev/opcache-dev.ini:/usr/local/etc/php/conf.d/zz-opcache-dev.ini:ro
+
+volumes:
+  nc_data:

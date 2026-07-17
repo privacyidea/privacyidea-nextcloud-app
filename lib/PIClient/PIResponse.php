@@ -37,7 +37,7 @@ class PIResponse
 	/* @var string Raw response in JSON format. */
 	private string $raw = '';
 
-	/* @var array Array of PIChallenge objects representing the triggered token challenges. */
+	/** @var PIChallenge[] Array of PIChallenge objects representing the triggered token challenges. */
 	private array $multiChallenge = [];
 
 	/* @var bool Status indicates if the request was processed successfully by the server. */
@@ -102,7 +102,7 @@ class PIResponse
 		}
 
 		$detail = $map[DETAIL] ?? [];
-		$ret->messages = isset($detail[MESSAGES]) ? implode(', ', array_unique($detail[MESSAGES])) : '';
+		$ret->messages = isset($detail[MESSAGES]) && is_array($detail[MESSAGES]) ? implode(', ', array_unique($detail[MESSAGES])) : '';
 		$ret->message = $detail[MESSAGE] ?? '';
 		$ret->serial = $detail[SERIAL] ?? '';
 		$ret->transactionID = $detail[TRANSACTION_ID] ?? '';
@@ -199,14 +199,20 @@ class PIResponse
 	}
 
 	/**
-	 * Check if any Push or Smartphone container challenge is available.
+	 * Check if any pollable Push or Smartphone container challenge is available.
 	 *
-	 * @return bool True if a Push or Smartphone container challenge is available, false otherwise.
+	 * A push challenge sent with client_mode "interactive" (e.g. the
+	 * push_code_to_phone policy, where the user reads a short code off the
+	 * phone and types it) is NOT pollable: it is answered through the OTP
+	 * input field, not by polling. Such challenges are excluded here so the
+	 * poll-based "Push" button is not offered for them.
+	 *
+	 * @return bool True if a pollable Push or Smartphone container challenge is available, false otherwise.
 	 */
 	public function isPushOrSmartphoneContainerAvailable(): bool
 	{
 		foreach ($this->multiChallenge as $c) {
-			if ($this->isPushOrSmartphoneContainer($c->type)) {
+			if ($this->isPushOrSmartphoneContainer($c->type) && $c->clientMode !== INTERACTIVE) {
 				return true;
 			}
 		}
@@ -362,7 +368,9 @@ class PIResponse
 		if (empty($webauthn)) {
 			return '';
 		}
-		$webauthn->allowCredentials = $arr;
+		// Drop challenges that carried no allowCredentials entry so the browser
+		// never receives a null credential (which would throw on credential.id).
+		$webauthn->allowCredentials = array_values(array_filter($arr, static fn ($credential) => $credential !== null));
 		return json_encode($webauthn);
 	}
 

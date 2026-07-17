@@ -72,7 +72,7 @@ Util::addStyle('privacyidea', 'settings-admin');
                     <label for="piExcludeIPs">Exclude IP addresses</label>
                 </td>
                 <td>
-                    <em>You can either add single IPs like 10.0.1.12,10.0.1.13, a range like 10.0.1.12-10.0.1.113
+                    <em>You can either add single IPs like 10.0.1.12,10.0.1.13, a range like 10.0.1.12-10.0.1.113<br>
                         or combinations like 10.0.1.12-10.0.1.113,192.168.0.15</em>
                 </td>
             </tr>
@@ -98,7 +98,7 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <input id="piTimeout" type="number" min="1" placeholder="Default is 5">
+                    <input id="piTimeout" type="number" min="1" placeholder="Default is 15">
                     <label for="piTimeout">Timeout</label>
                 </td>
                 <td>
@@ -134,36 +134,53 @@ Util::addStyle('privacyidea', 'settings-admin');
         <hr>
 
         <h2>Authentication flow</h2>
-        <em>Choose one of the following authentication flows:
-            "Send Password" - (default) Login interface contains an username input and an single password/OTP input.
-            "Trigger Challenge" - triggers all challenges beforehand using the provided service account.
-            This flow require additional parameters: 'service name','service pass' (see below).
-            "Separate OTP" - Login interface will contain separate Pass an OTP inputs.
-            "Send static pass" - performs the privacyIDEA server request automatically beforehand using
-            the provided static password. This flow require additional parameter: 'static pass' (see below).</em>
-        <br>
+        <em>What is sent to privacyIDEA before the login screen is shown. Mutually exclusive;
+            used to trigger the user's token challenges (or complete authentication) up front.</em>
         <table>
             <tr>
                 <td>
                     <input id="piAuthFlowDefault" type="radio" name="piAuthenticationFlow" checked>
-                    <label for="piAuthFlowDefault">Send Password</label>
-                    <br>
-                    <input id="piAuthFlowTriggerChallenge" type="radio" name="piAuthenticationFlow">
-                    <label for="piAuthFlowTriggerChallenge">Trigger Challenge</label>
-                    <br>
-                    <input id="piAuthFlowSeparateOTP" type="radio" name="piAuthenticationFlow">
-                    <label for="piAuthFlowSeparateOTP">Separate OTP</label>
-                    <br>
-                    <input id="piAuthFlowSendStaticPass" type="radio" name="piAuthenticationFlow">
-                    <label for="piAuthFlowSendStaticPass">Send Static Pass</label>
-                    <br>
-                    <br>
+                    <label for="piAuthFlowDefault">None (prompt only)</label>
                     <input id="piSelectedAuthFlow" type="hidden" name="piSelectedAuthFlow" value=""/>
+                </td>
+                <td>
+                    <em>(Default) Nothing is sent up front; the login screen is shown and whatever
+                        the user submits is sent to privacyIDEA.</em>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input id="piServiceName" type="text" width="300px"/>
+                    <input id="piAuthFlowTriggerChallenge" type="radio" name="piAuthenticationFlow">
+                    <label for="piAuthFlowTriggerChallenge">Trigger Challenge</label>
+                </td>
+                <td>
+                    <em>Triggers all of the user's challenges beforehand using the service account.
+                        Requires the service name and password below.</em>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input id="piAuthFlowSendPassword" type="radio" name="piAuthenticationFlow">
+                    <label for="piAuthFlowSendPassword">Send Password</label>
+                </td>
+                <td>
+                    <em>Sends the user's Nextcloud login password to privacyIDEA beforehand (password
+                        logins only; ignored for SSO/passkey logins).</em>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input id="piAuthFlowSendStaticPass" type="radio" name="piAuthenticationFlow">
+                    <label for="piAuthFlowSendStaticPass">Send Static Pass</label>
+                </td>
+                <td>
+                    <em>Sends the configured static password to privacyIDEA beforehand. Requires the
+                        static password below.</em>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input id="piServiceName" type="text" width="300px" autocomplete="off"/>
                     <label for="piServiceName">Service name</label>
                 </td>
                 <td>
@@ -172,7 +189,7 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <input id="piServicePass" type="password" width="300px"/>
+                    <input id="piServicePass" type="password" width="300px" autocomplete="off"/>
                     <label for="piServicePass">Service password</label>
                 </td>
                 <td>
@@ -190,7 +207,7 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <input id="piStaticPass" type="password" width="300px"/>
+                    <input id="piStaticPass" type="password" width="300px" autocomplete="off"/>
                     <label for="piStaticPass">Static password</label>
                 </td>
                 <td>
@@ -208,13 +225,17 @@ Util::addStyle('privacyidea', 'settings-admin');
                     <label for="piPollInBrowser">Activate poll in browser</label>
                 </td>
                 <td>
-                    <em>Process polling for a push token request's confirmation directly in your browser.</em>
+                    <em>Process polling for a push token request's confirmation directly in your browser.<br>
+                        The user's browser must be able to reach the privacyIDEA server directly for this feature to work.</em>
                 </td>
             </tr>
             <tr>
                 <td>
                     <input id="piPollInBrowserURL" type="text" width="300px"/>
                     <label for="piPollInBrowserURL">URL for poll in browser</label>
+                </td>
+                <td>
+                    <em>The privacyIDEA URL the browser polls (must be reachable from the browser).</em>
                 </td>
             </tr>
         </table>
@@ -244,6 +265,43 @@ Util::addStyle('privacyidea', 'settings-admin');
         </table>
         <hr>
 
+        <h2>Login screen</h2>
+        <table>
+            <tr>
+                <td>
+                    <input id="piOTPFieldHint" type="text" width="300px" placeholder="One-Time-Password"/>
+                    <label for="piOTPFieldHint">OTP field hint</label>
+                </td>
+                <td>
+                    <em>Placeholder shown in the one-time-password input field (default "One-Time-Password").</em>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input id="piPassFieldHint" type="text" width="300px" placeholder="Password/PIN"/>
+                    <label for="piPassFieldHint">Password/PIN field hint</label>
+                </td>
+                <td>
+                    <em>Placeholder shown in the password/PIN input field of the "Password/PIN and OTP" layout (default "Password/PIN").</em>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input id="piLayoutOtpOnly" type="radio" name="piInputLayoutRadio" checked>
+                    <label for="piLayoutOtpOnly">OTP only</label>
+                    <br>
+                    <input id="piLayoutSeparate" type="radio" name="piInputLayoutRadio">
+                    <label for="piLayoutSeparate">Password/PIN and OTP</label>
+                    <input id="piInputLayout" type="hidden" name="piInputLayout" value=""/>
+                </td>
+                <td>
+                    <em>Login-screen input layout: a single OTP field, or a separate password/PIN field
+                        plus an OTP field (combined and sent to privacyIDEA).</em>
+                </td>
+            </tr>
+        </table>
+        <hr>
+
         <h2>Forward headers to privacyIDEA</h2>
         <table>
             <tr>
@@ -252,7 +310,9 @@ Util::addStyle('privacyidea', 'settings-admin');
                     <label for="piForwardHeaders">Headers to forward</label>
                 </td>
                 <td>
-                    <em>Set headers which should be forwarded to privacyIDEA.</em>
+                    <em>Comma-separated list of headers to forward, e.g.
+                    <code>X-Forwarded-For</code>. Only headers present on the
+                    request are sent.</em>
                 </td>
             </tr>
         </table>

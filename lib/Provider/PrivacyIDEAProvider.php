@@ -7,6 +7,7 @@ use OCA\PrivacyIDEA\PIClient\AuthenticationStatus;
 use OCA\PrivacyIDEA\PIClient\PIBadRequestException;
 use OCA\PrivacyIDEA\PIClient\PIResponse;
 use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
+use OCP\Authentication\LoginCredentials\IStore;
 use OCP\Authentication\TwoFactorAuth\IProvider;
 use OCP\Authentication\TwoFactorAuth\TwoFactorException;
 use OCP\IAppConfig;
@@ -32,8 +33,12 @@ class PrivacyIDEAProvider implements IProvider
 	private IL10N $trans;
 	/** @var ISession */
 	private ISession $session;
-	/** @var PrivacyIDEA */
-	private PrivacyIDEA $pi;
+	/** @var PrivacyIDEAFactory */
+	private PrivacyIDEAFactory $piFactory;
+	/** @var IStore */
+	private IStore $credentialStore;
+	/** @var PrivacyIDEA|null */
+	private ?PrivacyIDEA $pi = null;
 
 	/**
 	 * PrivacyIDEAProvider constructor.
@@ -44,8 +49,10 @@ class PrivacyIDEAProvider implements IProvider
 	 * @param IGroupManager $groupManager
 	 * @param IL10N $trans
 	 * @param ISession $session
+	 * @param PrivacyIDEAFactory $piFactory
+	 * @param IStore $credentialStore
 	 */
-	public function __construct(IAppConfig $appConfig, LoggerInterface $logger, IRequest $request, IGroupManager $groupManager, IL10N $trans, ISession $session)
+	public function __construct(IAppConfig $appConfig, LoggerInterface $logger, IRequest $request, IGroupManager $groupManager, IL10N $trans, ISession $session, PrivacyIDEAFactory $piFactory, IStore $credentialStore)
 	{
 		$this->appConfig = $appConfig;
 		$this->logger = $logger;
@@ -53,8 +60,10 @@ class PrivacyIDEAProvider implements IProvider
 		$this->groupManager = $groupManager;
 		$this->trans = $trans;
 		$this->session = $session;
+		$this->piFactory = $piFactory;
+		$this->credentialStore = $credentialStore;
 		if ($this->session->get('piAllowCreatingPIInstance') === true) {
-			$this->pi = $this->createPrivacyIDEAInstance();
+			$this->pi = $this->piFactory->create();
 		}
 	}
 
@@ -73,9 +82,22 @@ class PrivacyIDEAProvider implements IProvider
 			$this->verifyChallenge($user, '');
 		} else {
 			$this->session->set('piAllowCreatingPIInstance', true);
-			$this->pi = $this->createPrivacyIDEAInstance();
+			// On a reload the constructor already built the client (the flag was
+			// set on the previous render), so only build it when it is missing.
+			if ($this->pi === null) {
+				$this->pi = $this->piFactory->create();
+			}
 
 			$authenticationFlow = $this->getAppValue('piSelectedAuthFlow', 'piAuthFlowDefault');
+			$inputLayout = $this->getAppValue('piInputLayout', '');
+			// Backward compatibility: the former "Separate OTP" flow is now the
+			// "separate" input layout with no pre-render behaviour.
+			if ($authenticationFlow === 'piAuthFlowSeparateOTP') {
+				$authenticationFlow = 'piAuthFlowDefault';
+				if ($inputLayout === '') {
+					$inputLayout = 'separate';
+				}
+			}
 			$this->log('debug', 'Selected authentication flow: ' . $authenticationFlow);
 			$username = $user->getUID();
 			$headers = [];
@@ -105,7 +127,7 @@ class PrivacyIDEAProvider implements IProvider
 				if ($this->session->get('piStaticPassDone') !== true) {
 					$response = $this->pi->validateCheck($username, $this->getAppValue('piStaticPass', ''), '', $headers);
 					$this->session->set('piStaticPassDone', true);
-					if ($response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT) {
+					if ($response !== null && $response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT) {
 						// Complete the authentication
 						$this->session->set('piSuccess', true);
 						$this->verifyChallenge($user, '');
@@ -113,10 +135,34 @@ class PrivacyIDEAProvider implements IProvider
 						$this->processPIResponse($response);
 					}
 				}
-			} elseif ($authenticationFlow === 'piAuthFlowSeparateOTP') {
-				$this->session->set('piSeparateOTP', true);
+			} elseif (!empty($this->pi) && $authenticationFlow === 'piAuthFlowSendPassword') {
+				// Send the user's Nextcloud login password to privacyIDEA up front.
+				// Like Send Static Pass this can complete authentication directly or
+				// trigger the user's challenges. The password is unavailable for
+				// SSO / passkey / token logins, where we fall back to the OTP field.
+				if ($this->session->get('piSendPasswordDone') !== true) {
+					$password = $this->getLoginPassword();
+					if ($password === '') {
+						$this->log('debug', 'Login password not available; prompting for the OTP instead.');
+					} else {
+						$response = $this->pi->validateCheck($username, $password, '', $headers);
+						$this->session->set('piSendPasswordDone', true);
+						if ($response !== null && $response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT) {
+							$this->session->set('piSuccess', true);
+							$this->verifyChallenge($user, '');
+						} else {
+							$this->processPIResponse($response);
+						}
+					}
+				}
 			} elseif ($authenticationFlow !== 'piAuthFlowDefault') {
 				$this->log('error', 'Unknown authentication flow: ' . $authenticationFlow . '. Fallback to default.');
+			}
+
+			// Input layout (independent of the flow above): render a separate
+			// password field alongside the OTP field when configured.
+			if ($inputLayout === 'separate') {
+				$this->session->set('piSeparateOTP', true);
 			}
 		}
 
@@ -160,6 +206,8 @@ class PrivacyIDEAProvider implements IProvider
 			'autoSubmitOtpLength' => [$this->getAppValue('piAutoSubmitOtpLength', '6')],
 			'pollInBrowser' => [$this->getAppValue('piPollInBrowser', '0')],
 			'pollInBrowserUrl' => [$this->getAppValue('piPollInBrowserURL', '')],
+			'otpHint' => [$this->getAppValue('piOTPFieldHint', 'One-Time-Password')],
+			'passHint' => [$this->getAppValue('piPassFieldHint', 'Password/PIN')],
 		];
 		foreach ($configForTemplate as $tplKey => [$val]) {
 			$template->assign($tplKey, $val);
@@ -221,6 +269,15 @@ class PrivacyIDEAProvider implements IProvider
 		$piResponse = null;
 		if ($this->request->getParam('modeChanged') === '1') {
 			throw new TwoFactorException(' ');
+		}
+
+		// The client is only created when piAllowCreatingPIInstance is set and a
+		// server URL is configured. If it is missing here (e.g. the session flag
+		// was lost, or the URL is unset), fail with a clean error instead of a
+		// fatal "typed property must not be accessed before initialization".
+		if ($this->pi === null) {
+			$this->log('error', 'Cannot verify challenge: no privacyIDEA client available (check the server URL configuration).');
+			throw new TwoFactorException($this->trans->t('Failed to authenticate.'));
 		}
 
 		if (!empty($this->request->getParam('passkeySignResponse'))) {
@@ -299,19 +356,24 @@ class PrivacyIDEAProvider implements IProvider
 				$this->log('debug', 'PUSH not confirmed yet...');
 			}
 
-			// Increase load counter
+			// Increase load counter. loadCounter is a user-controllable form
+			// field, so cast it before arithmetic (a non-numeric value would
+			// otherwise raise a TypeError on PHP 8).
 			if ($this->request->getParam('loadCounter')) {
-				$counter = $this->request->getParam('loadCounter');
+				$counter = (int)$this->request->getParam('loadCounter');
 				$this->session->set('piLoadCounter', $counter + 1);
 			}
 		} elseif ($mode === 'webauthn') {
-			$webAuthnSignResponse = json_decode($this->request->getParam('webAuthnSignResponse'), true);
+			// The sign response is already a JSON string from the browser;
+			// validateCheckWebAuthn parses it, so forward it as-is instead of
+			// decoding and re-encoding here.
+			$webAuthnSignResponse = (string)$this->request->getParam('webAuthnSignResponse');
 			$origin = $this->request->getParam('origin');
 
 			if (empty($webAuthnSignResponse)) {
 				$this->log('error', 'Incomplete data for WebAuthn authentication: WebAuthn sign response is missing!');
 			} else {
-				$piResponse = $this->pi->validateCheckWebAuthn($username, $transactionID, json_encode($webAuthnSignResponse), $origin, $headers);
+				$piResponse = $this->pi->validateCheckWebAuthn($username, $transactionID, $webAuthnSignResponse, $origin, $headers);
 				$this->processPIResponse($piResponse);
 			}
 		} else {
@@ -355,53 +417,46 @@ class PrivacyIDEAProvider implements IProvider
 	}
 
 	/**
-	 * Create a new privacyIDEA object with the given configuration.
-	 *
-	 * @return PrivacyIDEA|null privacyIDEA object or null on error.
-	 */
-	private function createPrivacyIDEAInstance(): ?PrivacyIDEA
-	{
-		$piUrl = $this->getAppValue('piURL', '');
-		if (!empty($piUrl)) {
-			$pi = new PrivacyIDEA('privacyidea-nextcloud/1.1.0', $piUrl);
-			$pi->setSSLVerifyHost($this->getAppValue('piSSLVerify', true));
-			$pi->setSSLVerifyPeer($this->getAppValue('piSSLVerify', true));
-			$pi->setServiceAccountName($this->getAppValue('piServiceName', ''));
-			$pi->setServiceAccountPass($this->getAppValue('piServicePass', ''));
-			$pi->setServiceAccountRealm($this->getAppValue('piServiceRealm', ''));
-			$pi->setRealm($this->getAppValue('piRealm', ''));
-			$pi->setNoProxy($this->getAppValue('piNoProxy', false));
-			if ($this->getAppValue('piForwardClientIP', false) && !empty($this->getClientIP())) {
-				$pi->setForwardClientIP($this->getClientIP());
-			}
-			return $pi;
-		} else {
-			$this->log('error', 'Cannot create privacyIDEA instance: Server URL missing in configuration!');
-		}
-		return null;
-	}
-
-	/**
 	 *  Process the response from privacyIDEA and write information to session.
 	 *
-	 * @param PIResponse $response
+	 * @param PIResponse|null $response
 	 * @return void
 	 */
-	private function processPIResponse(PIResponse $response): void
+	private function processPIResponse(?PIResponse $response): void
 	{
+		if ($response === null) {
+			$this->log('error', 'Cannot process response: the server response was empty or malformed.');
+			$this->session->set('piErrorMessage', $this->trans->t('The privacyIDEA server returned an empty or malformed response.'));
+			return;
+		}
 		$this->session->set('piMode', 'otp');
 		if (!empty($response->getMultiChallenge())) {
 			$triggeredTokens = $response->getTriggeredTokenTypes();
-			if (!empty($response->getPreferredClientMode())) {
-				if ($response->getPreferredClientMode() === 'interactive') {
-					$this->session->set('piMode', 'otp');
-				} elseif ($response->getPreferredClientMode() === 'poll') {
-					$this->session->set('piMode', 'push');
-				} else {
-					$this->session->set('piMode', $response->getPreferredClientMode());
-				}
-				$this->log('debug', 'Preferred client mode: ' . $this->session->get('piMode'));
+
+			// Decide which client mode the login form starts in. The server's
+			// preferred_client_mode wins over any single triggered token, so a
+			// response carrying several challenges (e.g. push + passkey) whose
+			// preferred mode is "interactive" starts on the OTP field instead of
+			// jumping into one specific token's flow. PIResponse has already
+			// normalised the value (interactive -> otp, poll -> push; webauthn
+			// and anything else pass through), defaulting to otp when absent.
+			$mode = $response->getPreferredClientMode() ?: 'otp';
+			$hasPasskey = in_array('passkey', $triggeredTokens, true) || !empty($response->getPasskeyChallenge());
+			$hasWebAuthn = in_array('webauthn', $triggeredTokens, true);
+			// Passkey challenges are reported with client_mode "webauthn" but
+			// need the dedicated passkey flow (there is a passkey challenge, not
+			// a webAuthnSignRequest). Translate a webauthn preference into passkey
+			// mode when the triggered token is actually a passkey, and fall back
+			// to passkey when one was triggered and the server stated no
+			// preference at all.
+			if ($mode === 'webauthn' && $hasPasskey && !$hasWebAuthn) {
+				$mode = 'passkey';
+			} elseif (empty($response->getPreferredClientMode()) && $hasPasskey) {
+				$mode = 'passkey';
 			}
+			$this->session->set('piMode', $mode);
+			$this->log('debug', 'Preferred client mode resolved to: ' . $mode);
+
 			$this->session->set('piPushOrSmartphoneContainerAvailable', $response->isPushOrSmartphoneContainerAvailable());
 			$this->session->set('piOTPAvailable', true);
 			$this->session->set('piMessage', $response->getMessages());
@@ -415,7 +470,10 @@ class PrivacyIDEAProvider implements IProvider
 				$this->session->set('piMessage', $response->getMessage());
 				$this->session->set('piPasskeyRegistrationSerial', $response->getPasskeyRegistrationSerial());
 			}
-			// Passkey challenge
+			// Passkey challenge: store it so the passkey login option is available.
+			// The starting mode was already decided above from the server's
+			// preferred_client_mode, so a passkey coexisting with other tokens no
+			// longer forces the page into passkey mode.
 			if (!empty($response->getPasskeyChallenge())) {
 				$this->session->set('piPasskeyChallenge', $response->getPasskeyChallenge());
 				$this->session->set('piPasskeyTransactionID', $response->getTransactionID());
@@ -442,7 +500,7 @@ class PrivacyIDEAProvider implements IProvider
 							}
 						}
 					} elseif (!empty($challenge->clientMode) && $challenge->clientMode === 'webauthn') {
-						$this->session->set('piImgWebAuthn', $challenge->image);
+						$this->session->set('piImgWebauthn', $challenge->image);
 						if ($response->isEnrollViaMultichallenge()) {
 							$this->session->set('piMode', 'webauthn');
 						}
@@ -465,10 +523,14 @@ class PrivacyIDEAProvider implements IProvider
 			$this->session->set('piErrorMessage', $response->getErrorMessage());
 		} elseif ($response->getAuthenticationStatus() === AuthenticationStatus::ACCEPT) {
 			// The user has been authenticated successfully.
-			$this->log('info', $response->getMessage());
+			$this->log('debug', $response->getMessage());
 		} else {
-			// Unexpected response
-			$this->log('error', $response->getMessage());
+			// Authentication was not (yet) successful, e.g. a wrong OTP/PIN. This
+			// is an expected outcome, not an error, so log at debug rather than
+			// error to avoid a log entry on every failed attempt. The debug trace
+			// still surfaces an unexpected/malformed response when triggering a
+			// challenge, where verifyChallenge does not run to log it.
+			$this->log('debug', 'Authentication not successful: ' . $response->getMessage());
 			$this->session->set('piErrorMessage', $response->getMessage());
 		}
 	}
@@ -476,28 +538,78 @@ class PrivacyIDEAProvider implements IProvider
 	/**
 	 * Search for the configured headers in $_SERVER and return all found with their values.
 	 *
+	 * The configured names may be natural HTTP header names (e.g.
+	 * "X-Forwarded-For") or raw server-variable names (e.g.
+	 * "HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"); both are resolved to the matching
+	 * $_SERVER key. Each match is forwarded under its real HTTP header name so
+	 * the receiving WSGI/Flask app reconstructs the expected header (the CGI
+	 * "HTTP_" prefix and underscores are internal to $_SERVER, not the wire).
+	 *
 	 * @return array Headers to forward with their values.
 	 */
 	private function getHeadersToForward(string $headers): array
 	{
-		$cleanHeaders = str_replace(' ', '', $headers);
-		$arrHeaders = explode(',', $cleanHeaders);
-
 		$headersToForward = [];
-		foreach ($arrHeaders as $header) {
-			if (array_key_exists($header, $_SERVER)) {
-				$this->log('debug', 'Found matching header: ' . $header);
-				$value = $_SERVER[$header];
-				if (is_array($_SERVER[$header])) {
-					$value = implode(',', $_SERVER[$header]);
-				}
-				$header = [$header => $value];
-				$headersToForward = array_push($headersToForward, $header);
-			} else {
-				$this->log('debug', 'No values for header: ' . $header . ' found.');
+		foreach (explode(',', $headers) as $rawHeader) {
+			$header = trim($rawHeader);
+			if ($header === '') {
+				continue;
 			}
+			$serverKey = $this->resolveServerKey($header);
+			if ($serverKey === null) {
+				$this->log('debug', 'No values for header: ' . $header . ' found.');
+				continue;
+			}
+			$this->log('debug', 'Found matching header: ' . $serverKey);
+			$value = $_SERVER[$serverKey];
+			if (is_array($value)) {
+				$value = implode(',', $value);
+			}
+			// Strip CR/LF so an attacker-influenced value (e.g. a spoofed
+			// X-Forwarded-For) cannot inject extra request headers into the
+			// call to privacyIDEA.
+			$value = str_replace(["\r", "\n"], '', (string)$value);
+			$headersToForward[] = $this->toHttpHeaderName($serverKey) . ': ' . $value;
 		}
 		return $headersToForward;
+	}
+
+	/**
+	 * Turn a $_SERVER key back into its real HTTP header name: drop the CGI
+	 * "HTTP_" prefix and convert underscores to dashes (e.g.
+	 * "HTTP_X_FORWARDED_FOR" -> "X-Forwarded-For", "REMOTE_ADDR" ->
+	 * "Remote-Addr"). Sending this form lets Werkzeug rebuild the original
+	 * header instead of a doubly-prefixed "Http-X-Forwarded-For".
+	 *
+	 * @param string $serverKey $_SERVER key.
+	 * @return string Real HTTP header name.
+	 */
+	private function toHttpHeaderName(string $serverKey): string
+	{
+		$name = $serverKey;
+		if (str_starts_with($name, 'HTTP_')) {
+			$name = substr($name, 5);
+		}
+		return implode('-', array_map('ucfirst', explode('_', strtolower($name))));
+	}
+
+	/**
+	 * Resolve a configured header name to the $_SERVER key that holds its value,
+	 * accepting the raw key as well as the natural HTTP header name. Returns null
+	 * when no matching key is present on the request.
+	 *
+	 * @param string $header Configured header name.
+	 * @return string|null Matching $_SERVER key or null.
+	 */
+	private function resolveServerKey(string $header): ?string
+	{
+		$normalized = strtoupper(str_replace('-', '_', $header));
+		foreach ([$header, $normalized, 'HTTP_' . $normalized] as $candidate) {
+			if (array_key_exists($candidate, $_SERVER)) {
+				return $candidate;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -515,6 +627,23 @@ class PrivacyIDEAProvider implements IProvider
 	}
 
 	/**
+	 * Get the user's first-factor Nextcloud login password if it is available.
+	 * Returns an empty string for logins where no password was captured (SSO,
+	 * app password, token, passwordless), where the credential store throws.
+	 *
+	 * @return string
+	 */
+	private function getLoginPassword(): string
+	{
+		try {
+			return (string)$this->credentialStore->getLoginCredentials()->getPassword();
+		} catch (\Throwable $e) {
+			$this->log('debug', 'Login credentials unavailable: ' . $e->getMessage());
+			return '';
+		}
+	}
+
+	/**
 	 * Check whether 2FA is enabled for the given user.
 	 *
 	 * @param IUser $user
@@ -529,19 +658,30 @@ class PrivacyIDEAProvider implements IProvider
 
 		if ($piActive === '1') {
 			if ($piExcludeIPs) {
-				$ipAddresses = explode(',', $piExcludeIPs);
+				// ip2long() only understands IPv4 and returns false otherwise.
+				// Bail out for non-IPv4 clients (e.g. IPv6) so that a false
+				// client address can never compare equal to a false (i.e.
+				// unparseable) exclude entry and silently skip MFA.
 				$clientIP = ip2long($this->getClientIP());
-				foreach ($ipAddresses as $address) {
-					if (str_contains($address, '-')) {
-						$range = explode('-', $address);
-						$startIP = ip2long($range[0]);
-						$endIP = ip2long($range[1]);
-						if ($clientIP >= $startIP && $clientIP <= $endIP) {
-							return false;
+				if ($clientIP !== false) {
+					foreach (explode(',', $piExcludeIPs) as $address) {
+						$address = trim($address);
+						if ($address === '') {
+							continue;
 						}
-					} else {
-						if ($clientIP === ip2long($address)) {
-							return false;
+						if (str_contains($address, '-')) {
+							$range = explode('-', $address);
+							$startIP = ip2long(trim($range[0]));
+							$endIP = ip2long(trim($range[1] ?? ''));
+							// Only match when both range bounds parse as IPv4.
+							if ($startIP !== false && $endIP !== false && $clientIP >= $startIP && $clientIP <= $endIP) {
+								return false;
+							}
+						} else {
+							$excludeIP = ip2long($address);
+							if ($excludeIP !== false && $clientIP === $excludeIP) {
+								return false;
+							}
 						}
 					}
 				}
@@ -602,13 +742,7 @@ class PrivacyIDEAProvider implements IProvider
 	 */
 	public function getClientIP(): string
 	{
-		$clientIP = $this->request->getRemoteAddress();
-		if (!empty($clientIP)) {
-			return $clientIP;
-		} else {
-			$this->log('error', 'Cannot get client IP address.');
-			return '';
-		}
+		return ClientIp::resolve($this->request, $this->logger);
 	}
 
 	/**
@@ -649,12 +783,9 @@ class PrivacyIDEAProvider implements IProvider
 	 */
 	private function log($level, $message): void
 	{
-		$context = ['app' => 'privacyIDEA'];
+		$context = ['app' => 'privacyidea'];
 		if ($level === 'debug') {
 			$this->logger->debug($message, $context);
-		}
-		if ($level === 'info') {
-			$this->logger->info($message, $context);
 		}
 		if ($level === 'error') {
 			$this->logger->error($message, $context);

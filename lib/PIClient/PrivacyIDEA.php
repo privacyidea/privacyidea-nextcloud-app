@@ -57,10 +57,13 @@ class PrivacyIDEA
 	private string $forwardClientIP = '';
 
 	/* @var string Timeout for the request. */
-	private string $timeout = '5';
+	private string $timeout = '15';
 
 	/* @var bool Ignore the system-wide proxy settings and send the authentication requests directly to privacyIDEA. */
 	private bool $noProxy = false;
+
+	/* @var bool Whether verbose request/response debug logging is enabled. Gated on the system log level so the (potentially large) pretty-printed log strings are not built when they would be discarded. */
+	private bool $debugLog = true;
 
 	/**
 	 * PrivacyIDEA constructor.
@@ -182,12 +185,20 @@ class PrivacyIDEA
 			$params[REALM] = $this->realm;
 		}
 		$tmp = json_decode($webAuthnSignResponse, true);
+		if (!is_array($tmp)) {
+			$this->log(DEBUG, 'Invalid WebAuthn sign response for validateCheckWebAuthn. Expected an array.');
+			return null;
+		}
 		$params[CREDENTIALID] = $tmp[CREDENTIALID];
 		$params[CLIENTDATA] = $tmp[CLIENTDATA];
 		$params[SIGNATUREDATA] = $tmp[SIGNATUREDATA];
 		$params[AUTHENTICATORDATA] = $tmp[AUTHENTICATORDATA];
-		if (!empty($tmp[USERHANDLE])) {
-			$params[USERHANDLE] = $tmp[USERHANDLE];
+		// The pi-webauthn JS library emits this field lowercase ("userhandle"),
+		// so accept either spelling. The server tolerates any casing as long as
+		// the name is not underscore-separated.
+		$userHandle = (string)($tmp[USERHANDLE] ?? $tmp['userhandle'] ?? '');
+		if ($userHandle !== '') {
+			$params[USERHANDLE] = $userHandle;
 		}
 		if (!empty($tmp[ASSERTIONCLIENTEXTENSIONS])) {
 			$params[ASSERTIONCLIENTEXTENSIONS] = $tmp[ASSERTIONCLIENTEXTENSIONS];
@@ -266,10 +277,9 @@ class PrivacyIDEA
 			$this->log(DEBUG, 'validateCheckCompletePasskeyRegistration: parameters are incomplete!');
 			return null;
 		}
-		try {
-			$registrationResponseParams = json_decode($registrationResponse, true);
-		} catch (\Exception $e) {
-			$this->log(DEBUG, 'Invalid registration response for validateCheckCompletePasskeyRegistration: ' . $e->getMessage());
+		$registrationResponseParams = json_decode($registrationResponse, true);
+		if (!is_array($registrationResponseParams)) {
+			$this->log(DEBUG, 'Invalid registration response for validateCheckCompletePasskeyRegistration. Expected an array.');
 			return null;
 		}
 		$params = [
@@ -397,8 +407,54 @@ class PrivacyIDEA
 			$params[PROXY] = [HTTPS => '', HTTP => ''];
 		}
 		$params[TIMEOUT] = $this->timeout;
-		$this->log(DEBUG, 'Sending ' . http_build_query($params, '', ', ') . ' to ' . $endpoint);
+		$prettyFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+		if ($this->debugLog) {
+			$this->log(DEBUG, 'Request to ' . $endpoint . ":\n" . json_encode($this->redactParams($params), $prettyFlags));
+		}
 		$completeUrl = $this->serverURL . $endpoint;
+		$ret = $this->curlRequest($completeUrl, $params, $headers, $httpMethod);
+		if ($this->debugLog && $endpoint != ENDPOINT_AUTH) {
+			$retJson = json_decode($ret, true);
+			$this->log(DEBUG, 'Response from ' . $endpoint . ":\n" . json_encode($retJson, $prettyFlags));
+		}
+		return $ret;
+	}
+
+	/**
+	 * Return a copy of the request parameters with secret values masked, so the
+	 * outgoing request can be logged without leaking the OTP/PIN/password or the
+	 * service-account password.
+	 *
+	 * @param array $params Request parameters.
+	 * @return array Parameters with secret values replaced by a placeholder.
+	 */
+	private function redactParams(array $params): array
+	{
+		foreach ([PASS, PASSWORD] as $secretKey) {
+			if (isset($params[$secretKey]) && $params[$secretKey] !== '') {
+				$params[$secretKey] = 'REDACTED';
+			}
+		}
+		return $params;
+	}
+
+	/**
+	 * Perform the actual HTTP request via cURL and return the response body.
+	 *
+	 * This is the single seam through which all network traffic flows. It is
+	 * declared protected (rather than folded into sendRequest) so that tests
+	 * can subclass PrivacyIDEA and override it to return canned responses
+	 * without hitting the network.
+	 *
+	 * @param string $completeUrl Fully qualified endpoint URL.
+	 * @param array $params Request parameters.
+	 * @param array $headers Headers to forward.
+	 * @param string $httpMethod GET, POST, PUT or DELETE.
+	 * @return string Response body with the HTTP headers stripped off.
+	 * @throws PIBadRequestException If the server cannot be reached.
+	 */
+	protected function curlRequest(string $completeUrl, array $params, array $headers, string $httpMethod): string
+	{
 		$curlInstance = curl_init();
 		curl_setopt($curlInstance, CURLOPT_URL, $completeUrl);
 		curl_setopt($curlInstance, CURLOPT_HEADER, true);
@@ -419,6 +475,13 @@ class PrivacyIDEA
 		}
 		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYHOST, $this->sslVerifyHost ? 2 : 0);
 		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYPEER, $this->sslVerifyPeer ? 2 : 0);
+		// Apply a client-side timeout so an unresponsive server cannot hang the
+		// Nextcloud login page indefinitely. Connection setup stays short (so a
+		// dead host fails fast) while the overall timeout is the configured value,
+		// giving a slow-responding token backend room to answer.
+		$timeoutSeconds = (int)$this->timeout > 0 ? (int)$this->timeout : 15;
+		curl_setopt($curlInstance, CURLOPT_CONNECTTIMEOUT, min(5, $timeoutSeconds));
+		curl_setopt($curlInstance, CURLOPT_TIMEOUT, $timeoutSeconds);
 		$response = curl_exec($curlInstance);
 		if (!$response) {
 			$curlErrno = curl_errno($curlInstance);
@@ -428,10 +491,6 @@ class PrivacyIDEA
 		$headerSize = curl_getinfo($curlInstance, CURLINFO_HEADER_SIZE);
 		$ret = substr($response, $headerSize);
 		curl_close($curlInstance);
-		if ($endpoint != ENDPOINT_AUTH) {
-			$retJson = json_decode($ret, true);
-			$this->log(DEBUG, $endpoint . ' returned ' . json_encode($retJson, JSON_PRETTY_PRINT));
-		}
 		return $ret;
 	}
 
@@ -458,9 +517,6 @@ class PrivacyIDEA
 	{
 		if ($level === DEBUG) {
 			logger(APP_ID_PRIVACYIDEA)->debug($message);
-		}
-		if ($level === INFO) {
-			logger(APP_ID_PRIVACYIDEA)->info($message);
 		}
 		if ($level === ERROR) {
 			logger(APP_ID_PRIVACYIDEA)->error($message);
@@ -524,10 +580,10 @@ class PrivacyIDEA
 	}
 
 	/**
-	 * @param bool $clientIP Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.
+	 * @param string $clientIP Send the "client" parameter to allow using the original IP address in the privacyIDEA policies.
 	 * @return void
 	 */
-	public function setForwardClientIP(bool $clientIP): void
+	public function setForwardClientIP(string $clientIP): void
 	{
 		$this->forwardClientIP = $clientIP;
 	}
@@ -539,5 +595,25 @@ class PrivacyIDEA
 	public function setNoProxy(bool $noProxy): void
 	{
 		$this->noProxy = $noProxy;
+	}
+
+	/**
+	 * @param bool $enabled Whether to build and emit the verbose request/response debug logs.
+	 * @return void
+	 */
+	public function setDebugLog(bool $enabled): void
+	{
+		$this->debugLog = $enabled;
+	}
+
+	/**
+	 * @param string $timeout Request timeout in seconds. Empty or non-positive values are ignored.
+	 * @return void
+	 */
+	public function setTimeout(string $timeout): void
+	{
+		if ((int)$timeout > 0) {
+			$this->timeout = $timeout;
+		}
 	}
 }

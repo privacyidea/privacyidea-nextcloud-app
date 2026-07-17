@@ -8,5 +8,6 @@
 /tests/.phpunit.cache
 
 /node_modules/
-*.lock
+# composer.lock and vendor-bin/*/composer.lock are committed for reproducible
+# CI (the dependency set is dev/CI tooling only; nothing ships in vendor/).
 /package-lock.json

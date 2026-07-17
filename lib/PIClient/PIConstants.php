@@ -71,4 +71,4 @@ const ALLOW_CREDENTIALS = 'allowCredentials';
 const SMARTPHONE = 'smartphone';
 const DEBUG = 'debug';
 const INFO = 'info';
-const APP_ID_PRIVACYIDEA = 'privacyIDEA';
+const APP_ID_PRIVACYIDEA = 'privacyidea';

@@ -1,11 +1,83 @@
-td {
-    column-gap: 10px;
-}
-
-#h2 {
-    display: inline-block !important;
-}
-
 #piSettingsMsg {
     float: left !important;
+}
+
+/* Layout for the settings tables: put breathing room between the control
+   column and its description column, and align both to the top. */
+#piSettings table {
+    border-collapse: collapse;
+    margin-bottom: 8px;
+}
+
+/* Give each section divider room so headings aren't cramped against it. */
+#piSettings hr {
+    margin: 26px 0 20px;
+}
+
+#piSettings h2 {
+    margin-top: 12px;
+}
+
+#piSettings td {
+    padding: 6px 28px 6px 0;
+    vertical-align: middle;
+}
+
+/* Suppress Nextcloud's default grey row-hover highlight on these tables. */
+#piSettings tr:hover,
+#piSettings tr:hover > td,
+#piSettings td:hover {
+    background-color: transparent !important;
+}
+
+/* Text-like inputs default to a tiny width; URLs in particular need room. */
+#piSettings input[type="text"],
+#piSettings input[type="password"],
+#piSettings input[type="number"] {
+    width: 320px;
+    max-width: 100%;
+}
+
+#piSettings input#piURL,
+#piSettings input#piPollInBrowserURL {
+    width: 420px;
+}
+
+/* Keep labels off their control and off the adjacent description text. */
+#piSettings label {
+    margin-left: 6px;
+}
+
+/* Vertically center checkboxes and radios with their label text (they
+   otherwise sit above the baseline) and keep them snug to the label. */
+#piSettings input[type="checkbox"],
+#piSettings input[type="radio"] {
+    vertical-align: middle;
+    margin: 0 4px 2px 0;
+}
+
+#piSettings input[type="checkbox"] + label,
+#piSettings input[type="radio"] + label {
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* Per-row descriptions (inside the settings tables): muted, theme-aware, and a
+   readable max width. Block (not inline-block) so the column can shrink and the
+   text wraps when space is tight, instead of forcing a horizontal scrollbar. */
+#piSettings td em {
+    display: block;
+    max-width: 36em;
+    overflow-wrap: anywhere;
+    color: var(--color-text-maxcontrast);
+}
+
+/* Section descriptions (the <em> directly under a heading, e.g. the
+   authentication-flow explainer): break onto their own line as a paragraph
+   instead of running alongside the inline heading. */
+#piSettings > em {
+    display: block;
+    max-width: 70em;
+    margin: 2px 0 10px;
+    color: var(--color-text-maxcontrast);
 }

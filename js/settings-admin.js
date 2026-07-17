@@ -1,5 +1,3 @@
-import {generateUrl} from '@nextcloud/router';
-
 const BASE_URL = '/apps/privacyidea/';
 
 document.addEventListener("DOMContentLoaded", function ()
@@ -7,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function ()
     /* Util functions */
     const getValue = function (key, callback)
     {
-        $.get(generateUrl(BASE_URL + 'getValue'), {key: key}).done(
+        $.get(OC.generateUrl(BASE_URL + 'getValue'), {key: key}).done(
             function (result)
             {
                 callback(result);
@@ -17,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function ()
     const setValue = function (key, value)
     {
         OC.msg.startSaving('#piSettingsMsg');
-        $.post(generateUrl(BASE_URL + 'setValue'), {
+        $.post(OC.generateUrl(BASE_URL + 'setValue'), {
             key: key,
             value: value
         }, function (data)
@@ -161,46 +159,63 @@ document.addEventListener("DOMContentLoaded", function ()
         setValue("piInExGroupsField", value);
     });
 
-    /* Authentication flow */
+    /* Authentication flow (behavior) + input layout (display) */
     let radioAuthFlowDef = document.getElementById('piAuthFlowDefault');
     let radioAuthFlowTriggerChallenge = document.getElementById('piAuthFlowTriggerChallenge');
-    let radioAuthFlowSeparateOTP = document.getElementById('piAuthFlowSeparateOTP');
+    let radioAuthFlowSendPassword = document.getElementById('piAuthFlowSendPassword');
     let radioAuthFlowSendStaticPass = document.getElementById('piAuthFlowSendStaticPass');
+    let radioLayoutOtpOnly = document.getElementById('piLayoutOtpOnly');
+    let radioLayoutSeparate = document.getElementById('piLayoutSeparate');
+    let layoutMigrated = false;
+
     getValue("piSelectedAuthFlow", function (piSelectedAuthFlow)
     {
-        $("#piSettings #piAuthFlowDefault").prop('checked', piSelectedAuthFlow === "piAuthFlowDefault");
-        $("#piSettings #piAuthFlowTriggerChallenge")
-            .prop('checked', piSelectedAuthFlow === "piAuthFlowTriggerChallenge");
-        $("#piSettings #piAuthFlowSeparateOTP").prop('checked', piSelectedAuthFlow === "piAuthFlowSeparateOTP");
-        $("#piSettings #piAuthFlowSendStaticPass").prop('checked', piSelectedAuthFlow === "piAuthFlowSendStaticPass");
-    });
-    document.getElementById("piAuthFlowDefault").addEventListener("change", function ()
-    {
-        if (radioAuthFlowDef.checked)
+        // Backward compatibility: the former "Separate OTP" flow is now the
+        // "separate" input layout with no pre-render behaviour. Migrate it once.
+        if (piSelectedAuthFlow === "piAuthFlowSeparateOTP")
         {
             setValue("piSelectedAuthFlow", "piAuthFlowDefault");
+            setValue("piInputLayout", "separate");
+            piSelectedAuthFlow = "piAuthFlowDefault";
+            layoutMigrated = true;
+            radioLayoutSeparate.checked = true;
+            radioLayoutOtpOnly.checked = false;
         }
+        radioAuthFlowDef.checked = piSelectedAuthFlow === "piAuthFlowDefault";
+        radioAuthFlowTriggerChallenge.checked = piSelectedAuthFlow === "piAuthFlowTriggerChallenge";
+        radioAuthFlowSendPassword.checked = piSelectedAuthFlow === "piAuthFlowSendPassword";
+        radioAuthFlowSendStaticPass.checked = piSelectedAuthFlow === "piAuthFlowSendStaticPass";
     });
-    document.getElementById("piAuthFlowTriggerChallenge").addEventListener("change", function ()
+    radioAuthFlowDef.addEventListener("change", function ()
     {
-        if (radioAuthFlowTriggerChallenge.checked)
-        {
-            setValue("piSelectedAuthFlow", "piAuthFlowTriggerChallenge");
-        }
+        if (radioAuthFlowDef.checked) { setValue("piSelectedAuthFlow", "piAuthFlowDefault"); }
     });
-    document.getElementById("piAuthFlowSeparateOTP").addEventListener("change", function ()
+    radioAuthFlowTriggerChallenge.addEventListener("change", function ()
     {
-        if (radioAuthFlowSeparateOTP.checked)
-        {
-            setValue("piSelectedAuthFlow", "piAuthFlowSeparateOTP");
-        }
+        if (radioAuthFlowTriggerChallenge.checked) { setValue("piSelectedAuthFlow", "piAuthFlowTriggerChallenge"); }
     });
-    document.getElementById("piAuthFlowSendStaticPass").addEventListener("change", function ()
+    radioAuthFlowSendPassword.addEventListener("change", function ()
     {
-        if (radioAuthFlowSendStaticPass.checked)
-        {
-            setValue("piSelectedAuthFlow", "piAuthFlowSendStaticPass");
-        }
+        if (radioAuthFlowSendPassword.checked) { setValue("piSelectedAuthFlow", "piAuthFlowSendPassword"); }
+    });
+    radioAuthFlowSendStaticPass.addEventListener("change", function ()
+    {
+        if (radioAuthFlowSendStaticPass.checked) { setValue("piSelectedAuthFlow", "piAuthFlowSendStaticPass"); }
+    });
+
+    getValue("piInputLayout", function (piInputLayout)
+    {
+        if (layoutMigrated) { return; }
+        radioLayoutSeparate.checked = piInputLayout === "separate";
+        radioLayoutOtpOnly.checked = piInputLayout !== "separate";
+    });
+    radioLayoutOtpOnly.addEventListener("change", function ()
+    {
+        if (radioLayoutOtpOnly.checked) { setValue("piInputLayout", "otp"); }
+    });
+    radioLayoutSeparate.addEventListener("change", function ()
+    {
+        if (radioLayoutSeparate.checked) { setValue("piInputLayout", "separate"); }
     });
 
     /* Service account name */
@@ -296,6 +311,28 @@ document.addEventListener("DOMContentLoaded", function ()
     {
         let value = $("#piSettings #piForwardHeaders").val();
         setValue("piForwardHeaders", value);
+    });
+
+    /* OTP field hint (placeholder) */
+    getValue("piOTPFieldHint", function (piOTPFieldHint)
+    {
+        $("#piSettings #piOTPFieldHint").val(piOTPFieldHint);
+    });
+    document.getElementById("piOTPFieldHint").addEventListener("change", function ()
+    {
+        let value = $("#piSettings #piOTPFieldHint").val();
+        setValue("piOTPFieldHint", value);
+    });
+
+    /* Password/PIN field hint (placeholder) */
+    getValue("piPassFieldHint", function (piPassFieldHint)
+    {
+        $("#piSettings #piPassFieldHint").val(piPassFieldHint);
+    });
+    document.getElementById("piPassFieldHint").addEventListener("change", function ()
+    {
+        let value = $("#piSettings #piPassFieldHint").val();
+        setValue("piPassFieldHint", value);
     });
 
     // todo add default message
