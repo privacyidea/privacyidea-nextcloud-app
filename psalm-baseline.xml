@@ -267,7 +267,6 @@
     <MixedOperand>
       <code><![CDATA[$this->request->getParam('passField')]]></code>
       <code><![CDATA[$transactionID]]></code>
-      <code><![CDATA[$value]]></code>
     </MixedOperand>
     <MixedPropertyFetch>
       <code><![CDATA[$challenge->clientMode]]></code>

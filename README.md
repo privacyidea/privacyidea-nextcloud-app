@@ -37,7 +37,7 @@ minimum, set the server URL and tick **Activate privacyIDEA**.
 | URL of the privacyIDEA server | `piURL` | Base URL of your privacyIDEA instance, e.g. `https://pi.example.com`. |
 | SSL certificate verification | `piSSLVerify` | Verify the server's TLS certificate (host and peer). **Keep enabled in production.** |
 | Realm | `piRealm` | privacyIDEA realm to authenticate against, if not the default. |
-| Timeout | `piTimeout` | Connection timeout in seconds (default `5`). Prevents an unresponsive server from hanging the login page. |
+| Timeout | `piTimeout` | Request timeout in seconds (default `15`; connection setup is capped at 5s). Prevents an unresponsive server from hanging the login page. |
 | No proxy | `piNoProxy` | Ignore the system-wide proxy and talk to privacyIDEA directly. |
 | Forward client IP | `piForwardClientIP` | Send the user's IP as the `client` parameter so privacyIDEA policies can match on the original address. |
 
@@ -79,12 +79,6 @@ password/PIN field plus OTP) is a separate **Login screen** setting — see belo
 Go to your Nextcloud installation directory and run one of the following commands:
 - ``sudo -u www-data php occ app:enable privacyidea``
 - ``sudo -u www-data php occ app:disable privacyidea``
-
-### How to install node with nvm?
-1. If you don't have nvm run: ``sudo apt update``, then: ``curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash``
-2. Restart your terminal.
-3. Install node: ``nvm install node``
-4. To update node to a new version: ``nvm install node --reinstall-packeges-from=current``
 
 ## Development and testing
 

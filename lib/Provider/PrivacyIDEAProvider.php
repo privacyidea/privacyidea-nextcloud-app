@@ -565,6 +565,10 @@ class PrivacyIDEAProvider implements IProvider
 			if (is_array($value)) {
 				$value = implode(',', $value);
 			}
+			// Strip CR/LF so an attacker-influenced value (e.g. a spoofed
+			// X-Forwarded-For) cannot inject extra request headers into the
+			// call to privacyIDEA.
+			$value = str_replace(["\r", "\n"], '', (string)$value);
 			$headersToForward[] = $this->toHttpHeaderName($serverKey) . ': ' . $value;
 		}
 		return $headersToForward;
