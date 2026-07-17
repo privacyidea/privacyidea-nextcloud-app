@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 
 - Added a client-side connection timeout so an unresponsive privacyIDEA server no longer hangs the login page; the server timeout from the settings is now applied to the request itself.
 - Browser-based push polling is more responsive and no longer hangs on an unexpected response.
+- Declared compatibility with Nextcloud 32 and 33 (API compatibility across the supported range is now verified by static analysis in CI).
 - Restyled the login form to match the Nextcloud design (theme-aware primary and secondary buttons, consistent spacing) and improved accessibility (field labels, keyboard focus outlines).
 - Added an automated test suite, continuous integration (lint, static analysis, unit tests) and security scanning.
 

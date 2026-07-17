@@ -55,16 +55,18 @@ jobs:
       - name: Unit tests (phpunit)
         run: composer run test:unit
 
-  # Statically verify the app's OCP usage against newer Nextcloud releases than
-  # the pinned stub (dev-stable31), so an API that is removed/changed in a later
-  # NC is caught before bumping info.xml max-version.
+  # Statically verify the app's OCP usage across the whole supported Nextcloud
+  # range (info.xml min-version..max-version), so an API that is too new for the
+  # floor or removed/changed at the ceiling is caught in CI. stable31 (the pinned
+  # stub) is already covered by the main psalm step above. The older stubs pull
+  # an older psr/log, so -W lets the switch resolve.
   psalm-ocp-compat:
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        ocp-branch: ['stable32', 'stable33']
+        ocp-branch: ['stable29', 'stable30', 'stable32', 'stable33']
 
     name: psalm (ocp ${{ matrix.ocp-branch }})
 
@@ -88,7 +90,7 @@ jobs:
         run: composer install --no-interaction --no-progress
 
       - name: Switch OCP stubs to ${{ matrix.ocp-branch }}
-        run: composer require --dev --no-interaction --no-progress "nextcloud/ocp:dev-${{ matrix.ocp-branch }}"
+        run: composer require --dev -W --no-interaction --no-progress "nextcloud/ocp:dev-${{ matrix.ocp-branch }}"
 
       - name: Static analysis (psalm)
         run: composer run psalm

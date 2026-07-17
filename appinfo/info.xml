@@ -19,7 +19,7 @@
     <screenshot small-thumbnail="https://raw.githubusercontent.com/privacyidea/privacyidea-nextcloud-app/master/img/app-screenshot.png">https://raw.githubusercontent.com/privacyidea/privacyidea-nextcloud-app/master/img/app-screenshot.png</screenshot>
     <website>https://privacyidea.org</website>
     <dependencies>
-        <nextcloud min-version="29" max-version="31"/>
+        <nextcloud min-version="29" max-version="33"/>
     </dependencies>
     <two-factor-providers>
         <provider>OCA\PrivacyIDEA\Provider\PrivacyIDEAProvider</provider>
