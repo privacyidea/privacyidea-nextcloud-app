@@ -62,6 +62,9 @@ class PrivacyIDEA
 	/* @var bool Ignore the system-wide proxy settings and send the authentication requests directly to privacyIDEA. */
 	private bool $noProxy = false;
 
+	/* @var bool Whether verbose request/response debug logging is enabled. Gated on the system log level so the (potentially large) pretty-printed log strings are not built when they would be discarded. */
+	private bool $debugLog = true;
+
 	/**
 	 * PrivacyIDEA constructor.
 	 * @param $userAgent string User agent.
@@ -405,10 +408,12 @@ class PrivacyIDEA
 		}
 		$params[TIMEOUT] = $this->timeout;
 		$prettyFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
-		$this->log(DEBUG, 'Request to ' . $endpoint . ":\n" . json_encode($this->redactParams($params), $prettyFlags));
+		if ($this->debugLog) {
+			$this->log(DEBUG, 'Request to ' . $endpoint . ":\n" . json_encode($this->redactParams($params), $prettyFlags));
+		}
 		$completeUrl = $this->serverURL . $endpoint;
 		$ret = $this->curlRequest($completeUrl, $params, $headers, $httpMethod);
-		if ($endpoint != ENDPOINT_AUTH) {
+		if ($this->debugLog && $endpoint != ENDPOINT_AUTH) {
 			$retJson = json_decode($ret, true);
 			$this->log(DEBUG, 'Response from ' . $endpoint . ":\n" . json_encode($retJson, $prettyFlags));
 		}
@@ -588,6 +593,15 @@ class PrivacyIDEA
 	public function setNoProxy(bool $noProxy): void
 	{
 		$this->noProxy = $noProxy;
+	}
+
+	/**
+	 * @param bool $enabled Whether to build and emit the verbose request/response debug logs.
+	 * @return void
+	 */
+	public function setDebugLog(bool $enabled): void
+	{
+		$this->debugLog = $enabled;
 	}
 
 	/**

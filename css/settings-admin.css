@@ -43,14 +43,6 @@
     width: 420px;
 }
 
-/* Secret fields (service/static password) stay type="text" so the browser
-   doesn't treat them as credentials to save or autofill, but are visually
-   masked. -webkit-text-security covers Chromium and Firefox 118+. */
-#piSettings input.pi-secret {
-    -webkit-text-security: disc;
-    text-security: disc;
-}
-
 /* Keep labels off their control and off the adjacent description text. */
 #piSettings label {
     margin-left: 6px;

@@ -189,7 +189,7 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <input id="piServicePass" type="text" width="300px" autocomplete="off" class="pi-secret"/>
+                    <input id="piServicePass" type="password" width="300px" autocomplete="off"/>
                     <label for="piServicePass">Service password</label>
                 </td>
                 <td>
@@ -207,7 +207,7 @@ Util::addStyle('privacyidea', 'settings-admin');
             </tr>
             <tr>
                 <td>
-                    <input id="piStaticPass" type="text" width="300px" autocomplete="off" class="pi-secret"/>
+                    <input id="piStaticPass" type="password" width="300px" autocomplete="off"/>
                     <label for="piStaticPass">Static password</label>
                 </td>
                 <td>

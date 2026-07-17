@@ -522,8 +522,11 @@ class PrivacyIDEAProvider implements IProvider
 			$this->log('debug', $response->getMessage());
 		} else {
 			// Authentication was not (yet) successful, e.g. a wrong OTP/PIN. This
-			// is an expected outcome, not an error, and verifyChallenge already
-			// logs the server message at debug, so only store it for display here.
+			// is an expected outcome, not an error, so log at debug rather than
+			// error to avoid a log entry on every failed attempt. The debug trace
+			// still surfaces an unexpected/malformed response when triggering a
+			// challenge, where verifyChallenge does not run to log it.
+			$this->log('debug', 'Authentication not successful: ' . $response->getMessage());
 			$this->session->set('piErrorMessage', $response->getMessage());
 		}
 	}

@@ -19,6 +19,7 @@ use OCA\PrivacyIDEA\AppInfo\Application;
 use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
+use OCP\IConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
@@ -39,13 +40,16 @@ class PrivacyIDEAFactory
 	private LoggerInterface $logger;
 	/** @var IAppManager */
 	private IAppManager $appManager;
+	/** @var IConfig */
+	private IConfig $config;
 
-	public function __construct(IAppConfig $appConfig, IRequest $request, LoggerInterface $logger, IAppManager $appManager)
+	public function __construct(IAppConfig $appConfig, IRequest $request, LoggerInterface $logger, IAppManager $appManager, IConfig $config)
 	{
 		$this->appConfig = $appConfig;
 		$this->request = $request;
 		$this->logger = $logger;
 		$this->appManager = $appManager;
+		$this->config = $config;
 	}
 
 	/**
@@ -72,6 +76,10 @@ class PrivacyIDEAFactory
 		$pi->setRealm($this->getAppValue('piRealm', ''));
 		$pi->setTimeout($this->getAppValue('piTimeout', '5'));
 		$pi->setNoProxy($this->getAppValue('piNoProxy', false));
+		// Only build the verbose request/response debug logs when the system is
+		// actually recording debug (loglevel 0); otherwise they would be encoded
+		// and immediately discarded on every login request.
+		$pi->setDebugLog($this->config->getSystemValueInt('loglevel', 2) <= 0);
 		if ($this->getAppValue('piForwardClientIP', false) && !empty($this->getClientIP())) {
 			$pi->setForwardClientIP($this->getClientIP());
 		}

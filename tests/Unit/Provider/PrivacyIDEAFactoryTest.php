@@ -14,6 +14,7 @@ use OCA\PrivacyIDEA\PIClient\PrivacyIDEA;
 use OCA\PrivacyIDEA\Provider\PrivacyIDEAFactory;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
+use OCP\IConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -37,7 +38,8 @@ class PrivacyIDEAFactoryTest extends TestCase
 			$appConfig,
 			$this->createMock(IRequest::class),
 			$this->createMock(LoggerInterface::class),
-			$appManager
+			$appManager,
+			$this->createMock(IConfig::class)
 		);
 	}
 
