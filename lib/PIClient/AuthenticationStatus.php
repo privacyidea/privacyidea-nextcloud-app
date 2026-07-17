@@ -17,8 +17,8 @@ namespace OCA\PrivacyIDEA\PIClient;
 
 abstract class AuthenticationStatus
 {
-	public const CHALLENGE = 'CHALLENGE';
-	public const ACCEPT = 'ACCEPT';
-	public const REJECT = 'REJECT';
-	public const NONE = 'NONE';
+	public const string CHALLENGE = 'CHALLENGE';
+	public const string ACCEPT = 'ACCEPT';
+	public const string REJECT = 'REJECT';
+	public const string NONE = 'NONE';
 }
