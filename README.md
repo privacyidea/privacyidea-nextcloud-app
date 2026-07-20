@@ -80,6 +80,16 @@ Go to your Nextcloud installation directory and run one of the following command
 - ``sudo -u www-data php occ app:enable privacyidea``
 - ``sudo -u www-data php occ app:disable privacyidea``
 
+### Enforce MFA for already-logged-in users
+Nextcloud evaluates whether MFA applies to a user only once and caches the result
+in its two-factor provider registry, so enabling or reconfiguring the app does not
+retroactively affect users who are already logged in. To force Nextcloud to
+re-evaluate this on the next login, clear the cached state:
+- ``sudo -u www-data php occ twofactorauth:cleanup privacyidea``
+
+Existing sessions that already passed login are not challenged retroactively; the
+re-evaluation happens the next time the affected users log in.
+
 ## Development and testing
 
 A throwaway Nextcloud for testing the app is provided via Docker Compose. It
