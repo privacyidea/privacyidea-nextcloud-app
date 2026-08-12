@@ -24,7 +24,7 @@ class PrivacyIDEAFactoryTest extends TestCase
 	/**
 	 * @param array<string, string> $config
 	 */
-	private function factory(array $config, string $appVersion = '9.9.9'): PrivacyIDEAFactory
+	private function factory(array $config, string $appVersion = '9.9.9', string $remoteAddress = ''): PrivacyIDEAFactory
 	{
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -34,13 +34,26 @@ class PrivacyIDEAFactoryTest extends TestCase
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getAppVersion')->willReturn($appVersion);
 
+		$request = $this->createMock(IRequest::class);
+		$request->method('getRemoteAddress')->willReturn($remoteAddress);
+
 		return new PrivacyIDEAFactory(
 			$appConfig,
-			$this->createMock(IRequest::class),
+			$request,
 			$this->createMock(LoggerInterface::class),
 			$appManager,
 			$this->createMock(IConfig::class)
 		);
+	}
+
+	/**
+	 * The forwarded address has no getter; read it reflectively.
+	 */
+	private function forwardedClientIp(PrivacyIDEA $pi): string
+	{
+		$prop = new \ReflectionProperty(PrivacyIDEA::class, 'forwardClientIP');
+		$prop->setAccessible(true);
+		return $prop->getValue($pi);
 	}
 
 	public function testUserAgentIsDerivedFromAppVersion(): void
@@ -59,5 +72,35 @@ class PrivacyIDEAFactoryTest extends TestCase
 	public function testReturnsNullWhenServerUrlMissing(): void
 	{
 		self::assertNull($this->factory([])->create());
+	}
+
+	public function testForwardClientIpSettingPassesTheRequestAddressToTheClient(): void
+	{
+		$pi = $this->factory(
+			['piURL' => 'https://pi.example.com', 'piForwardClientIP' => '1'],
+			remoteAddress: '192.0.2.55'
+		)->create();
+
+		self::assertInstanceOf(PrivacyIDEA::class, $pi);
+		self::assertSame('192.0.2.55', $this->forwardedClientIp($pi));
+	}
+
+	public function testNothingIsForwardedWhenTheSettingIsOff(): void
+	{
+		$pi = $this->factory(
+			['piURL' => 'https://pi.example.com', 'piForwardClientIP' => '0'],
+			remoteAddress: '192.0.2.55'
+		)->create();
+
+		self::assertInstanceOf(PrivacyIDEA::class, $pi);
+		self::assertSame('', $this->forwardedClientIp($pi));
+	}
+
+	public function testNothingIsForwardedWhenTheRequestAddressIsUnavailable(): void
+	{
+		$pi = $this->factory(['piURL' => 'https://pi.example.com', 'piForwardClientIP' => '1'])->create();
+
+		self::assertInstanceOf(PrivacyIDEA::class, $pi);
+		self::assertSame('', $this->forwardedClientIp($pi));
 	}
 }

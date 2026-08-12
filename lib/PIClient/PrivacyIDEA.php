@@ -402,11 +402,6 @@ class PrivacyIDEA
 			$params[CLIENT] = $this->forwardClientIP;
 			$this->log(DEBUG, 'Forwarding Client IP: ' . $this->forwardClientIP);
 		}
-		if ($this->noProxy === true) {
-			$this->log(DEBUG, 'Ignoring proxy settings.');
-			$params[PROXY] = [HTTPS => '', HTTP => ''];
-		}
-		$params[TIMEOUT] = $this->timeout;
 		$prettyFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 		if ($this->debugLog) {
 			$this->log(DEBUG, 'Request to ' . $endpoint . ":\n" . json_encode($this->redactParams($params), $prettyFlags));
@@ -475,11 +470,17 @@ class PrivacyIDEA
 		}
 		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYHOST, $this->sslVerifyHost ? 2 : 0);
 		curl_setopt($curlInstance, CURLOPT_SSL_VERIFYPEER, $this->sslVerifyPeer ? 2 : 0);
+		if ($this->noProxy === true) {
+			// An empty proxy makes cURL ignore the http_proxy/https_proxy
+			// environment of the web server process and connect directly.
+			$this->log(DEBUG, 'Ignoring proxy settings.');
+			curl_setopt($curlInstance, CURLOPT_PROXY, '');
+		}
 		// Apply a client-side timeout so an unresponsive server cannot hang the
 		// Nextcloud login page indefinitely. Connection setup stays short (so a
 		// dead host fails fast) while the overall timeout is the configured value,
 		// giving a slow-responding token backend room to answer.
-		$timeoutSeconds = (int)$this->timeout > 0 ? (int)$this->timeout : 15;
+		$timeoutSeconds = $this->timeoutSeconds();
 		curl_setopt($curlInstance, CURLOPT_CONNECTTIMEOUT, min(5, $timeoutSeconds));
 		curl_setopt($curlInstance, CURLOPT_TIMEOUT, $timeoutSeconds);
 		$response = curl_exec($curlInstance);
@@ -492,6 +493,17 @@ class PrivacyIDEA
 		$ret = substr($response, $headerSize);
 		curl_close($curlInstance);
 		return $ret;
+	}
+
+	/**
+	 * Effective request timeout in seconds: the configured value, or the default
+	 * of 15 when it is missing or not a positive number.
+	 *
+	 * @return int Timeout in seconds.
+	 */
+	private function timeoutSeconds(): int
+	{
+		return (int)$this->timeout > 0 ? (int)$this->timeout : 15;
 	}
 
 	/**
