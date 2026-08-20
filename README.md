@@ -38,7 +38,7 @@ minimum, set the server URL and tick **Activate privacyIDEA**.
 | Realm | `piRealm` | privacyIDEA realm to authenticate against, if not the default. |
 | Timeout | `piTimeout` | Request timeout in seconds (default `15`; connection setup is capped at 5s). Prevents an unresponsive server from hanging the login page. |
 | No proxy | `piNoProxy` | Ignore the system-wide proxy and talk to privacyIDEA directly. |
-| Forward client IP | `piForwardClientIP` | Send the user's IP as the `client` parameter so privacyIDEA policies can match on the original address. |
+| Forward client IP | `piForwardClientIP` | Send the user's IP as the `client` parameter so privacyIDEA policies can match on the original address. Make sure to add the IP address of the Nextcloud Server to the `Override Authorization Clients` list in the privacyIDEA Server System config, to log the actual user's IP address.|
 
 ### Who has to use MFA
 
