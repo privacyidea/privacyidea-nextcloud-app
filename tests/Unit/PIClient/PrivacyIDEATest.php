@@ -303,13 +303,23 @@ class PrivacyIDEATest extends TestCase
 		self::assertCount(0, $pi->captured);
 	}
 
+	/**
+	 * The configured timeout is a cURL option, not something privacyIDEA is
+	 * asked about, so read the value the transport applies.
+	 */
+	private function timeoutSeconds(PrivacyIDEA $pi): int
+	{
+		$method = new \ReflectionMethod(PrivacyIDEA::class, 'timeoutSeconds');
+		$method->setAccessible(true);
+		return $method->invoke($pi);
+	}
+
 	public function testSetTimeoutIsAppliedToRequests(): void
 	{
 		$pi = $this->client();
 		$pi->setTimeout('9');
-		$pi->validateCheck('alice', 'pw');
 
-		self::assertSame('9', $pi->lastRequest()['params']['timeout']);
+		self::assertSame(9, $this->timeoutSeconds($pi));
 	}
 
 	public function testSetTimeoutIgnoresNonPositiveValues(): void
@@ -317,10 +327,56 @@ class PrivacyIDEATest extends TestCase
 		$pi = $this->client();
 		$pi->setTimeout('abc');
 		$pi->setTimeout('0');
-		$pi->validateCheck('alice', 'pw');
 
 		// Falls back to the default timeout of 15.
-		self::assertSame('15', $pi->lastRequest()['params']['timeout']);
+		self::assertSame(15, $this->timeoutSeconds($pi));
+	}
+
+	public function testTimeoutAndProxySettingsAreNotSentToTheServer(): void
+	{
+		$pi = $this->client();
+		$pi->setTimeout('9');
+		$pi->setNoProxy(true);
+		$pi->validateCheck('alice', 'pw');
+
+		// Both are transport settings; they used to be added to the request body,
+		// where privacyIDEA received them as unknown parameters.
+		$params = $pi->lastRequest()['params'];
+		self::assertArrayNotHasKey('timeout', $params);
+		self::assertArrayNotHasKey('proxy', $params);
+		self::assertSame(['user' => 'alice', 'pass' => 'pw'], $params);
+	}
+
+	public function testForwardedClientIpIsSentWithEveryRequest(): void
+	{
+		$pi = $this->client();
+		$pi->setForwardClientIP('192.0.2.55');
+		$pi->setServiceAccountName('svc');
+		$pi->setServiceAccountPass('svcpass');
+		$pi->responses['/auth'] =
+			'{"result": {"status": true, "value": {"token": "JWT-TOKEN", "role": "admin"}}}';
+		$pi->responses['/validate/triggerchallenge'] =
+			'{"detail": {"transaction_id": "tx-1"}, "result": {"status": true, "value": 1, "authentication": "CHALLENGE"}}';
+
+		$pi->validateCheck('alice', 'pw');
+		$pi->triggerChallenge('alice');
+		$pi->pollTransaction('tx-1');
+
+		// The client parameter lets privacyIDEA apply policies to the browser's
+		// address instead of the Nextcloud server's, so it has to be on the
+		// service-account and polling requests too, not just /validate/check.
+		self::assertNotEmpty($pi->captured);
+		foreach ($pi->captured as $request) {
+			self::assertSame('192.0.2.55', $request['params']['client'], 'Missing client on ' . $request['url']);
+		}
+	}
+
+	public function testClientIpIsOmittedWhenForwardingIsOff(): void
+	{
+		$pi = $this->client();
+		$pi->validateCheck('alice', 'pw');
+
+		self::assertArrayNotHasKey('client', $pi->lastRequest()['params']);
 	}
 
 	public function testTriggerChallengeSendsAuthorizationHeader(): void
