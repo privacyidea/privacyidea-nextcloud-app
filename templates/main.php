@@ -92,6 +92,8 @@ if (!empty($_['imgOtp']) && $_['mode'] === 'otp') : ?>
            value="<?php if (isset($_['pollInBrowser'])) : p($_['pollInBrowser']); endif; ?>"/>
     <input id="pollInBrowserUrl" type="hidden" name="pollInBrowserUrl"
            value="<?php if (isset($_['pollInBrowserUrl'])) : p($_['pollInBrowserUrl']); endif; ?>"/>
+    <input id="pollInBrowserWorkerUrl" type="hidden" name="pollInBrowserWorkerUrl"
+           value="<?php if (isset($_['pollInBrowserWorkerUrl'])) : p($_['pollInBrowserWorkerUrl']); endif; ?>"/>
     <input id="pollInBrowserFailed" type="hidden" name="pollInBrowserFailed"
            value="<?php if (isset($_['pollInBrowserFailed'])) : p($_['pollInBrowserFailed']); endif; ?>"/>
     <input id="transactionID" type="hidden" name="transactionID"
