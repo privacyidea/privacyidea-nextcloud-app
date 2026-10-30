@@ -3,37 +3,56 @@ const BASE_URL = '/apps/privacyidea/';
 document.addEventListener("DOMContentLoaded", function ()
 {
     /* Util functions */
+    // Plain fetch() instead of jQuery: Nextcloud 34+ no longer provides a global $.
+    // jQuery added the CSRF token automatically, so send it here. Read it from the
+    // page head on every call, because Nextcloud refreshes it there.
+    const requestHeaders = function ()
+    {
+        return {requesttoken: document.head.dataset.requesttoken};
+    };
     const getValue = function (key, callback)
     {
-        $.get(OC.generateUrl(BASE_URL + 'getValue'), {key: key}).done(
-            function (result)
+        fetch(OC.generateUrl(BASE_URL + 'getValue') + '?' + new URLSearchParams({key: key}), {
+            headers: requestHeaders()
+        }).then(function (response)
+        {
+            if (!response.ok)
             {
-                callback(result);
+                throw new Error(response.statusText);
             }
-        );
+            return response.json();
+        }).then(callback);
     };
     const setValue = function (key, value)
     {
         OC.msg.startSaving('#piSettingsMsg');
-        $.post(OC.generateUrl(BASE_URL + 'setValue'), {
-            key: key,
-            value: value
-        }, function (data)
+        fetch(OC.generateUrl(BASE_URL + 'setValue'), {
+            method: 'POST',
+            headers: requestHeaders(),
+            body: new URLSearchParams({key: key, value: value})
+        }).then(function (response)
         {
+            if (!response.ok)
+            {
+                throw new Error(response.statusText);
+            }
             OC.msg.finishedSuccess('#piSettingsMsg', "Saved");
+        }).catch(function ()
+        {
+            OC.msg.finishedError('#piSettingsMsg', "Saving failed");
         });
     };
 
     /* Activate privacyIDEA */
     getValue("piActivatePI", function (piActivatePI)
     {
-        $("#piSettings #piActivatePI").prop('checked', piActivatePI === "1");
+        document.getElementById("piActivatePI").checked = piActivatePI === "1";
     });
     document.getElementById("piActivatePI").addEventListener("change", function ()
     {
-        if ($(this).is(":checked"))
+        if (this.checked)
         {
-            if ($("#piSettings #piURL").val().length > 0)
+            if (document.getElementById("piURL").value.length > 0)
             {
                 setValue("piActivatePI", "1");
             }
@@ -51,11 +70,11 @@ document.addEventListener("DOMContentLoaded", function ()
     /* privacyIDEA instance URL */
     getValue("piURL", function (piURL)
     {
-        $("#piSettings #piURL").val(piURL);
+        document.getElementById("piURL").value = piURL;
     });
     document.getElementById("piURL").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piURL").val();
+        let value = document.getElementById("piURL").value;
         console.log(value);
         setValue("piURL", value);
     });
@@ -64,22 +83,22 @@ document.addEventListener("DOMContentLoaded", function ()
     getValue("piSSLVerify", function (piSSLVerify)
     {
         /* NOTE: We check for `!== "0"` instead of `=== "1"` here in order to be consistent with the Provider. */
-        $("#piSettings #piSSLVerify").prop('checked', piSSLVerify !== "0");
+        document.getElementById("piSSLVerify").checked = piSSLVerify !== "0";
     });
     document.getElementById("piSSLVerify").addEventListener("change", function ()
     {
-        setValue("piSSLVerify", $(this).is(":checked") ? "1" : "0");
+        setValue("piSSLVerify", this.checked ? "1" : "0");
     });
 
     /* privacyIDEA realm */
     getValue("piRealm", function (realm)
     {
-        $("#piSettings #piRealm").val(realm);
+        document.getElementById("piRealm").value = realm;
     });
     document.getElementById("piRealm").addEventListener("change", function ()
     {
         // Always save the value
-        let value = $("#piSettings #piRealm").val();
+        let value = document.getElementById("piRealm").value;
         console.log(value);
         setValue("piRealm", value);
     });
@@ -87,42 +106,42 @@ document.addEventListener("DOMContentLoaded", function ()
     /* Exclude given IPs from MFA */
     getValue("piExcludeIPs", function (excludeIPs)
     {
-        $("#piSettings #piExcludeIPs").val(excludeIPs);
+        document.getElementById("piExcludeIPs").value = excludeIPs;
     });
     document.getElementById("piExcludeIPs").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piExcludeIPs").val();
+        let value = document.getElementById("piExcludeIPs").value;
         setValue("piExcludeIPs", value);
     });
 
     /* Bypass Proxy (checkbox) */
     getValue("piNoProxy", function (piNoProxy)
     {
-        $("#piSettings #piNoProxy").prop('checked', piNoProxy === "1");
+        document.getElementById("piNoProxy").checked = piNoProxy === "1";
     });
     document.getElementById("piNoProxy").addEventListener("change", function ()
     {
-        setValue("piNoProxy", $(this).is(":checked") ? "1" : "0");
+        setValue("piNoProxy", this.checked ? "1" : "0");
     });
 
     /* Forward client IP (checkbox) */
     getValue("piForwardClientIP", function (piForwardClientIP)
     {
-        $("#piSettings #piForwardClientIP").prop('checked', piForwardClientIP === "1");
+        document.getElementById("piForwardClientIP").checked = piForwardClientIP === "1";
     });
     document.getElementById("piForwardClientIP").addEventListener("change", function ()
     {
-        setValue("piForwardClientIP", $(this).is(":checked") ? "1" : "0");
+        setValue("piForwardClientIP", this.checked ? "1" : "0");
     });
 
     /* Timeout */
     getValue("piTimeout", function (piTimeout)
     {
-        $("#piSettings #piTimeout").val(piTimeout);
+        document.getElementById("piTimeout").value = piTimeout;
     });
     document.getElementById("piTimeout").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piTimeout").val();
+        let value = document.getElementById("piTimeout").value;
         setValue("piTimeout", value);
     });
 
@@ -131,8 +150,8 @@ document.addEventListener("DOMContentLoaded", function ()
     let radioExclude = document.getElementById('piExcludeGroups');
     getValue("piInOrExSelected", function (piInOrExSelected)
     {
-        $("#piSettings #piIncludeGroups").prop('checked', piInOrExSelected === "include");
-        $("#piSettings #piExcludeGroups").prop('checked', piInOrExSelected === "exclude");
+        document.getElementById("piIncludeGroups").checked = piInOrExSelected === "include";
+        document.getElementById("piExcludeGroups").checked = piInOrExSelected === "exclude";
     });
     document.getElementById("piIncludeGroups").addEventListener("change", function ()
     {
@@ -150,12 +169,11 @@ document.addEventListener("DOMContentLoaded", function ()
     });
     getValue("piInExGroupsField", function (piInExGroupsField)
     {
-        $("#piSettings #piInExGroupsField").val(piInExGroupsField);
-        //OC.Settings.setupGroupsSelect($('#piSettings #piInExGroupsField'));
+        document.getElementById("piInExGroupsField").value = piInExGroupsField;
     });
     document.getElementById("piInExGroupsField").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piInExGroupsField").val();
+        let value = document.getElementById("piInExGroupsField").value;
         setValue("piInExGroupsField", value);
     });
 
@@ -221,117 +239,117 @@ document.addEventListener("DOMContentLoaded", function ()
     /* Service account name */
     getValue("piServiceName", function (piServiceName)
     {
-        $("#piSettings #piServiceName").val(piServiceName);
+        document.getElementById("piServiceName").value = piServiceName;
     });
     document.getElementById("piServiceName").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piServiceName").val();
+        let value = document.getElementById("piServiceName").value;
         setValue("piServiceName", value);
     });
 
     /* Service account pass */
     getValue("piServicePass", function (piServicePass)
     {
-        $("#piSettings #piServicePass").val(piServicePass);
+        document.getElementById("piServicePass").value = piServicePass;
     });
     document.getElementById("piServicePass").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piServicePass").val();
+        let value = document.getElementById("piServicePass").value;
         setValue("piServicePass", value);
     });
 
     /* Service account realm */
     getValue("piServiceRealm", function (piServiceRealm)
     {
-        $("#piSettings #piServiceRealm").val(piServiceRealm);
+        document.getElementById("piServiceRealm").value = piServiceRealm;
     });
     document.getElementById("piServiceRealm").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piServiceRealm").val();
+        let value = document.getElementById("piServiceRealm").value;
         setValue("piServiceRealm", value);
     });
 
     /* Static pass */
     getValue("piStaticPass", function (piStaticPass)
     {
-        $("#piSettings #piStaticPass").val(piStaticPass);
+        document.getElementById("piStaticPass").value = piStaticPass;
     });
     document.getElementById("piStaticPass").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piStaticPass").val();
+        let value = document.getElementById("piStaticPass").value;
         setValue("piStaticPass", value);
     });
 
     /* Poll in browser */
     getValue("piPollInBrowser", function (piPollInBrowser)
     {
-        $("#piSettings #piPollInBrowser").prop('checked', piPollInBrowser === "1");
+        document.getElementById("piPollInBrowser").checked = piPollInBrowser === "1";
     });
     document.getElementById("piPollInBrowser").addEventListener("change", function ()
     {
-        let checked = $(this).is(":checked");
+        let checked = this.checked;
         setValue("piPollInBrowser", checked ? "1" : "0");
     });
     getValue("piPollInBrowserURL", function (piPollInBrowserURL)
     {
-        $("#piSettings #piPollInBrowserURL").val(piPollInBrowserURL);
+        document.getElementById("piPollInBrowserURL").value = piPollInBrowserURL;
     });
     document.getElementById("piPollInBrowserURL").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piPollInBrowserURL").val();
+        let value = document.getElementById("piPollInBrowserURL").value;
         setValue("piPollInBrowserURL", value);
     });
 
     /* Form-auto-submit after X digits entered */
     getValue("piActivateAutoSubmitOtpLength", function (piActivateAutoSubmitOtpLength)
     {
-        $("#piSettings #piActivateAutoSubmitOtpLength").prop('checked', piActivateAutoSubmitOtpLength === "1");
+        document.getElementById("piActivateAutoSubmitOtpLength").checked = piActivateAutoSubmitOtpLength === "1";
     });
     document.getElementById("piActivateAutoSubmitOtpLength").addEventListener("change", function ()
     {
-        let checked = $(this).is(":checked");
+        let checked = this.checked;
         setValue("piActivateAutoSubmitOtpLength", checked ? "1" : "0");
     });
     getValue("piAutoSubmitOtpLength", function (piAutoSubmitOtpLength)
     {
-        $("#piSettings #piAutoSubmitOtpLength").val(piAutoSubmitOtpLength);
+        document.getElementById("piAutoSubmitOtpLength").value = piAutoSubmitOtpLength;
     });
     document.getElementById("piAutoSubmitOtpLength").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piAutoSubmitOtpLength").val();
+        let value = document.getElementById("piAutoSubmitOtpLength").value;
         setValue("piAutoSubmitOtpLength", value);
     });
 
     /* Forward headers */
     getValue("piForwardHeaders", function (piForwardHeaders)
     {
-        $("#piSettings #piForwardHeaders").val(piForwardHeaders);
+        document.getElementById("piForwardHeaders").value = piForwardHeaders;
     });
     document.getElementById("piForwardHeaders").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piForwardHeaders").val();
+        let value = document.getElementById("piForwardHeaders").value;
         setValue("piForwardHeaders", value);
     });
 
     /* OTP field hint (placeholder) */
     getValue("piOTPFieldHint", function (piOTPFieldHint)
     {
-        $("#piSettings #piOTPFieldHint").val(piOTPFieldHint);
+        document.getElementById("piOTPFieldHint").value = piOTPFieldHint;
     });
     document.getElementById("piOTPFieldHint").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piOTPFieldHint").val();
+        let value = document.getElementById("piOTPFieldHint").value;
         setValue("piOTPFieldHint", value);
     });
 
     /* Password/PIN field hint (placeholder) */
     getValue("piPassFieldHint", function (piPassFieldHint)
     {
-        $("#piSettings #piPassFieldHint").val(piPassFieldHint);
+        document.getElementById("piPassFieldHint").value = piPassFieldHint;
     });
     document.getElementById("piPassFieldHint").addEventListener("change", function ()
     {
-        let value = $("#piSettings #piPassFieldHint").val();
+        let value = document.getElementById("piPassFieldHint").value;
         setValue("piPassFieldHint", value);
     });
 
@@ -341,11 +359,11 @@ document.addEventListener("DOMContentLoaded", function ()
     /*getValue("piPassOnNoUser", function (piPassOnNoUser)
     {
         let value = (piPassOnNoUser === "1");
-        $("#piSettings #piPassOnNoUser").prop('checked', value);
+        document.getElementById("piPassOnNoUser").checked = value;
     });
     document.getElementById("piPassOnNoUser").addEventListener("change", function ()
     {
-        let checked = $(this).is(":checked");
+        let checked = this.checked;
         setValue("piPassOnNoUser", checked ? "1" : "0");
     });*/
 });
