@@ -491,7 +491,6 @@ class PrivacyIDEA
 		}
 		$headerSize = curl_getinfo($curlInstance, CURLINFO_HEADER_SIZE);
 		$ret = substr($response, $headerSize);
-		curl_close($curlInstance);
 		return $ret;
 	}
 
