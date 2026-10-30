@@ -130,6 +130,12 @@ docker exec "$CONTAINER" chown -R www-data:www-data /var/www/html/custom_apps/pr
 occ config:system:set auth.bruteforce.protection.enabled --value false --type boolean >/dev/null
 occ config:app:set privacyidea piActivatePI --value 1 >/dev/null
 occ config:app:set privacyidea piURL --value "$PI_URL" >/dev/null
+# "Poll in browser": the browser on this host reaches the mock at its listen
+# address directly.
+BROWSER_MOCK_HOST="$MOCK_BIND"
+[ "$BROWSER_MOCK_HOST" != 0.0.0.0 ] || BROWSER_MOCK_HOST=127.0.0.1
+occ config:app:set privacyidea piPollInBrowser --value 1 >/dev/null
+occ config:app:set privacyidea piPollInBrowserURL --value "http://$BROWSER_MOCK_HOST:$MOCK_PORT" >/dev/null
 # The post-installation hook of the dev stack: it enables the app with --force
 # (the test also runs above max-version), sets the debug log level and turns
 # off the rate limiter.
@@ -153,6 +159,11 @@ node "$HERE/smoke.mjs" "$NC_URL" "$PI_URL"
 realm="$(occ config:app:get privacyidea piRealm || true)"
 [ "$realm" = e2e-realm ] || fail "the settings page did not store piRealm (stored value: '$realm')"
 echo "ok   the changed value is stored in the app configuration"
+# The push login also completes when the app falls back to page reloads. Only
+# the log of the mock shows that the browser itself polled.
+grep -q 'GET /validate/polltransaction.*HeadlessChrome' "$WORK/mock.log" \
+	|| fail "the browser did not poll privacyIDEA (Poll in browser)"
+echo "ok   the browser polled privacyIDEA directly (Poll in browser)"
 
 section "Nextcloud log"
 docker exec "$CONTAINER" cat /var/www/html/data/nextcloud.log | python3 -I "$HERE/check_log.py"

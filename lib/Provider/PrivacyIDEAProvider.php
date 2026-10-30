@@ -15,6 +15,7 @@ use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\ISession;
+use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\Template;
 use Psr\Log\LoggerInterface;
@@ -37,6 +38,8 @@ class PrivacyIDEAProvider implements IProvider
 	private PrivacyIDEAFactory $piFactory;
 	/** @var IStore */
 	private IStore $credentialStore;
+	/** @var IURLGenerator */
+	private IURLGenerator $urlGenerator;
 	/** @var PrivacyIDEA|null */
 	private ?PrivacyIDEA $pi = null;
 
@@ -51,8 +54,9 @@ class PrivacyIDEAProvider implements IProvider
 	 * @param ISession $session
 	 * @param PrivacyIDEAFactory $piFactory
 	 * @param IStore $credentialStore
+	 * @param IURLGenerator $urlGenerator
 	 */
-	public function __construct(IAppConfig $appConfig, LoggerInterface $logger, IRequest $request, IGroupManager $groupManager, IL10N $trans, ISession $session, PrivacyIDEAFactory $piFactory, IStore $credentialStore)
+	public function __construct(IAppConfig $appConfig, LoggerInterface $logger, IRequest $request, IGroupManager $groupManager, IL10N $trans, ISession $session, PrivacyIDEAFactory $piFactory, IStore $credentialStore, IURLGenerator $urlGenerator)
 	{
 		$this->appConfig = $appConfig;
 		$this->logger = $logger;
@@ -62,6 +66,7 @@ class PrivacyIDEAProvider implements IProvider
 		$this->session = $session;
 		$this->piFactory = $piFactory;
 		$this->credentialStore = $credentialStore;
+		$this->urlGenerator = $urlGenerator;
 		if ($this->session->get('piAllowCreatingPIInstance') === true) {
 			$this->pi = $this->piFactory->create();
 		}
@@ -206,6 +211,10 @@ class PrivacyIDEAProvider implements IProvider
 			'autoSubmitOtpLength' => [$this->getAppValue('piAutoSubmitOtpLength', '6')],
 			'pollInBrowser' => [$this->getAppValue('piPollInBrowser', '0')],
 			'pollInBrowserUrl' => [$this->getAppValue('piPollInBrowserURL', '')],
+			// The web path of the app folder differs between installations
+			// (apps/ or custom_apps/, Nextcloud in a subfolder), so let
+			// Nextcloud build the URL of the poll worker.
+			'pollInBrowserWorkerUrl' => [$this->urlGenerator->linkTo('privacyidea', 'js/pollTransaction.worker.js')],
 			'otpHint' => [$this->getAppValue('piOTPFieldHint', 'One-Time-Password')],
 			'passHint' => [$this->getAppValue('piPassFieldHint', 'Password/PIN')],
 		];
