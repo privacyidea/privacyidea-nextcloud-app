@@ -6,11 +6,6 @@ It enables Nextcloud to perform MFA against the privacyIDEA server in your netwo
 PrivacyIDEA supports classic OTP tokens, and challenge-response tokens like E-Mail, SMS, PUSH, or WebAuthn.
 
 ## Installation
-### Nextcloud App Store
-privacyIDEA Nextcloud App is now available in the Nextcloud App Store.
-
-You can install it from the Nextcloud Admin Panel.
-For more information see the Nextcloud documentation: https://docs.nextcloud.com/server/stable/admin_manual/apps_management.html
 
 ### Install from release archive
 1. Download `privacyidea.tar.gz` archive from the latest release.
