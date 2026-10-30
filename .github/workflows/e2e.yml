@@ -1,0 +1,56 @@
+name: E2E smoke test
+
+# Runs tests/e2e/run.sh against a real Nextcloud Docker image: a browser login
+# with password and OTP (against a mock privacyIDEA), a check of the admin
+# settings page, and a scan of the Nextcloud log for errors from the app.
+# nextcloud-version-watch.yml calls it for each new Nextcloud version. Start it
+# by hand to test any image tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      nextcloud-version:
+        description: 'Nextcloud Docker image tag, for example 35 or latest'
+        required: true
+        default: 'latest'
+        type: string
+  workflow_call:
+    inputs:
+      nextcloud-version:
+        description: 'Nextcloud Docker image tag'
+        required: true
+        type: string
+  pull_request:
+    paths:
+      - 'tests/e2e/**'
+      - '.github/workflows/e2e.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: e2e (nextcloud ${{ inputs.nextcloud-version || 'latest' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      # smoke.mjs needs the built-in WebSocket of Node 22.
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: Run the smoke test
+        env:
+          NC_VERSION: ${{ inputs.nextcloud-version || 'latest' }}
+        run: tests/e2e/run.sh "$NC_VERSION"
