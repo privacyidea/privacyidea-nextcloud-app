@@ -40,7 +40,8 @@ jobs:
         run: .github/scripts/nextcloud-version-watch.sh detect
 
   psalm:
-    name: psalm (ocp stable${{ needs.detect.outputs.version }})
+    # A fixed name: GitHub shows the raw expression for a skipped job.
+    name: psalm (new OCP stubs)
     needs: detect
     if: needs.detect.outputs.version != ''
     runs-on: ubuntu-latest
