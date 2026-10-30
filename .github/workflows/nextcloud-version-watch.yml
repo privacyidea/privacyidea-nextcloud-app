@@ -1,0 +1,80 @@
+name: Nextcloud version watch
+
+# Every night, look for Nextcloud major versions that are released (the Docker
+# image nextcloud:<major> exists) but not yet in the psalm OCP matrix of
+# php-tests.yml. For a new version, run the E2E smoke test against it, then
+# open a pull request that adds it to the matrix and reports the E2E result.
+# A version gets one pull request only: when it is closed without a merge, the
+# watch does not open it again.
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: nextcloud-version-watch
+
+jobs:
+  detect:
+    name: Look for new Nextcloud versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      versions: ${{ steps.detect.outputs.versions }}
+      newest: ${{ steps.detect.outputs.newest }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Compare the psalm matrix with Docker Hub and Packagist
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: .github/scripts/detect-new-nextcloud.sh >> "$GITHUB_OUTPUT"
+
+  e2e:
+    name: E2E smoke test
+    needs: detect
+    if: needs.detect.outputs.newest != ''
+    permissions:
+      contents: read
+    uses: $/.github/workflows/e2e.yml
+    with:
+      nextcloud-version: ${{ needs.detect.outputs.newest }}
+
+  pull-request:
+    name: Open the matrix pull request
+    needs: [detect, e2e]
+    # Also after a failed E2E test, because the pull request reports the result.
+    if: ${{ !cancelled() && needs.detect.outputs.newest != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      # To start php-tests.yml on the new branch.
+      actions: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Add the versions to the matrix and open the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSIONS: ${{ needs.detect.outputs.versions }}
+          NEWEST: ${{ needs.detect.outputs.newest }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: .github/scripts/open-matrix-pr.sh

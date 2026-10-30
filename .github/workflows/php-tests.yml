@@ -6,6 +6,9 @@ on:
     branches:
       - main
       - master
+  # nextcloud-version-watch.yml starts this workflow on the branches that it
+  # pushes, because pushes with the workflow token do not start workflows.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -66,6 +69,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # nextcloud-version-watch.yml appends new versions to this line with
+        # sed. Keep the list on one line.
         ocp-branch: ['stable29', 'stable30', 'stable32', 'stable33', 'stable34', 'stable35']
 
     name: psalm (ocp ${{ matrix.ocp-branch }})
