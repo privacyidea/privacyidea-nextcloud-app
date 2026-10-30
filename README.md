@@ -133,7 +133,7 @@ tests/e2e/run.sh 35       # any Nextcloud Docker image tag, default: latest
 ```
 
 You need Docker, Python 3, Node.js 22 or newer and Chrome or Chromium. The
-GitHub workflow `e2e.yml` runs the same script. Every night,
-`nextcloud-version-watch.yml` looks for a new Nextcloud major version. If it
-finds one, it runs this test against the new version and opens a pull request
-that adds the version to the psalm matrix.
+GitHub workflow `e2e.yml` runs the same script on every pull request and push to
+`main`. Every night, `nextcloud-version-watch.yml` looks for a new Nextcloud
+major version. If it finds one, it runs psalm and this test against the new
+version and opens an issue with the results.

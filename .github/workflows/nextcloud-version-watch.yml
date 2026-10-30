@@ -1,11 +1,10 @@
 name: Nextcloud version watch
 
-# Every night, look for Nextcloud major versions that are released (the Docker
+# Every night, look for a Nextcloud major version that is released (the Docker
 # image nextcloud:<major> exists) but not yet in the psalm OCP matrix of
-# php-tests.yml. For a new version, run the E2E smoke test against it, then
-# open a pull request that adds it to the matrix and reports the E2E result.
-# A version gets one pull request only: when it is closed without a merge, the
-# watch does not open it again.
+# php-tests.yml. For such a version, run psalm against its OCP stubs and the
+# E2E smoke test against its image, then open an issue with both results.
+# Each version gets one issue. A closed issue is not opened again.
 
 on:
   schedule:
@@ -19,14 +18,13 @@ concurrency:
 
 jobs:
   detect:
-    name: Look for new Nextcloud versions
+    name: Look for a new Nextcloud version
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      issues: read
     outputs:
-      versions: ${{ steps.detect.outputs.versions }}
-      newest: ${{ steps.detect.outputs.newest }}
+      version: ${{ steps.detect.outputs.version }}
 
     steps:
       - name: Checkout
@@ -34,34 +32,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Compare the psalm matrix with Docker Hub and Packagist
+      - name: Compare the psalm matrix with Docker Hub, Packagist and the issues
         id: detect
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: .github/scripts/detect-new-nextcloud.sh >> "$GITHUB_OUTPUT"
+        run: .github/scripts/nextcloud-version-watch.sh detect
 
-  e2e:
-    name: E2E smoke test
+  psalm:
+    name: psalm (ocp stable${{ needs.detect.outputs.version }})
     needs: detect
-    if: needs.detect.outputs.newest != ''
-    permissions:
-      contents: read
-    uses: $/.github/workflows/e2e.yml
-    with:
-      nextcloud-version: ${{ needs.detect.outputs.newest }}
-
-  pull-request:
-    name: Open the matrix pull request
-    needs: [detect, e2e]
-    # Also after a failed E2E test, because the pull request reports the result.
-    if: ${{ !cancelled() && needs.detect.outputs.newest != '' }}
+    if: needs.detect.outputs.version != ''
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
-      # To start php-tests.yml on the new branch.
-      actions: write
+      contents: read
 
     steps:
       - name: Checkout
@@ -69,12 +53,59 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Add the versions to the matrix and open the pull request
+      - name: Set up php8.3
+        uses: shivammathur/setup-php@ec406be512d7077f68eed36e63f4d91bc006edc4 # v2.35.4
+        with:
+          php-version: '8.3'
+          extensions: curl, json, mbstring
+          coverage: none
+          ini-file: development
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Switch the OCP stubs to the new version
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
+        run: composer require --dev -W --no-interaction --no-progress "nextcloud/ocp:dev-stable$VERSION"
+
+      - name: Static analysis (psalm)
+        run: composer run psalm
+
+  e2e:
+    name: E2E smoke test
+    needs: detect
+    if: needs.detect.outputs.version != ''
+    permissions:
+      contents: read
+    uses: $/.github/workflows/e2e.yml
+    with:
+      nextcloud-version: ${{ needs.detect.outputs.version }}
+
+  issue:
+    name: Open the issue
+    needs: [detect, psalm, e2e]
+    # Also after failed checks, because the issue reports the results.
+    if: ${{ !cancelled() && needs.detect.outputs.version != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Open the issue with the results
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          VERSIONS: ${{ needs.detect.outputs.versions }}
-          NEWEST: ${{ needs.detect.outputs.newest }}
+          VERSION: ${{ needs.detect.outputs.version }}
+          PSALM_RESULT: ${{ needs.psalm.result }}
           E2E_RESULT: ${{ needs.e2e.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: .github/scripts/open-matrix-pr.sh
+        run: .github/scripts/nextcloud-version-watch.sh report
