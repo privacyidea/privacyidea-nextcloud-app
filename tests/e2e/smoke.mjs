@@ -66,7 +66,17 @@ if (process.env.CI)
 }
 // google-chrome is a wrapper script. A separate process group lets shutdown()
 // stop the real browser processes too.
-const chrome = spawn(findChrome(), chromeArgs, {stdio: 'ignore', detached: true});
+const chrome = spawn(findChrome(), chromeArgs, {stdio: ['ignore', 'ignore', 'pipe'], detached: true});
+let chromeStderr = '';
+let chromeExitCode = null;
+chrome.stderr.on('data', chunk =>
+{
+    chromeStderr = (chromeStderr + chunk).slice(-4000);
+});
+chrome.on('exit', code =>
+{
+    chromeExitCode = code;
+});
 
 async function shutdown(code)
 {
@@ -95,17 +105,22 @@ async function shutdown(code)
 }
 
 // With port 0, Chrome picks a free port and writes it to DevToolsActivePort.
+// The first start on a fresh CI runner can take longer than 10 seconds.
 const portFile = join(profileDir, 'DevToolsActivePort');
-for (let i = 0; i < 100 && !existsSync(portFile); i++)
+const readPort = () => (existsSync(portFile) ? readFileSync(portFile, 'utf8').split('\n')[0] : '');
+let port = '';
+for (let i = 0; i < 600 && !/^\d+$/.test(port) && chromeExitCode === null; i++)
 {
     await sleep(100);
+    port = readPort();
 }
-if (!existsSync(portFile))
+if (!/^\d+$/.test(port))
 {
-    console.error('Chrome did not start');
+    const reason = chromeExitCode === null ? 'in 60 seconds' : `(exit code ${chromeExitCode})`;
+    check(false, `Chrome did not start ${reason}`);
+    console.error(chromeStderr);
     await shutdown(1);
 }
-const port = readFileSync(portFile, 'utf8').split('\n')[0];
 const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
 const ws = new WebSocket(targets.find(target => target.type === 'page').webSocketDebuggerUrl);
 await new Promise(resolve => ws.addEventListener('open', resolve));
