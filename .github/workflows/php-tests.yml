@@ -66,7 +66,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ocp-branch: ['stable29', 'stable30', 'stable32', 'stable33']
+        ocp-branch: ['stable29', 'stable30', 'stable32', 'stable33', 'stable34', 'stable35']
 
     name: psalm (ocp ${{ matrix.ocp-branch }})
 
