@@ -3,6 +3,7 @@ name: E2E smoke test
 # Runs tests/e2e/run.sh against a real Nextcloud Docker image: a browser login
 # with password and OTP (against a mock privacyIDEA), a check of the admin
 # settings page, and a scan of the Nextcloud log for errors from the app.
+# It runs on every pull request and push to main against the latest image.
 # nextcloud-version-watch.yml calls it for each new Nextcloud version. Start it
 # by hand to test any image tag.
 
@@ -21,9 +22,9 @@ on:
         required: true
         type: string
   pull_request:
-    paths:
-      - 'tests/e2e/**'
-      - '.github/workflows/e2e.yml'
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read

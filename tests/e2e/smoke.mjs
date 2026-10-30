@@ -234,7 +234,7 @@ try
     {
         throw new Error(`stopped at ${await evaluate('location.href')}`);
     }
-    check(await evaluate('document.getElementById("otp")?.offsetParent !== null'), 'challenge page shows the OTP field');
+    check(await evaluate('(document.getElementById("otp")?.offsetParent ?? null) !== null'), 'challenge page shows the OTP field');
 
     await submitOtp('000000');
     check(await waitFor(onChallengePage), 'wrong OTP returns to the challenge page');
