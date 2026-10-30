@@ -7,8 +7,9 @@ bodies.
     python3 mock_privacyidea.py <bind-address> <port>
 """
 import json
-import re
 import sys
+from email.parser import BytesParser
+from email.policy import HTTP
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs
@@ -19,11 +20,14 @@ VALID_OTP = '123456'
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         length = int(self.headers.get('Content-Length', 0))
-        body = self.rfile.read(length).decode('utf-8', 'replace')
-        if 'multipart/form-data' in self.headers.get('Content-Type', ''):
-            params = dict(re.findall(r'name="([^"]+)"\r\n\r\n(.*?)\r\n--', body, re.S))
+        body = self.rfile.read(length)
+        content_type = self.headers.get('Content-Type', '')
+        if content_type.startswith('multipart/form-data'):
+            message = BytesParser(policy=HTTP).parsebytes(b'Content-Type: ' + content_type.encode() + b'\r\n\r\n' + body)
+            params = {part.get_param('name', header='content-disposition'): part.get_content()
+                      for part in message.iter_parts()}
         else:
-            params = {key: values[0] for key, values in parse_qs(body).items()}
+            params = {key: values[0] for key, values in parse_qs(body.decode('utf-8', 'replace')).items()}
 
         if not self.path.startswith('/validate/check'):
             self.reply(404, {'result': {'status': False, 'error': {'code': 404, 'message': 'not mocked'}}})

@@ -119,8 +119,12 @@ ws.addEventListener('message', event =>
     const message = JSON.parse(event.data);
     if (message.id !== undefined)
     {
-        pending.get(message.id)?.(message);
+        const resolve = pending.get(message.id);
         pending.delete(message.id);
+        if (typeof resolve === 'function')
+        {
+            resolve(message);
+        }
     }
     else if (message.method === 'Runtime.exceptionThrown')
     {
