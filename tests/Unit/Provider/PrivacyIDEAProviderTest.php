@@ -22,6 +22,7 @@ use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\ISession;
+use OCP\IURLGenerator;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -90,7 +91,8 @@ class PrivacyIDEAProviderTest extends TestCase
 			$trans,
 			$session,
 			$factory,
-			$credentialStore
+			$credentialStore,
+			$this->createMock(IURLGenerator::class)
 		);
 	}
 

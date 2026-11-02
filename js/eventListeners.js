@@ -61,7 +61,7 @@ function eventListeners()
     }
 
     // POLL BY RELOAD
-    if (piGetValue("mode") === "push" && piGetValue("pollInBrowser") !== "1")
+    const startPollByReload = function ()
     {
         const pollingIntervals = [8, 5, 4];
         let loadCounter = Number(document.getElementById("loadCounter").value) || 1;
@@ -73,6 +73,10 @@ function eventListeners()
             ? 0
             : pollingIntervals[Math.min(loadCounter - 2, pollingIntervals.length - 1)] * 1000;
         window.setTimeout(() => document.forms["piLoginForm"].submit(), refreshTime);
+    };
+    if (piGetValue("mode") === "push" && piGetValue("pollInBrowser") !== "1")
+    {
+        startPollByReload();
     }
 
     // POLL IN BROWSER
@@ -81,16 +85,34 @@ function eventListeners()
         piGetValue("transactionID").length > 0)
     {
         piDisableElement("pushButton");
+        // If the browser cannot poll, show the error and give the push button
+        // back. On the push page, also poll by reload, so that the login still
+        // completes when the user confirms the push. Other pages keep their
+        // input field and do not reload.
+        const pollInBrowserFailed = function (message)
+        {
+            console.log("Poll in browser error: " + message);
+            piSetValue("errorMessage", "Poll in browser error: " + message);
+            piSetValue("pollInBrowserFailed", true);
+            piEnableElement("pushButton");
+            if (piGetValue("mode") === "push")
+            {
+                startPollByReload();
+            }
+        };
         let worker;
         if (typeof Worker !== "undefined")
         {
             if (!worker)
             {
-                worker = new Worker("/apps/privacyidea/js/pollTransaction.worker.js");
+                worker = new Worker(piGetValue("pollInBrowserWorkerUrl"));
                 document.getElementById("submitButton").addEventListener('click', function ()
                 {
-                    worker.terminate();
-                    worker = undefined;
+                    if (worker)
+                    {
+                        worker.terminate();
+                        worker = undefined;
+                    }
                 });
                 worker.postMessage({ 'cmd': 'url', 'msg': piGetValue("pollInBrowserUrl") });
                 worker.postMessage({ 'cmd': 'transactionID', 'msg': piGetValue("transactionID") });
@@ -104,21 +126,22 @@ function eventListeners()
                             document.forms["piLoginForm"].submit();
                             break;
                         case 'error':
-                            console.log("Poll in browser error: " + data.message);
-                            piSetValue("errorMessage", "Poll in browser error: " + data.message);
-                            piSetValue("pollInBrowserFailed", true);
-                            piEnableElement("pushButton");
                             worker = undefined;
+                            pollInBrowserFailed(data.message);
                     }
+                });
+                // A worker script that does not load (for example from a wrong
+                // URL) fires an error event and never sends a message.
+                worker.addEventListener('error', function ()
+                {
+                    worker = undefined;
+                    pollInBrowserFailed("The poll worker could not start.");
                 });
             }
         }
         else
         {
-            console.log("Sorry! No Web Worker support.");
-            piSetValue("errorMessage", "Poll in browser error: The browser doesn't support the Web Worker.");
-            piSetValue("pollInBrowserFailed", true);
-            piEnableElement("pushButton");
+            pollInBrowserFailed("The browser doesn't support the Web Worker.");
         }
     }
 }

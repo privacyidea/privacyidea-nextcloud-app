@@ -5,7 +5,9 @@
 //   node smoke.mjs <nextcloud-url> <expected-piURL>
 //
 // The Nextcloud must have the user admin/admin, and the app must be enabled and
-// point to mock_privacyidea.py, which accepts only the OTP 123456.
+// point to mock_privacyidea.py: it accepts the OTP 123456, and the PIN "push"
+// triggers a push challenge. run.sh also turns on "Poll in browser", so the
+// push login runs through the poll worker.
 import {execFileSync, spawn} from 'node:child_process';
 import {existsSync, mkdtempSync, readFileSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -208,11 +210,8 @@ async function submitOtp(otp)
         document.getElementById("piLoginForm").submit();`);
 }
 
-await send('Runtime.enable');
-await send('Page.enable');
-await send('Log.enable');
-
-try
+// Logs in as admin with the password and waits for the privacyIDEA challenge page.
+async function passwordLogin()
 {
     await send('Page.navigate', {url: `${baseUrl}/login`});
     check(await waitFor('!!document.querySelector("input[name=user]") && !!document.querySelector("input[name=password]")', 30000),
@@ -234,6 +233,15 @@ try
     {
         throw new Error(`stopped at ${await evaluate('location.href')}`);
     }
+}
+
+await send('Runtime.enable');
+await send('Page.enable');
+await send('Log.enable');
+
+try
+{
+    await passwordLogin();
     check(await evaluate('(document.getElementById("otp")?.offsetParent ?? null) !== null'), 'challenge page shows the OTP field');
 
     await submitOtp('000000');
@@ -258,6 +266,20 @@ try
     })()`);
     check(await waitFor('document.getElementById("piSettingsMsg")?.textContent.includes("Saved")'),
         'admin settings page saves a changed value');
+
+    // A second login, with a push token. The browser polls privacyIDEA and
+    // submits the form itself when the push is confirmed.
+    const requestToken = await evaluate('document.head.dataset.requesttoken');
+    await send('Page.navigate', {url: `${baseUrl}/logout?requesttoken=${encodeURIComponent(requestToken)}`});
+    await passwordLogin();
+    await submitOtp('push');
+    if (!check(await waitFor(`${onChallengePage} && document.getElementById("mode")?.value === "push"`),
+        'the PIN of a push token opens the push page'))
+    {
+        throw new Error(`stopped at ${await evaluate('location.href')}`);
+    }
+    check(await waitFor(`${newPageLoaded} && !location.pathname.includes("/login")`, 30000),
+        'a confirmed push logs the user in');
 }
 catch (error)
 {

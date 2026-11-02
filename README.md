@@ -1,21 +1,66 @@
-# privacyIDEA Nextcloud App
-This app adds flexible, enterprise-grade multi-factor authentication to Nextcloud.
+# privacyIDEA for Nextcloud
 
-It enables Nextcloud to perform MFA against the privacyIDEA server in your network.
+Protect your Nextcloud logins with a second factor that you control. This app
+connects the Nextcloud login to your own [privacyIDEA](https://github.com/privacyidea/privacyidea)
+server. Nextcloud asks for the second factor, and privacyIDEA checks it.
 
-PrivacyIDEA supports classic OTP tokens, and challenge-response tokens like E-Mail, SMS, PUSH, or WebAuthn.
+privacyIDEA is an open-source authentication server. It manages the second
+factors of all your users in one place, with policies, an audit log and a
+self-service portal. The same server can also protect other logins, for example
+Windows, VPN (through RADIUS) or Keycloak. Nextcloud stores no token secrets.
+
+## What your users can log in with
+
+- **Passkeys and FIDO2 security keys** (WebAuthn), for example a YubiKey,
+  Windows Hello or the passkey on a phone.
+- **Push notifications**: the user confirms the login with one tap in the
+  privacyIDEA Authenticator app.
+- **One-time passwords (OTP)** from any TOTP or HOTP app, for example Google
+  Authenticator, Microsoft Authenticator or FreeOTP, or from a hardware token.
+- **Codes by email or SMS.**
+
+If a user has more than one type of token, the login page lets the user switch
+between them.
+
+## What you can set up
+
+- **Enrollment at login**: privacyIDEA can ask a user without a token to enroll
+  one on the login page. The user scans a QR code (OTP app or smartphone
+  container) or registers a passkey. If your policy allows it, the user can
+  skip this step.
+- **Login flows**: trigger all challenges before the login page shows, so that
+  the push or SMS is already on its way. You can also send the Nextcloud
+  password or a fixed password to privacyIDEA first.
+- **Who must use MFA**: include or exclude Nextcloud groups, and exclude IPv4
+  addresses or ranges.
+- **Rules in one place**: token types, lockout and other policies stay in
+  privacyIDEA.
+
+## Requirements
+
+- Nextcloud 29 to 35, PHP 8.3 or newer.
+- A privacyIDEA server that your Nextcloud server can reach.
 
 ## Installation
 
-### Install from release archive
-1. Download `privacyidea.tar.gz` archive from the latest release.
-2. Unpack the archive to the Nextcloud apps directory: ``tar -xzf privacyidea.tar.gz -C <nextcloud>/apps/``.
-3. Enable the app in the Nextcloud WebUI: go to settings(admin) -> apps -> disabled page with "Not enabled" apps and click "Enable" for the privacyIDEA application.
+### From the release archive
 
-### Manual installation from the Git repository
-The app ships its `js/` as-is — there is no build step.
-1. Copy the files of this repository to ``<nextcloud>/apps/privacyidea``.
-2. In the Nextcloud WebUI go to settings(admin) -> apps -> disabled page with "Not enabled" apps and click "Enable" for the privacyIDEA application.
+1. Download the `.tar.gz` archive of the
+   [latest release](https://github.com/privacyidea/privacyidea-nextcloud-app/releases/latest).
+2. Unpack it into the apps folder of Nextcloud:
+   `tar -xzf privacyidea-*.tar.gz -C <nextcloud>/apps/`. If your installation
+   has a separate folder for added apps, use that folder. For example, the
+   official Docker image uses `custom_apps/`.
+3. Enable the app. In Nextcloud, open **Apps → Disabled apps** and click
+   **Enable** next to privacyIDEA. Or run
+   `sudo -u www-data php occ app:enable privacyidea`.
+
+### From the Git repository
+
+The app has no build step, so a copy of the repository works as it is.
+
+1. Clone or copy this repository to `<nextcloud>/apps/privacyidea`.
+2. Enable the app as in step 3 above.
 
 ## Configuration
 
@@ -41,6 +86,15 @@ minimum, set the server URL and tick **Activate privacyIDEA**.
 | --- | --- | --- |
 | Exclude IP addresses | `piExcludeIPs` | Skip MFA for these IPv4 addresses/ranges, e.g. `10.0.1.12,10.0.1.20-10.0.1.40`. (IPv4 only; non-IPv4 or unparseable entries are ignored and never skip MFA.) |
 | Group names + Include/Exclude | `piInExGroupsField`, `piInOrExSelected` | Restrict MFA to (Include) or skip it for (Exclude) members of the listed Nextcloud groups (comma-separated). |
+
+### Nextcloud behind a reverse proxy
+
+**Exclude IP addresses** and **Forward client IP** use the client address that
+Nextcloud sees. Behind a reverse proxy, set `trusted_proxies` in the Nextcloud
+`config.php` (see
+[Reverse proxy configuration](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html)).
+Otherwise Nextcloud sees the address of the proxy for every request. If an
+excluded range contains that address, no user has to use MFA.
 
 ### Authentication flow
 
@@ -68,6 +122,41 @@ password/PIN field plus OTP) is a separate **Login screen** setting — see belo
 | Auto-submit by OTP length | `piActivateAutoSubmitOtpLength`, `piAutoSubmitOtpLength` | Submit the form automatically once the configured number of characters (default `6`) is entered in the OTP field. |
 | Poll in browser | `piPollInBrowser`, `piPollInBrowserURL` | For PUSH tokens, poll privacyIDEA directly from the browser so the page advances the moment the user confirms, instead of periodic page reloads. Requires a privacyIDEA URL reachable from the browser. |
 | Forward headers to privacyIDEA | `piForwardHeaders` | Comma-separated list of request header names to forward to privacyIDEA (useful for header-based policies). |
+
+### Push tokens
+
+Turn on **Poll in browser** for push tokens. Without it, the login page reloads
+to ask whether the user confirmed the push: at once, then after 8, 5 and 4
+seconds, and then every 4 seconds. Each reload is a request to the two-factor
+endpoint of Nextcloud. By default, Nextcloud accepts 5 of these requests per
+user in 100 seconds. If the user takes longer than about 20 seconds, Nextcloud
+answers "Too many requests".
+
+With **Poll in browser**, the browser asks privacyIDEA directly, at the URL in
+`piPollInBrowserURL`. If privacyIDEA has a different origin than Nextcloud (a
+different scheme, host or port), the browser needs CORS headers. privacyIDEA
+does not send them. Add them on the web server or reverse proxy in front of
+privacyIDEA, for the path `/validate/polltransaction`:
+
+```
+Access-Control-Allow-Origin: https://cloud.example.com
+```
+
+Without this header, the browser blocks the poll requests. The login page then
+falls back to reloads, with the limit described above.
+
+## Troubleshooting
+
+- The app writes its messages to the Nextcloud log. At log level debug, it also
+  logs every request to privacyIDEA and the response. Passwords show as
+  `REDACTED`. To set the level, run
+  `sudo -u www-data php occ log:manage --level=debug`. Afterwards, set it back
+  with `--level=warning`.
+- If users who logged in before do not get the MFA prompt, see
+  [Enforce MFA for already-logged-in users](#enforce-mfa-for-already-logged-in-users).
+- If **Poll in browser** does not work, open the developer console of the
+  browser on the login page. A CORS error means that the header from
+  [Push tokens](#push-tokens) is missing.
 
 ## Protips
 ### Enable or disable privacyIDEA app using command line
@@ -120,8 +209,9 @@ composer run test:unit    # PHPUnit
 `tests/e2e/run.sh` tests the app in a real Nextcloud. It starts a throwaway
 Nextcloud container, installs the app from your working tree and points it at a
 mock privacyIDEA. Then headless Chrome logs in with a password and an OTP and
-changes a value on the admin settings page. At the end, the script checks the
-Nextcloud log for errors from the app.
+changes a value on the admin settings page. After a logout, it logs in again
+with a push token while **Poll in browser** is on. At the end, the script checks
+the Nextcloud log for errors from the app.
 
 ```bash
 tests/e2e/run.sh 35       # any Nextcloud Docker image tag, default: latest
