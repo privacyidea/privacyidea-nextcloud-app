@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.3.0 - 11/2026
+
+### Bug fixes
+
+- The admin settings page works on Nextcloud 34 and newer, which no longer include jQuery.
+- "Poll in browser" works when the app is in a separate apps folder, for example `custom_apps/` in the official Docker image. Before, the browser did not load the poll worker, and the login page did not notice the confirmed push. If the browser cannot poll, the push page now falls back to reloads.
+- The "No proxy" setting works. Before, the app sent it to privacyIDEA as a request parameter, and cURL still used the proxy of the web server.
+- The app no longer sends the timeout to privacyIDEA as a request parameter.
+- The app no longer calls `curl_close()`, which PHP 8.5 deprecates.
+
+### Improvements
+
+- Declared compatibility with Nextcloud 34 and 35.
+- The app declares that it needs PHP 8.3 or newer. Before, Nextcloud enabled it on PHP 8.2, and every login failed with HTTP 500.
+- New end-to-end tests and an updated README.
+
 ## v1.2.0 - 07/2026
 
 ### Features
